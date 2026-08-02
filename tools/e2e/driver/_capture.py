@@ -83,7 +83,13 @@ class CaptureMixin(RunState):
         # status test crops to its stable controls. Never let FPS/RAM text make
         # an otherwise identical full-frame UI test flaky.
         ignored_bottom = 92 if crop is None else 0
-        self.pending_goldens.append(GoldenCheck(name, png_path, tolerance, capture_ms, ignored_bottom))
+        # Terrain edits refresh the engine's cached shading texture. A broad
+        # map-only RGB ramp can move by a few units; keep panel crops exact and
+        # allow that renderer quantisation only for full-frame captures.
+        channel_tolerance = 8 if crop is None else 1
+        self.pending_goldens.append(
+            GoldenCheck(name, png_path, tolerance, channel_tolerance, capture_ms, ignored_bottom)
+        )
         self.event(
             "golden_queued",
             name=name,
@@ -157,6 +163,7 @@ class CaptureMixin(RunState):
                         check.path,
                         update=self.update_golden,
                         tolerance=check.tolerance,
+                        channel_tolerance=check.channel_tolerance,
                         ignored_bottom=check.ignored_bottom,
                     )
             except Exception as error:
@@ -169,6 +176,7 @@ class CaptureMixin(RunState):
                 status=status,
                 path=str(check.path),
                 capture_ms=check.capture_ms,
+                channel_tolerance=check.channel_tolerance,
                 conversion_ms=conversion.elapsed_ms,
                 compare_ms=int((monotonic() - started) * 1000),
             )

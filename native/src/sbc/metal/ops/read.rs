@@ -25,6 +25,13 @@ pub(crate) fn read(interface: &NativeInterfaceRef) -> Option<Vec<u8>> {
 }
 
 pub(crate) fn map_size(interface: &NativeInterfaceRef) -> Option<(i32, i32)> {
-    let (mmx, mmz) = interface.metal_map().get_metal_map_size().ok()?;
-    Some((mmx * METAL_RESOLUTION, mmz * METAL_RESOLUTION))
+    if let Some((map_x, map_z)) = crate::sbc::heightmap::ops::read::world_size(interface) {
+        return Some((i32::try_from(map_x).ok()?, i32::try_from(map_z).ok()?));
+    }
+
+    let (points_x, points_z) = interface.terrain().get_height_map_size().ok()?;
+    let square_size = spring_native::constants::GAME_SQUARE_SIZE;
+    let map_x = points_x.checked_sub(1)? * square_size;
+    let map_z = points_z.checked_sub(1)? * square_size;
+    Some((map_x, map_z))
 }

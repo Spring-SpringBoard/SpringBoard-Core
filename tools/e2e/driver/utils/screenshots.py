@@ -115,6 +115,12 @@ def _crop_image(image: Image.Image, crop: str | None) -> Image.Image:
         return image.crop((max(0, width - 500), 0, width, height))
     if crop == "dev-console":
         return image.crop((0, max(0, height - 392), max(1, width - 500), height - 92))
+    if crop == "dev-console-without-heading":
+        # The engine-line count in the heading is intentionally live: it
+        # includes diagnostics emitted by the process before this scenario
+        # starts. Keep the console body and toolbar in the golden while leaving
+        # that run-dependent text to the deterministic log assertions.
+        return image.crop((0, max(0, height - 360), max(1, width - 500), height - 92))
     if crop == "status-commands":
         panel_left = max(1, width - 500)
         start = round(panel_left * 0.6)

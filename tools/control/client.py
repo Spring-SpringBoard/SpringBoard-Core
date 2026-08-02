@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from .errors import UNKNOWN_NAME_CODE, ConnectionClosedError, UnknownNameError
-from .handles import Camera, Commands, Editor, index_editors
+from .handles import Camera, Commands, Dialog, Editor, index_dialogs, index_editors
 from .transport import CONNECT_TIMEOUT_S, Connection, open_connection, open_replacement_connection
 
 
@@ -26,6 +26,7 @@ class Control:
         # project reload can replace the socket without invalidating handles
         # that a caller declared before the reload.
         self._editors = index_editors(self, schema)
+        self._dialogs = index_dialogs(self, schema)
         self.commands = Commands(self, schema["commands"])
 
     @property
@@ -47,9 +48,22 @@ class Control:
             )
         return self._editors[name].open()
 
+    def dialog(self, name: str) -> Dialog:
+        """Return the typed domain-input dialog registered under ``name``."""
+        if name not in self._dialogs:
+            raise UnknownNameError(
+                UNKNOWN_NAME_CODE,
+                f"no dialog {name!r}. Dialogs: {', '.join(sorted(self._dialogs))}",
+            )
+        return self._dialogs[name]
+
     @property
     def editors(self) -> Mapping[str, Editor]:
         return self._editors
+
+    @property
+    def dialogs(self) -> Mapping[str, Dialog]:
+        return self._dialogs
 
     @property
     def camera(self) -> Camera:
@@ -94,6 +108,7 @@ class Control:
         self._connection = open_replacement_connection(self._write_dir, previous_instance_id, timeout_s)
         schema = self._connection.call("describe")
         self._editors = index_editors(self, schema)
+        self._dialogs = index_dialogs(self, schema)
         self.commands = Commands(self, schema["commands"])
 
     def wait_for_update(self) -> None:

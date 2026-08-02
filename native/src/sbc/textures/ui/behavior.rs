@@ -1,8 +1,8 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
-use crate::sbc::panels::field::{ChangeQueue, InteractionQueue};
-use crate::sbc::panels::runtime::{Behavior, EditorModel, Item, Outcome};
+use crate::sbc::panels::field::{ChangeQueue, Field, FieldValue, InteractionQueue};
+use crate::sbc::panels::runtime::{Behavior, EditorModel, Event, Item, Outcome, Phase};
 use crate::sbc::project::EditorState;
 use crate::sbc::rml::element_by_id;
 use crate::sbc::states::{BrushSettings, StateRequest};
@@ -17,6 +17,23 @@ impl Behavior for TextureBehavior {
 
     fn layout(&self, model: &TextureUiModel) -> Vec<Item<TexField>> {
         layout::layout(model)
+    }
+
+    fn apply(
+        &mut self,
+        event: Event<TexField>,
+        model: &mut TextureUiModel,
+        engine: &NativeInterfaceRef,
+    ) -> Outcome {
+        if let Event::Changed(TexField::Material, Phase::Commit) = event {
+            let FieldValue::Text(name) = model.material.value() else {
+                return Outcome::default();
+            };
+            if !model.select_material_control(&name, engine) {
+                log::warn!("texture control: unknown material {name:?}");
+            }
+        }
+        Outcome::default()
     }
 
     fn load_editor_state(&mut self, model: &mut TextureUiModel, state: &EditorState) {
@@ -108,6 +125,10 @@ impl Behavior for TextureBehavior {
             for entry in model.table.fields() {
                 let _ = entry.field.write_to_dom(interface);
             }
+            let _ = model.render_grids(interface, document);
+            model.sync_visibility();
+        }
+        if model.take_material_control_changed() {
             let _ = model.render_grids(interface, document);
             model.sync_visibility();
         }

@@ -15,7 +15,7 @@ See docs/design/programmatic-control.md.
 
 from .client import Control, connect, connect_session
 from .errors import ControlError, UnknownNameError
-from .handles import Camera, Command, Commands, Editor, FieldSpec
+from .handles import Camera, Command, Commands, Dialog, Editor, FieldSpec
 
 __all__ = [
     "Camera",
@@ -23,6 +23,7 @@ __all__ = [
     "Commands",
     "Control",
     "ControlError",
+    "Dialog",
     "Editor",
     "FieldSpec",
     "UnknownNameError",

@@ -31,6 +31,7 @@ pub(crate) fn describe() -> Value {
 
     json!({
         "tabs": tabs,
+        "dialogs": dialog_descriptors(),
         "commands": registered_class_names(),
     })
 }
@@ -104,4 +105,34 @@ fn field_json(spec: FieldSpec) -> Value {
         "value": value_json(&spec.value),
         "options": spec.options,
     })
+}
+
+fn dialog_descriptors() -> Vec<Value> {
+    vec![
+        json!({
+            "name": "new_project",
+            "fields": [
+                { "name": "name", "kind": "text", "value": "" },
+                { "name": "map", "kind": "text", "value": "SB_Blank_Map" },
+                { "name": "size_x", "kind": "number", "value": 10.0 },
+                { "name": "size_y", "kind": "number", "value": 10.0 },
+            ],
+        }),
+        json!({ "name": "load_project", "fields": [] }),
+        json!({
+            "name": "save_project_as",
+            "fields": [{ "name": "name", "kind": "text", "value": "" }],
+        }),
+        json!({
+            "name": "import",
+            "fields": [{ "name": "file_type", "kind": "text", "value": "" }],
+        }),
+        json!({
+            "name": "export",
+            "fields": [
+                { "name": "name", "kind": "text", "value": "" },
+                { "name": "file_type", "kind": "text", "value": "" },
+            ],
+        }),
+    ]
 }

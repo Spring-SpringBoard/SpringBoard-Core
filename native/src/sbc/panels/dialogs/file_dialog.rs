@@ -333,6 +333,49 @@ impl FileDialog {
 }
 
 impl Modal for FileDialog {
+    fn control_name(&self) -> Option<&'static str> {
+        self.config.as_ref().map(|config| config.control_name)
+    }
+
+    fn control_field_name(&self, name: &str) -> Option<String> {
+        match name {
+            "name" => Some("fd-name".to_string()),
+            "file_type" | "type" => Some("fd-type".to_string()),
+            _ => None,
+        }
+    }
+
+    fn control_select(
+        &mut self,
+        path: &str,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<bool, Error> {
+        let Some(config) = self.config.clone() else {
+            return Ok(false);
+        };
+        let selectable = self
+            .grid
+            .item(path)
+            .is_some_and(|item| !item.is_directory || self.dir_is_item(&config, path));
+        if !selectable {
+            return Ok(false);
+        }
+        self.grid.set_selected(Some(path));
+        self.grid.render(interface, document)?;
+        Ok(true)
+    }
+
+    fn control_accept(&mut self) -> bool {
+        self.events.borrow_mut().push(PickerEvent::Accept);
+        true
+    }
+
+    fn control_cancel(&mut self) -> bool {
+        self.events.borrow_mut().push(PickerEvent::Cancel);
+        true
+    }
+
     fn prepare_data_model(
         &mut self,
         interface: &NativeInterfaceRef,

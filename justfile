@@ -148,7 +148,7 @@ run config="config/ui-rust.json": build-native
 # invocations store all scenario artifacts and the aggregate suite report under
 # one timestamped suite folder.
 [group('test')]
-test-e2e target *args: build-native
+test-e2e target="all" *args: build-native
     PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e run "{{target}}" {{args}}
 
 # `just test-e2e all` shares compatible launch environments by default and

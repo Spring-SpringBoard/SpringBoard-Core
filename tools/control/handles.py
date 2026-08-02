@@ -95,6 +95,57 @@ class Editor:
         return self._fields[field]
 
 
+class Dialog:
+    """A domain-input dialog controlled without synthetic pointer/keyboard events."""
+
+    def __init__(self, control: Caller, name: str, fields: Mapping[str, FieldSpec]) -> None:
+        self._control = control
+        self._name = name
+        self._fields = dict(fields)
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def fields(self) -> Mapping[str, FieldSpec]:
+        return self._fields
+
+    def open(self) -> Self:
+        self._control.call("dialog.open", dialog=self.name)
+        return self
+
+    def get(self, field: str) -> FieldValue:
+        self._spec(field)
+        return self._control.call("dialog.get", dialog=self.name, field=field)["value"]
+
+    def set(self, field: str, value: FieldValue) -> FieldValue:
+        spec = self._spec(field)
+        _check_value(self.name, spec, value)
+        return self._control.call("dialog.set", dialog=self.name, field=field, value=_wire(value))["value"]
+
+    def select(self, path: str) -> None:
+        self._control.call("dialog.select", dialog=self.name, path=str(path))
+
+    def accept(self) -> None:
+        self._control.call("dialog.accept", dialog=self.name)
+
+    def cancel(self) -> None:
+        self._control.call("dialog.cancel", dialog=self.name)
+
+    def _spec(self, field: str) -> FieldSpec:
+        if field not in self._fields:
+            raise UnknownNameError(
+                UNKNOWN_NAME_CODE,
+                f"no field {field!r} in dialog {self.name!r}. Its fields: {', '.join(sorted(self._fields))}",
+            )
+        return self._fields[field]
+
+    @override
+    def __repr__(self) -> str:
+        return f"Dialog({self.name!r}, fields={sorted(self._fields)})"
+
+
 class Command:
     """One registered editor command, called by keyword."""
 
@@ -171,9 +222,17 @@ class Camera:
             params["target"] = [float(v) for v in target]
         return self._control.call("camera.set", **params)
 
-    def zoom(self, factor: float) -> dict[str, Any]:
-        """Zoom deterministically through the engine camera API."""
-        return self._control.call("camera.zoom", factor=float(factor))
+    def zoom(
+        self,
+        factor: float,
+        *,
+        screen: Sequence[float] | None = None,
+    ) -> dict[str, Any]:
+        """Zoom through the engine camera API, optionally around a screen point."""
+        params: dict[str, object] = {"factor": float(factor)}
+        if screen is not None:
+            params["screen"] = [float(value) for value in screen]
+        return self._control.call("camera.zoom", **params)
 
     def trace_screen_ray(self, x: float, y: float) -> dict[str, Any]:
         """Trace a top-origin screen point onto the ground."""
@@ -195,6 +254,22 @@ def index_editors(control: Caller, schema: Mapping[str, Any]) -> dict[str, Edito
             }
             editors[entry["name"]] = Editor(control, entry["name"], entry["caption"], tab["name"], fields)
     return editors
+
+
+def index_dialogs(control: Caller, schema: Mapping[str, Any]) -> dict[str, Dialog]:
+    dialogs: dict[str, Dialog] = {}
+    for entry in schema.get("dialogs", []):
+        fields = {
+            field["name"]: FieldSpec(
+                field["name"],
+                field["kind"],
+                field["value"],
+                tuple(field["options"]) if field.get("options") else None,
+            )
+            for field in entry.get("fields", [])
+        }
+        dialogs[entry["name"]] = Dialog(control, entry["name"], fields)
+    return dialogs
 
 
 def _check_value(editor: str, spec: FieldSpec, value: FieldValue) -> None:

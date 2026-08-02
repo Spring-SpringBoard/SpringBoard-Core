@@ -106,6 +106,7 @@ fn map_info(ctx: &mut Context) -> Value {
         "description": info.description,
         "version": info.version,
         "author": info.author,
+        "mapfile": format!("maps/{project_name}.smf"),
         "shortname": "",
         "modtype": 3,
         "depend": ["Map Helper v1"],
@@ -344,6 +345,12 @@ fn ground_extremes(ctx: &Context) -> Option<(f32, f32)> {
 }
 
 fn map_size(ctx: &Context) -> Option<(i32, i32)> {
-    let (mmx, mmz) = ctx.interface.metal_map().get_metal_map_size().ok()?;
-    Some((mmx * 16, mmz * 16))
+    if let Some((map_x, map_z)) = crate::sbc::heightmap::ops::read::world_size(ctx.interface) {
+        return Some((i32::try_from(map_x).ok()?, i32::try_from(map_z).ok()?));
+    }
+
+    let (square_size, squares_x, squares_z) =
+        ctx.interface.vfs().get_map_square_texture_info().ok()?;
+    (square_size > 0 && squares_x > 0 && squares_z > 0)
+        .then_some((square_size * squares_x, square_size * squares_z))
 }

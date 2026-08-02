@@ -3,8 +3,6 @@ use spring_native::prelude::NativeInterfaceRef;
 
 pub(crate) const GRASS_STEP: i32 = GAME_SQUARE_SIZE * 4;
 
-const MAP_UNITS_PER_METAL_CELL: i32 = 16;
-
 /// Reads the live grass map: one `u8` per cell (`1` = grass, `0` = none),
 /// row-major over the `GRASS_STEP` grid.
 pub(crate) fn read(interface: &NativeInterfaceRef) -> Option<Vec<u8>> {
@@ -25,9 +23,12 @@ pub(crate) fn read(interface: &NativeInterfaceRef) -> Option<Vec<u8>> {
 }
 
 pub(crate) fn map_size(interface: &NativeInterfaceRef) -> Option<(i32, i32)> {
-    let (mmx, mmz) = interface.metal_map().get_metal_map_size().ok()?;
-    Some((
-        mmx * MAP_UNITS_PER_METAL_CELL,
-        mmz * MAP_UNITS_PER_METAL_CELL,
-    ))
+    if let Some((map_x, map_z)) = crate::sbc::heightmap::ops::read::world_size(interface) {
+        return Some((i32::try_from(map_x).ok()?, i32::try_from(map_z).ok()?));
+    }
+
+    let (points_x, points_z) = interface.terrain().get_height_map_size().ok()?;
+    let map_x = points_x.checked_sub(1)? * GAME_SQUARE_SIZE;
+    let map_z = points_z.checked_sub(1)? * GAME_SQUARE_SIZE;
+    Some((map_x, map_z))
 }

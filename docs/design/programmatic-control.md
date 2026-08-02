@@ -9,8 +9,8 @@ A control channel lets a script drive a running SpringBoard the way a user
 drives it — open an editor, set its fields, run a command, place the camera,
 capture the result — without synthesising X11 input.
 
-Status: **implemented for editor fields, registered commands, camera state, and
-ordered capture; domain handles are the next layer.**
+Status: **implemented for editor fields, domain dialogs, registered commands,
+camera state, and ordered capture.**
 
 ## Why
 
@@ -47,7 +47,7 @@ The Python client detects that replacement, waits for the new `instance_id`,
 refreshes the schema, and reconnects subsequent calls; a caller does not need
 to rebuild its editor or camera handles.
 
-## Three surfaces, all first-class
+## First-class surfaces
 
 **Editors** — `ui.open(tab, editor)`, `ui.set(editor, field, value)`,
 `ui.get(editor, field)`. This is the user path: `Editor::set_field_value`
@@ -77,6 +77,22 @@ controller distance/height), `camera.trace_screen_ray(x, y)`,
 `runtime.reload_native_modules()` for native-module lifecycle testing. The
 reload deliberately preserves engine world/project state; it is not a project
 reset.
+
+**Dialogs** — `dialog.open/get/set/select/accept/cancel` controls typed
+project/file dialogs through their existing action and modal paths. A domain
+workflow can create a project, choose a VFS project, or save/export by name
+without synthesising a click, text entry, or Enter key:
+
+```python
+project = sb.dialog("new_project").open()
+project.set("name", "Example")
+project.set("size_x", 32)
+project.accept()
+
+load = sb.dialog("load_project").open()
+load.select("springboard/projects/Example.sdd")
+load.accept()
+```
 
 ## The Python client
 
@@ -124,7 +140,7 @@ a step at a time while the rest of it still clicks.
 `native/src/sbc/control/` separates the two halves so neither drifts into the
 other:
 
-- `api/` — the surface, one file per method group (`editors`, `commands`,
+- `api/` — the surface, one file per method group (`editors`, `dialogs`, `commands`,
   `camera`, `capture`, `schema`). Each goes through the seam its user action
   goes through, and knows nothing about sockets.
 - `channel/` — the plumbing: `server` (socket and connections), `discovery`
@@ -136,8 +152,9 @@ other:
 ## When a call is done
 
 A reply is sent once its effect has landed, not once the request was accepted:
-`ui.open` answers when the editor is on screen, `capture` when the image is on
-disk, and `runtime.barrier` after two input-idle native updates. Requests on a
+`ui.open` answers when the editor is on screen, `dialog.open`/`dialog.accept`
+answer when the modal opens/closes, `capture` when the image is on disk, and
+`runtime.barrier` after two input-idle native updates. Requests on a
 connection apply and answer in order, and `capture` is queued at
 `draw_screen_post`, so an image already contains every call before it. No
 scenario needs a sleep to make a screenshot honest.
@@ -148,7 +165,7 @@ Nothing in this channel may fail by doing nothing.
 
 ## Scope
 
-**Built**: `describe`, `ui.open/set/get`, `command.execute`,
+**Built**: `describe`, `ui.open/set/get`, `dialog.open/get/set/select/accept/cancel`, `command.execute`,
 `camera.set/get/trace_screen_ray/zoom`,
 `capture`, `runtime.barrier`, `runtime.reload_native_modules`. `SBC_CONTROL_FILE` names the discovery file and turns the channel on;
 the E2E harness sets it per run and exposes the connection as

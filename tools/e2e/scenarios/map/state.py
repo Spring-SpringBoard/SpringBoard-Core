@@ -5,13 +5,10 @@ from typing import TYPE_CHECKING
 from e2e.driver.timing import Delay
 from e2e.driver.utils.models import is_object
 from e2e.scenarios.helpers.geometry import (
-    DIALOG,
     MAP,
     MAP_ACTIONS,
     TAB_X,
     TAB_Y,
-    TOOLBAR,
-    dialog_point,
     editor_point,
     panel_left,
     panel_point,
@@ -42,7 +39,7 @@ def _editor_state_roundtrip(run_state: "RunState") -> None:
     run_state.click(left + TAB_X["map"], TAB_Y, delay=Delay.CONTROL)
     run_state.click(*editor_point(left, "map", "terrain"), delay=Delay.SETTLE)
     terrain = run_state.control.editor("heightmapEditor")
-    run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=Delay.CONTROL)
+    terrain.set("patternTexture", TERRAIN_PATTERN_PATH)
     terrain.size = 333.0
     terrain.rotation = 27.0
     terrain.strength = 8.5
@@ -59,7 +56,8 @@ def _editor_state_roundtrip(run_state: "RunState") -> None:
     texture.texScale = 3.5
     texture.specularEnabled = False
     run_state.click(*panel_point(left, MAP["saved_brush_add"]), delay=Delay.SETTLE)
-    run_state.click(*dialog_point(run_state, DIALOG["asset_core_cell"]), delay=Delay.SETTLE)
+    texture.set("material", "tiles")
+    texture.set("patternTexture", TERRAIN_PATTERN_PATH)
 
     # Save As writes this state, then reloads into the project. No screenshot is
     # needed: the command payloads below are stronger evidence and keep this
@@ -68,11 +66,9 @@ def _editor_state_roundtrip(run_state: "RunState") -> None:
     before_save = len(run_state.commands())
     reload_log = run_state.log_cursor()
     reload_commands = run_state.command_cursor()
-    run_state.click_settled(*panel_point(left, TOOLBAR["save_as"]))
-    run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=Delay.CONTROL)
-    run_state.type_text("EditorState")
-    run_state.key("Return", delay=Delay.CONTROL)
-    run_state.click_settled(*dialog_point(run_state, DIALOG["file_ok_name"]))
+    save_as = run_state.control.dialog("save_project_as").open()
+    save_as.set("name", "EditorState")
+    save_as.accept()
     run_state.wait_for_command("ReloadIntoProjectCommand", after=reload_commands)
     run_state.wait_for_log("finished loading and is now ingame", after=reload_log)
     # A project reload recreates the native module and its loopback server.

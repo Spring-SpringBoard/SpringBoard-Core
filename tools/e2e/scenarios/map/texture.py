@@ -5,13 +5,11 @@ from typing import TYPE_CHECKING
 from e2e.driver.timing import Delay
 from e2e.scenarios.helpers.camera import zoom_map
 from e2e.scenarios.helpers.geometry import (
-    DIALOG,
     MAP,
     MAP_ACTIONS,
     MAP_TEXTURE_ACTIONS,
     TAB_X,
     TAB_Y,
-    dialog_point,
     editor_point,
     panel_left,
     panel_point,
@@ -19,7 +17,7 @@ from e2e.scenarios.helpers.geometry import (
 )
 from e2e.scenarios.helpers.registry import scenario
 
-from .common import MAP_STROKE_PIXELS, _paint_stroke
+from .common import MAP_STROKE_PIXELS, TERRAIN_PATTERN_PATH, _paint_stroke
 
 if TYPE_CHECKING:
     from e2e.driver.state import RunState
@@ -54,9 +52,13 @@ def texture_paint(run_state: "RunState") -> None:
     # saved-brush picker comes first. `tiles` is visibly orange and patterned;
     # cement is too pale to prove texture paint in a review image.
     run_state.click(*editor_point(left, "map", "texture"), delay=Delay.READY)
+    texture = run_state.control.editor("textureEditor")
     run_state.click(*panel_point(left, MAP["saved_brush_add"]), delay=Delay.READY)
     run_state.screenshot_root("texture-material-picker")
-    run_state.click(*dialog_point(run_state, DIALOG["asset_core_cell"]), delay=Delay.DIALOG)
+    texture.set("material", "tiles")
+    # The brush shape is domain state, so set it through the typed editor
+    # surface instead of making the test hit a thumbnail in the panel.
+    texture.set("patternTexture", TERRAIN_PATTERN_PATH)
     # A shaped pattern, not circle1: a stroke of circles is a row of dots, and a
     # rotation on a circle is a no-op.
     run_state.click(*panel_point(left, MAP["saved_brush_rect"]), delay=Delay.DIALOG)

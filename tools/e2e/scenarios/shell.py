@@ -164,8 +164,9 @@ def import_action(run_state: "RunState") -> None:
 
     run_state.click(*panel_point(left, TOOLBAR["import"]), delay=Delay.READY)
     run_state.screenshot("import-dialog")
-    run_state.click(*dialog_point(run_state, DIALOG["asset_first_cell"]), delay=Delay.SETTLE)
-    run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=Delay.DIALOG)
+    import_dialog = run_state.control.dialog("import")
+    import_dialog.select("springboard/projects/import_test.png")
+    import_dialog.accept()
     run_state.assert_any_command("ImportDiffuseCommand")
     # Importing replaces every diffuse tile. It must be a real undoable edit so
     # the shared-session reset can restore the map for the next scenario.
@@ -181,7 +182,7 @@ def import_action(run_state: "RunState") -> None:
     # screenshot diff; the harness rejects any RmlUi data-for diagnostic.
     run_state.click(*panel_point(left, TOOLBAR["load"]), delay=Delay.POLL)
     run_state.screenshot("load-after-import")
-    run_state.key("Escape", delay=Delay.POLL)
+    run_state.control.dialog("load_project").cancel()
 
 
 @scenario()

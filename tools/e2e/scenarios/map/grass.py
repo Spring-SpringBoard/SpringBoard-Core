@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from e2e.driver.timing import Delay
 from e2e.scenarios.helpers.camera import zoom_map
 from e2e.scenarios.helpers.geometry import (
-    MAP,
     MAP_ACTIONS,
     TAB_X,
     TAB_Y,
@@ -15,7 +14,7 @@ from e2e.scenarios.helpers.geometry import (
 )
 from e2e.scenarios.helpers.registry import scenario
 
-from .common import MAP_STROKE_PIXELS, _paint_stroke
+from .common import MAP_STROKE_PIXELS, TERRAIN_PATTERN_PATH, _paint_stroke
 
 if TYPE_CHECKING:
     from e2e.driver.state import RunState
@@ -36,7 +35,7 @@ def grass_paint(run_state: "RunState") -> None:
     zoom_map(run_state, factor=0.125, point=(paint_x, paint_y))
 
     grass = run_state.control.editor("grassEditor")
-    run_state.click(*panel_point(left, MAP["texture_pattern"]), delay=Delay.SETTLE)
+    grass.set("patternTexture", TERRAIN_PATTERN_PATH)
     grass.size = 180.0
     run_state.click(*panel_point(left, MAP_ACTIONS["texture_paint"]), delay=Delay.READY)
     before = run_state.screenshot("grass-before")

@@ -25,6 +25,8 @@ pub enum ActionResult {
 /// Configuration for the file browser dialog.
 #[derive(Debug, Clone)]
 pub struct FileDialogConfig {
+    /// Stable programmatic name for this action's file dialog.
+    pub control_name: &'static str,
     pub title: String,
     pub root_dir: String,
     /// File extensions to show (e.g. `[".png", ".jpg"]`). Empty = show all.
@@ -40,6 +42,7 @@ pub struct FileDialogConfig {
 impl Default for FileDialogConfig {
     fn default() -> Self {
         FileDialogConfig {
+            control_name: "file",
             title: "File".to_string(),
             root_dir: PROJECTS_DIR.to_string(),
             extensions: Vec::new(),

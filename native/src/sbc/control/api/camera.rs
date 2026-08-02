@@ -2,6 +2,7 @@
 
 use serde::Deserialize;
 use serde_json::json;
+use spring_native::prelude::NativeInterfaceRef;
 
 use crate::sbc::sbc::SBC;
 
@@ -28,6 +29,11 @@ pub(crate) struct Set {
 #[derive(Deserialize)]
 pub(crate) struct Zoom {
     pub factor: f32,
+    /// Keep this ground point under a screen-space cursor while zooming.
+    /// This is the semantic equivalent of the engine's mouse-wheel zoom; the
+    /// client should pass the screen point, not reproduce camera geometry.
+    #[serde(default)]
+    pub screen: Option<[f32; 2]>,
 }
 
 #[derive(Deserialize)]
@@ -168,7 +174,18 @@ pub(crate) fn zoom(sbc: &mut SBC, params: Zoom) -> Handled {
             "camera.zoom factor must be positive and finite",
         ));
     }
-    let camera = sbc.interface().camera();
+    let interface = sbc.interface();
+    let target = if let Some(screen) = params.screen {
+        if !screen[0].is_finite() || !screen[1].is_finite() {
+            return Err(ControlError::invalid(
+                "camera.zoom screen coordinates must be finite",
+            ));
+        }
+        trace_ground(interface, screen)?
+    } else {
+        None
+    };
+    let camera = interface.camera();
     let mut state = camera
         .get_camera_state(false)
         .map_err(|err| ControlError::failed(format!("get_camera_state: {err:?}")))?;
@@ -187,6 +204,26 @@ pub(crate) fn zoom(sbc: &mut SBC, params: Zoom) -> Handled {
         .map_err(|err| ControlError::failed(format!("set_camera_state: {err:?}")))?
         .then_some(())
         .ok_or_else(|| ControlError::failed("engine rejected camera zoom"))?;
+
+    if let (Some(screen), Some(target)) = (params.screen, target) {
+        // The generic camera.zoom operation scales around the controller
+        // position. The mouse-wheel operation instead keeps the traced ground
+        // point beneath the cursor. Re-trace after scaling and apply the
+        // horizontal ground delta in the controller, where the engine owns the
+        // camera projection and terrain height.
+        if let Some(current) = trace_ground(interface, screen)? {
+            let mut state = camera
+                .get_camera_state(false)
+                .map_err(|err| ControlError::failed(format!("get_camera_state: {err:?}")))?;
+            state.pos.x += target[0] - current[0];
+            state.pos.z += target[2] - current[2];
+            camera
+                .set_camera_state(state, 0.0, 1.0, 1.0)
+                .map_err(|err| ControlError::failed(format!("set_camera_state: {err:?}")))?
+                .then_some(())
+                .ok_or_else(|| ControlError::failed("engine rejected camera focus"))?;
+        }
+    }
     get(sbc)
 }
 
@@ -207,4 +244,15 @@ pub(crate) fn trace(sbc: &mut SBC, params: Trace) -> Handled {
         "hit_id": hit_id,
         "position": [position.x, position.y, position.z],
     })))
+}
+
+fn trace_ground(
+    interface: &NativeInterfaceRef,
+    screen: [f32; 2],
+) -> Result<Option<[f32; 3]>, ControlError> {
+    let (hit_type, _, position) = interface
+        .camera()
+        .trace_screen_ray(screen[0], screen[1], true, false, false, true, 0.0)
+        .map_err(|err| ControlError::failed(format!("trace_screen_ray: {err:?}")))?;
+    Ok((hit_type == 3).then_some([position.x, position.y, position.z]))
 }

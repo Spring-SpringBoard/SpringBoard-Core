@@ -28,11 +28,6 @@ pub(crate) fn start_script(project: &ProjectData, teams: &[Team]) -> String {
         .as_ref()
         .cloned()
         .unwrap_or_else(|| json!({}));
-    let map_seed = map_opts
-        .get("mapSeed")
-        .cloned()
-        .unwrap_or_else(|| Value::from(42));
-
     let mut script = Map::new();
     script.insert(
         "gameType".to_string(),
@@ -42,7 +37,21 @@ pub(crate) fn start_script(project: &ProjectData, teams: &[Team]) -> String {
         "mapName".to_string(),
         Value::String(project.map_name.clone().unwrap_or_default()),
     );
-    script.insert("mapSeed".to_string(), map_seed);
+    // `mapSeed` opts into the engine's blank-map generator. Keep it for an
+    // explicitly generated blank map, and for the engine's initial generated
+    // map (which is the map captured by Save As before a project exists).
+    // Archive-backed maps must omit it or Spring replaces their SMF with a
+    // fresh blank map.
+    let map_seed = map_opts.get("mapSeed").cloned().or_else(|| {
+        project
+            .map_name
+            .as_deref()
+            .filter(|name| *name == "SB_Blank_Map" || name.starts_with("sb_initial_blank_"))
+            .map(|_| Value::from(42))
+    });
+    if let Some(map_seed) = map_seed {
+        script.insert("mapSeed".to_string(), map_seed);
+    }
     script.insert("isHost".to_string(), Value::Bool(true));
     script.insert("hostIP".to_string(), Value::String("127.0.0.1".to_string()));
     script.insert("gameStartDelay".to_string(), Value::from(0));

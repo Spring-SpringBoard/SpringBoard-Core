@@ -12,12 +12,20 @@ impl EditorModel for TextureUiModel {
     fn fields(&self) -> Vec<FieldRef<'_>> {
         let mut fields = self.table.fields();
         fields.push(self.pattern.entry());
+        fields.push(FieldRef {
+            field: &self.material,
+            brush: None,
+        });
         fields
     }
 
     fn fields_mut(&mut self) -> Vec<FieldMut<'_>> {
         let mut fields = self.table.fields_mut();
         fields.push(self.pattern.entry_mut());
+        fields.push(FieldMut {
+            field: &mut self.material,
+            brush: None,
+        });
         fields
     }
 
@@ -43,12 +51,18 @@ impl EditorModel for TextureUiModel {
         if name == "patternTexture" {
             return Some(Pattern);
         }
+        if name == "material" {
+            return Some(Material);
+        }
         self.table.id_of(name)
     }
 
     fn name_of(&self, id: TexField) -> String {
         if id == Pattern {
             return "patternTexture".to_string();
+        }
+        if id == Material {
+            return "material".to_string();
         }
         self.table.name_of(id)
     }

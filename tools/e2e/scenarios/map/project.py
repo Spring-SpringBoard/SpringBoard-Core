@@ -5,22 +5,18 @@ from typing import TYPE_CHECKING
 
 from e2e.driver.timing import Delay
 from e2e.scenarios.helpers.geometry import (
-    DIALOG,
     MAP,
     MAP_ACTIONS,
     PARK_PANEL,
     TAB_X,
     TAB_Y,
-    TOOLBAR,
-    dialog_point,
-    dropdown_option,
     editor_point,
     panel_left,
     panel_point,
     window_size,
 )
 
-from .common import _sweep, _wait_for_archive
+from .common import TERRAIN_PATTERN_PATH, _sweep, _wait_for_archive
 
 if TYPE_CHECKING:
     from e2e.driver.state import RunState
@@ -56,14 +52,9 @@ def _map_export(run_state: "RunState") -> None:
     # Save As creates it and reloads into it. Wait for the second ready line,
     # rather than assuming every machine needs the old fixed eight seconds.
     reload_log = run_state.log_cursor()
-    run_state.click_settled(*panel_point(left, TOOLBAR["save_as"]), delay=Delay.FRAME)
-    run_state.fill_text(
-        *dialog_point(run_state, DIALOG["file_name"]),
-        "ExportMap",
-        click_delay=Delay.INPUT,
-        commit_delay=Delay.INPUT,
-    )
-    run_state.click_settled(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=Delay.INPUT)
+    save_as = run_state.control.dialog("save_project_as").open()
+    save_as.set("name", "ExportMap")
+    save_as.accept()
     run_state.wait_for_command("ReloadIntoProjectCommand")
     run_state.wait_for_log("finished loading and is now ingame", after=reload_log)
 
@@ -73,33 +64,30 @@ def _map_export(run_state: "RunState") -> None:
     terrain = run_state.control.editor("heightmapEditor")
     terrain.size = 1200.0
     terrain.strength = 10.0
-    run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=Delay.CONTROL)
+    terrain.set("patternTexture", TERRAIN_PATTERN_PATH)
     run_state.click(*panel_point(left, MAP_ACTIONS["terrain_add"]), delay=Delay.CONTROL)
     _sweep(run_state, left, width, height)
     run_state.assert_command_at_least("TerrainShapeModifyCommand", 1)
 
     # Texture: choose a material, pick a brush shape, paint across the map.
     run_state.click(*editor_point(left, "map", "texture"), delay=Delay.FRAME)
+    texture = run_state.control.editor("textureEditor")
     run_state.click(*panel_point(left, MAP["saved_brush_add"]), delay=Delay.SETTLE)
-    run_state.click(*dialog_point(run_state, DIALOG["asset_core_cell"]), delay=Delay.FRAME)
+    texture.set("material", "tiles")
+    texture.set("patternTexture", TERRAIN_PATTERN_PATH)
     run_state.click(*panel_point(left, MAP["saved_brush_rect"]), delay=Delay.CONTROL)
     run_state.click(*panel_point(left, MAP_ACTIONS["texture_paint"]), delay=Delay.CONTROL)
     _sweep(run_state, left, width, height)
     run_state.assert_any_command("TerrainChangeTextureCommand", paintMode="paint")
     run_state.key("Escape", delay=Delay.CONTROL)
     run_state.move(*panel_point(left, PARK_PANEL), delay=Delay.CONTROL)
-    edited = run_state.screenshot("edited-before-export")
+    edited = run_state.control_capture("edited-before-export")
 
     # Save the edits, then Export -> Spring archive (the default type).
     _save_project(run_state, "ExportMap")
-    run_state.click_settled(*panel_point(left, TOOLBAR["export"]), delay=Delay.CONTROL)
-    run_state.fill_text(
-        *dialog_point(run_state, DIALOG["file_name"]),
-        "ExportMap",
-        click_delay=Delay.INPUT,
-        commit_delay=Delay.INPUT,
-    )
-    run_state.click_settled(*dialog_point(run_state, DIALOG["file_ok_export"]), delay=Delay.INPUT)
+    export = run_state.control.dialog("export").open()
+    export.set("name", "ExportMap")
+    export.accept()
     run_state.wait_for_command("ExportSpringArchiveCommand")
     run_state.assert_command("ExportSpringArchiveCommand")
 
@@ -127,17 +115,13 @@ def _map_export(run_state: "RunState") -> None:
     shutil.copyfile(archive, maps_dir / "ExportMap.sdz")
     reload_log = run_state.log_cursor()
     reload_commands = run_state.command_cursor()
-    run_state.click_settled(*panel_point(left, TOOLBAR["new_project"]), delay=Delay.CONTROL)
-    run_state.click_settled(*dialog_point(run_state, DIALOG["new_project_name"]), delay=Delay.INPUT)
-    run_state.type_text("FromExport")
-    run_state.click_settled(*dialog_point(run_state, DIALOG["new_project_map"]), delay=Delay.CONTROL)
-    run_state.click_settled(
-        *dialog_point(run_state, dropdown_option(DIALOG["new_project_map"], 1)), delay=Delay.CONTROL
-    )
-    run_state.click_settled(*dialog_point(run_state, DIALOG["new_project_create_nosize"]), delay=Delay.INPUT)
+    new_project = run_state.control.dialog("new_project").open()
+    new_project.set("name", "FromExport")
+    new_project.set("map", "Manual's Scenario 1")
+    new_project.accept()
     run_state.wait_for_command("ReloadIntoProjectCommand", after=reload_commands)
     run_state.wait_for_log("finished loading and is now ingame", after=reload_log)
-    reopened = run_state.screenshot("export-reopened")
+    reopened = run_state.control_capture("export-reopened")
     painted_after = run_state.count_color(reopened, map_region, "#878692")
     if painted_after < 50:
         raise AssertionError(f"exported map lost its painted diffuse texture ({painted_after} tile pixels)")
@@ -161,19 +145,14 @@ def _map_roundtrip(run_state: "RunState") -> None:
     width, height = window_size(run_state)
     # A central patch of the map (left of the 500-wide panel) to compare terrain.
     map_region = (left // 2 - 260, height // 2 - 220, 520, 440)
-    original = run_state.screenshot("original-map")
+    original = run_state.control_capture("original-map")
 
     # Save As establishes a project; then sculpt + paint so the map is distinct.
     reload_log = run_state.log_cursor()
     reload_commands = run_state.command_cursor()
-    run_state.click_settled(*panel_point(left, TOOLBAR["save_as"]))
-    run_state.fill_text(
-        *dialog_point(run_state, DIALOG["file_name"]),
-        "RoundTrip",
-        click_delay=Delay.INPUT,
-        commit_delay=Delay.INPUT,
-    )
-    run_state.click_settled(*dialog_point(run_state, DIALOG["file_ok_name"]))
+    save_as = run_state.control.dialog("save_project_as").open()
+    save_as.set("name", "RoundTrip")
+    save_as.accept()
     run_state.wait_for_command("ReloadIntoProjectCommand", after=reload_commands)
     run_state.wait_for_log("finished loading and is now ingame", after=reload_log)
 
@@ -183,7 +162,7 @@ def _map_roundtrip(run_state: "RunState") -> None:
     terrain.size = 1400.0
     terrain.strength = 10.0
     terrain.height = 300.0
-    run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=Delay.CONTROL)
+    terrain.set("patternTexture", TERRAIN_PATTERN_PATH)
     run_state.click(*panel_point(left, MAP_ACTIONS["terrain_add"]), delay=Delay.CONTROL)
     # Two sweeps at a representative strength for pronounced, stable relief.
     _sweep(run_state, left, width, height)
@@ -191,8 +170,10 @@ def _map_roundtrip(run_state: "RunState") -> None:
     run_state.assert_command_at_least("TerrainShapeModifyCommand", 1)
 
     run_state.click(*editor_point(left, "map", "texture"), delay=Delay.FRAME)
+    texture = run_state.control.editor("textureEditor")
     run_state.click(*panel_point(left, MAP["saved_brush_add"]), delay=Delay.SETTLE)
-    run_state.click(*dialog_point(run_state, DIALOG["asset_core_cell"]), delay=Delay.FRAME)
+    texture.set("material", "tiles")
+    texture.set("patternTexture", TERRAIN_PATTERN_PATH)
     run_state.click(*panel_point(left, MAP["saved_brush_rect"]), delay=Delay.CONTROL)
     run_state.click(*panel_point(left, MAP_ACTIONS["texture_paint"]), delay=Delay.CONTROL)
     _sweep(run_state, left, width, height)
@@ -210,14 +191,9 @@ def _map_roundtrip(run_state: "RunState") -> None:
     scenario_info.set("name", "AAA RoundTrip")
 
     _save_project(run_state, "RoundTrip")
-    run_state.click_settled(*panel_point(left, TOOLBAR["export"]))
-    run_state.fill_text(
-        *dialog_point(run_state, DIALOG["file_name"]),
-        "RoundTrip",
-        click_delay=Delay.INPUT,
-        commit_delay=Delay.INPUT,
-    )
-    run_state.click_settled(*dialog_point(run_state, DIALOG["file_ok_export"]))
+    export = run_state.control.dialog("export").open()
+    export.set("name", "RoundTrip")
+    export.accept()
     run_state.wait_for_command("ExportSpringArchiveCommand")
     run_state.assert_command("ExportSpringArchiveCommand")
 
@@ -230,30 +206,18 @@ def _map_roundtrip(run_state: "RunState") -> None:
     maps_dir = run_state.write_dir / "maps"
     maps_dir.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(archive, maps_dir / "RoundTrip.sdz")
-    # New Project must now list the just-exported map (available_maps rescans).
-    run_state.click_settled(*panel_point(left, TOOLBAR["new_project"]))
-    # Name first, while the dialog still has its full layout.
-    run_state.fill_text(
-        *dialog_point(run_state, DIALOG["new_project_name"]),
-        "FromExport",
-        click_delay=Delay.INPUT,
-        commit_delay=Delay.INPUT,
-    )
-    # Open the map dropdown and pick the exported map. Its map name comes from the
-    # scenario ("Manual's Scenario 1"), which sorts to option index 1 -- ahead of
-    # the "RoundTrip 1.0" *project* entry, whose base map is flat.
-    run_state.click_settled(*dialog_point(run_state, DIALOG["new_project_map"]))
-    run_state.screenshot_root("roundtrip-map-dropdown")
-    run_state.click_settled(*dialog_point(run_state, dropdown_option(DIALOG["new_project_map"], 1)))
-    # Picking a non-blank map hides the Size row, so Create sits one row higher.
-    run_state.screenshot_root("roundtrip-after-map")
+    # New Project rescans VFS and accepts the exported map by name, without
+    # opening a dropdown or relying on its row order.
+    new_project = run_state.control.dialog("new_project").open()
+    new_project.set("name", "FromExport")
+    new_project.set("map", "AAA RoundTrip 1")
     reload_log = run_state.log_cursor()
     reload_commands = run_state.command_cursor()
-    run_state.click_settled(*dialog_point(run_state, DIALOG["new_project_create_nosize"]))
+    new_project.accept()
     run_state.wait_for_command("ReloadIntoProjectCommand", after=reload_commands)
     run_state.wait_for_log("finished loading and is now ingame", after=reload_log)
 
-    roundtrip = run_state.screenshot("roundtrip-loaded")
+    roundtrip = run_state.control_capture("roundtrip-loaded")
     # The compiled terrain came through: sharply different from the flat default
     # it started on...
     run_state.assert_region_pixels(original, roundtrip, map_region, min_changed=20_000)

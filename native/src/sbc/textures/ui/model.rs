@@ -11,7 +11,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::sbc::panels::brush::{non_empty, BrushAction, BrushActions};
 use crate::sbc::panels::controls::grid::GridView;
-use crate::sbc::panels::field::FieldValue;
+use crate::sbc::panels::field::{Field, FieldValue};
+use crate::sbc::panels::fields::StringField;
 use crate::sbc::panels::runtime::{AssetGrid, EditorModel, TableModel};
 use crate::sbc::panels::tooltip::{TooltipContent, TooltipStatus};
 use crate::sbc::project::{EditorState, TextureEditorState};
@@ -142,6 +143,8 @@ pub(super) enum MaterialPickerEvent {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum TexField {
     Pattern,
+    /// Control-only material selector; it is not rendered as a panel row.
+    Material,
     Size,
     Rotation,
     TexScale,
@@ -173,6 +176,7 @@ pub(crate) struct TextureUiModel {
     pub(super) table: TableModel<TexField>,
     pub(super) actions: BrushActions,
     pattern: AssetGrid,
+    pub(super) material: StringField,
     pub(super) saved_brush_grid: GridView,
     pub(super) material_grid: GridView,
     pub(super) materials: Vec<Material>,
@@ -184,6 +188,7 @@ pub(crate) struct TextureUiModel {
     pub(super) selected_brush: Option<String>,
     pub(super) material_picker_open: bool,
     pub(super) material_picker_events: Rc<RefCell<Vec<MaterialPickerEvent>>>,
+    material_control_changed: bool,
     /// Which DNTS channels the map actually has. Lua disables the button when
     /// there are none.
     pub(super) dnts_available: Vec<i32>,
@@ -196,6 +201,7 @@ impl TextureUiModel {
             table: texture_table(),
             actions: BrushActions::new(ACTIONS),
             pattern: AssetGrid::of(pattern()),
+            material: StringField::new("material", "Material", ""),
             saved_brush_grid: GridView::new("texture-saved-brush-grid", 64),
             material_grid: GridView::new("texture-material-grid", 64),
             materials: Vec::new(),
@@ -205,6 +211,7 @@ impl TextureUiModel {
             selected_brush: None,
             material_picker_open: false,
             material_picker_events: Rc::new(RefCell::new(Vec::new())),
+            material_control_changed: false,
             dnts_available: Vec::new(),
             visibility: None,
         }
@@ -237,6 +244,7 @@ impl TextureUiModel {
             Strength => Some(STRENGTH_VISIBLE),
             FalloffFactor => Some(FALLOFF_VISIBLE),
             Pattern | Size | Rotation => None,
+            Material => Some(MATERIAL_CONTROLS_VISIBLE),
         }
     }
 
@@ -348,6 +356,9 @@ impl TextureUiModel {
         self.saved_brushes = saved.saved_brushes.clone();
         self.selected_brush = saved.selected_brush.clone();
         self.selected_material = saved.selected_material.clone();
+        self.material.set_value(&FieldValue::Text(
+            self.selected_material.clone().unwrap_or_default(),
+        ));
     }
 
     pub(super) fn save_editor_state(&self, state: &mut EditorState) {
@@ -356,6 +367,32 @@ impl TextureUiModel {
             selected_brush: self.selected_brush.clone(),
             selected_material: self.selected_material.clone(),
         });
+    }
+
+    /// Select a material through the typed editor surface and create the same
+    /// saved brush as the visible material picker.
+    pub(super) fn select_material_control(
+        &mut self,
+        name: &str,
+        interface: &NativeInterfaceRef,
+    ) -> bool {
+        if self.materials.is_empty() {
+            self.materials = crate::sbc::textures::materials::list_materials(interface);
+        }
+        let Some(material) = self.materials.iter().find(|material| material.name == name) else {
+            return false;
+        };
+        self.selected = material.channels.clone();
+        self.selected_material = Some(material.name.clone());
+        self.create_saved_brush(material.name.clone());
+        self.material_picker_open = false;
+        self.material_control_changed = true;
+        self.sync_visibility();
+        true
+    }
+
+    pub(super) fn take_material_control_changed(&mut self) -> bool {
+        std::mem::take(&mut self.material_control_changed)
     }
 
     pub(super) fn read_brush(&mut self, brush: &BrushSettings) {

@@ -1,4 +1,4 @@
-use log::{error, info};
+use log::{debug, error, info};
 
 use super::read::{map_size, GRASS_STEP};
 use crate::sbc::sbc::SBC;
@@ -9,6 +9,16 @@ pub(crate) fn write(sbc: &mut SBC, bytes: &[u8]) {
         error!("write grass map: could not read map size");
         return;
     };
+
+    let expected = cell_count(size_x, size_z, GRASS_STEP);
+    if bytes.len() != expected {
+        debug!(
+            "skip grass map: file has {} cells, current map expects {}",
+            bytes.len(),
+            expected
+        );
+        return;
+    }
 
     let synced = sbc.interface().synced_ctrl();
     let terrain = synced.terrain();
@@ -30,8 +40,11 @@ pub(crate) fn write(sbc: &mut SBC, bytes: &[u8]) {
         }
         x += GRASS_STEP;
     }
-    if values.next().is_some() {
-        error!("write grass map: file has trailing bytes");
-    }
     info!("grass map loaded");
+}
+
+fn cell_count(size_x: i32, size_z: i32, step: i32) -> usize {
+    let count_x = (size_x + step - 1).div_euclid(step);
+    let count_z = (size_z + step - 1).div_euclid(step);
+    (count_x * count_z) as usize
 }

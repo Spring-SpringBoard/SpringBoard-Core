@@ -6,7 +6,7 @@ use serde_json::json;
 
 use crate::sbc::sbc::SBC;
 
-use super::api::{camera, capture, commands, editors, runtime, schema};
+use super::api::{camera, capture, commands, dialogs, editors, runtime, schema};
 use super::channel::{protocol, ControlServer, Effect, Pending, Request};
 use super::{ControlError, Handled, Reply};
 
@@ -55,6 +55,12 @@ fn route(sbc: &mut SBC, request: &Request) -> Handled {
         "ui.set" => editors::set(sbc, params(request)?),
         "ui.get" => editors::get(sbc, params(request)?),
         "command.execute" => commands::execute(sbc, params(request)?),
+        "dialog.open" => dialogs::open(sbc, params(request)?),
+        "dialog.get" => dialogs::get(sbc, params(request)?),
+        "dialog.set" => dialogs::set(sbc, params(request)?),
+        "dialog.select" => dialogs::select(sbc, params(request)?),
+        "dialog.accept" => dialogs::accept(sbc, params(request)?),
+        "dialog.cancel" => dialogs::cancel(sbc, params(request)?),
         "camera.get" => camera::get(sbc),
         "camera.set" => camera::set(sbc, params(request)?),
         "camera.zoom" => camera::zoom(sbc, params(request)?),
@@ -109,6 +115,24 @@ fn resolve_pending(sbc: &mut SBC, server: &mut ControlServer) {
                         editors::is_open(sbc, editor),
                         || json!({ "editor": editor }),
                         || format!("editor {editor} did not open"),
+                    )
+                }
+                Effect::DialogOpen(dialog) => {
+                    let dialog = *dialog;
+                    pending.resolve(
+                        sbc.model::<crate::sbc::panels::PanelManager>()
+                            .control_dialog_is_open(dialog),
+                        || json!({ "dialog": dialog }),
+                        || format!("dialog {dialog} did not open"),
+                    )
+                }
+                Effect::DialogClosed(dialog) => {
+                    let dialog = *dialog;
+                    pending.resolve(
+                        !sbc.model::<crate::sbc::panels::PanelManager>()
+                            .control_dialog_is_open(dialog),
+                        || json!({ "dialog": dialog }),
+                        || format!("dialog {dialog} did not close"),
                     )
                 }
                 Effect::Capture(path) => {

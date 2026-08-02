@@ -1,4 +1,4 @@
-use log::{error, info};
+use log::{debug, error, info};
 
 use super::read::{map_size, METAL_RESOLUTION};
 use crate::sbc::sbc::SBC;
@@ -9,6 +9,16 @@ pub(crate) fn write(sbc: &mut SBC, bytes: &[u8]) {
         error!("write metal map: could not read map size");
         return;
     };
+
+    let expected = cell_count(size_x, size_z, METAL_RESOLUTION) * 4;
+    if bytes.len() != expected {
+        debug!(
+            "skip metal map: file has {} bytes, current map expects {}",
+            bytes.len(),
+            expected
+        );
+        return;
+    }
 
     let metal = sbc.interface().metal_map();
     let mut chunks = bytes.chunks_exact(4);
@@ -28,8 +38,11 @@ pub(crate) fn write(sbc: &mut SBC, bytes: &[u8]) {
         }
         x += METAL_RESOLUTION;
     }
-    if !chunks.remainder().is_empty() || chunks.next().is_some() {
-        error!("write metal map: file has trailing bytes");
-    }
     info!("metal map loaded");
+}
+
+fn cell_count(size_x: i32, size_z: i32, step: i32) -> usize {
+    let count_x = (size_x + step - 1).div_euclid(step);
+    let count_z = (size_z + step - 1).div_euclid(step);
+    (count_x * count_z) as usize
 }

@@ -7,6 +7,8 @@ import pytest
 from e2e.driver.utils.models import list_item_matches, number_close
 from e2e.scenarios.helpers.registry import scenario
 
+from .common import TERRAIN_PATTERN_PATH
+
 if TYPE_CHECKING:
     from e2e.driver.state import RunState
 
@@ -33,6 +35,8 @@ def map_editors(run_state: "RunState") -> None:
 
     texture = run_state.control.editor("textureEditor")
     for field, value in {
+        "material": "tiles",
+        "patternTexture": TERRAIN_PATTERN_PATH,
         "size": 180.0,
         "rotation": 20.0,
         "texScale": 3.5,

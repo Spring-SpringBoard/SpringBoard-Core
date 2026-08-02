@@ -79,6 +79,16 @@ def reload_native_modules(run_state: "RunState") -> None:
         value=object_number_close("x", 1800, tolerance=1.0),
     )
 
+    # The object was created before the native-module replacement, so its add
+    # command belonged to the discarded module's history. Remove it through a
+    # live command from the replacement module, then establish a history
+    # boundary. Undoing the delete would restore the feature and make the next
+    # shared-session undo walk recreate this fixture.
+    run_state.key("Delete", delay=Delay.READY)
+    run_state.assert_any_command("CompoundCommand")
+    run_state.control.commands["ClearUndoRedoCommand"]()
+    run_state.assert_any_command("ClearUndoRedoCommand")
+
     # LuaUI teardown used to free the native console document while handling
     # its Enter callback. Keep that recovery check with the module-reload
     # boundary instead of paying for another cold engine session.
@@ -163,13 +173,14 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
     clicked = run_state.screenshot("third-row-clicked")
     run_state.assert_region_pixels(hovered, clicked, suggestion_box, min_changed=100)
 
-    # `/set` exposes the engine configuration catalogue, which is long enough
-    # to exercise a real scrollbar in the deterministic test map.
+    # The complete engine catalogue is long enough to exercise a real scrollbar
+    # in the deterministic test map.  `/set` is a short filtered list, so it
+    # cannot prove that keyboard selection or thumb dragging changes scroll.
     # Escape hides Chonsole but keeps its input; clear it before the next query.
     run_state.key("Escape")
     run_state.key("Return", delay=Delay.CONTROL)
     _clear_chonsole_input(run_state)
-    run_state.type_text("/set ")
+    run_state.type_text("/")
     run_state.move(*chonsole_header_point(width, height))
     unhovered = run_state.screenshot("scroll-start")
     # Two page jumps select the twentieth command. That row is outside the
@@ -190,7 +201,7 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
     run_state.key("Escape")
     run_state.key("Return", delay=Delay.CONTROL)
     _clear_chonsole_input(run_state)
-    run_state.type_text("/set ")
+    run_state.type_text("/")
     run_state.move(*chonsole_header_point(width, height))
     unhovered = run_state.screenshot("scroll-start-reset")
     scrollbar_x, scrollbar_y = chonsole_scrollbar_point(width, height)
@@ -233,7 +244,7 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
     run_state.key("Escape")
     run_state.key("Return", delay=Delay.CONTROL)
     _clear_chonsole_input(run_state)
-    run_state.type_text("/set ")
+    run_state.type_text("/")
     track_start = run_state.screenshot("track-scroll-start")
     track_bottom_y = suggestion_box[1] + CHONSOLE["header_height"] + CHONSOLE["scrollbar_height"] - 8
     run_state.click(scrollbar_x, track_bottom_y, delay=Delay.DIALOG)
@@ -246,9 +257,9 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
     run_state.key("Escape")
     run_state.key("Return", delay=Delay.CONTROL)
     _clear_chonsole_input(run_state)
-    run_state.type_text("/set ")
+    run_state.type_text("/")
     drag_start = run_state.screenshot("drag-scroll-start")
-    run_state.drag(
+    run_state.drag_root(
         scrollbar_x,
         suggestion_box[1] + CHONSOLE["header_height"] + CHONSOLE["scrollbar_thumb_start_y"],
         scrollbar_x,
@@ -364,7 +375,7 @@ def developer_console(run_state: "RunState") -> None:
     run_state.golden("status-bar", crop="status-commands")
 
     run_state.click(DEV_CONSOLE["problems_x"], toolbar_y, delay=Delay.DIALOG)
-    run_state.golden("console-problems-on")
+    run_state.golden("console-problems-on", crop="dev-console-without-heading")
 
     run_state.click(DEV_CONSOLE["problems_x"], toolbar_y, delay=Delay.DIALOG)
     run_state.golden("console-problems-off")

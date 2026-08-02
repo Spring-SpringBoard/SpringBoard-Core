@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 from e2e.driver.timing import Delay
 from e2e.scenarios.helpers.camera import zoom_map
 from e2e.scenarios.helpers.geometry import (
-    MAP,
     MAP_ACTIONS,
     MAP_TERRAIN_BRUSHES,
     PARK_PANEL,
@@ -49,11 +48,12 @@ def pattern_preview(run_state: "RunState") -> None:
 
     run_state.click(left + TAB_X["map"], TAB_Y, delay=Delay.FRAME)
     run_state.click(*editor_point(left, "map", "terrain"), delay=Delay.READY)
+    terrain = run_state.control.editor("heightmapEditor")
     zoom_map(run_state, factor=0.25, point=point)
     run_state.click(*panel_point(left, MAP_ACTIONS["terrain_add"]), delay=Delay.DIALOG)
     run_state.move(*point, delay=Delay.SETTLE)
     before = run_state.screenshot("armed-without-pattern")
-    run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=Delay.DIALOG)
+    terrain.set("patternTexture", TERRAIN_PATTERN_PATH)
     run_state.move(*point, delay=Delay.FRAME)
     preview = run_state.screenshot("pattern-preview")
     run_state.assert_region_pixels(before, preview, map_region, min_changed=1_000)
@@ -74,7 +74,8 @@ def terrain_stationary_hold(run_state: "RunState") -> None:
 
     run_state.click(left + TAB_X["map"], TAB_Y, delay=Delay.FRAME)
     run_state.click(*editor_point(left, "map", "terrain"), delay=Delay.READY)
-    run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=Delay.DIALOG)
+    terrain = run_state.control.editor("heightmapEditor")
+    terrain.set("patternTexture", TERRAIN_PATTERN_PATH)
     run_state.click(*panel_point(left, MAP_ACTIONS["terrain_add"]), delay=Delay.SETTLE)
     zoom_map(run_state, factor=0.5, point=point)
 
@@ -127,7 +128,7 @@ def heightmap(run_state: "RunState") -> None:
     run_state.click(*editor_point(left, "map", "terrain"), delay=Delay.READY)
     terrain = run_state.control.editor("heightmapEditor")
     run_state.screenshot("terrain-open")
-    run_state.click(*panel_point(left, MAP["terrain_pattern"]), delay=Delay.DIALOG)
+    terrain.set("patternTexture", TERRAIN_PATTERN_PATH)
 
     # The default camera sits far enough out that a 100-unit brush is a smudge a
     # few pixels across -- the stroke lands, but nothing in the shot says so.

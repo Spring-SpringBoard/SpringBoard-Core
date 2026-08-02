@@ -26,6 +26,7 @@ class GoldenCheck:
     name: str
     path: Path
     tolerance: int
+    channel_tolerance: int
     capture_ms: int
     ignored_bottom: int = 0
 

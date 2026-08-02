@@ -65,6 +65,7 @@ pub fn execute(
 
         Action::Load => {
             let config = FileDialogConfig {
+                control_name: "load_project",
                 title: "Open project".to_string(),
                 root_dir: PROJECTS_DIR.to_string(),
                 dirs_as_items: true,
@@ -86,6 +87,7 @@ pub fn execute(
 
         Action::Import => {
             let config = FileDialogConfig {
+                control_name: "import",
                 title: "Import".to_string(),
                 root_dir: PROJECTS_DIR.to_string(),
                 extensions: [".png", ".jpg", ".bmp", ".tga", ".tif"]
@@ -126,6 +128,7 @@ pub fn execute(
                 return ActionResult::None;
             }
             let config = FileDialogConfig {
+                control_name: "export",
                 title: "Export".to_string(),
                 root_dir: EXPORTS_DIR.to_string(),
                 file_types: [
@@ -221,6 +224,7 @@ pub fn execute_paste(
 
 fn open_save_as() -> ActionResult {
     let config = FileDialogConfig {
+        control_name: "save_project_as",
         title: "Save project as...".to_string(),
         root_dir: PROJECTS_DIR.to_string(),
         show_name_input: true,

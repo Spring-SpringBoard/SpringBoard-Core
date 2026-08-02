@@ -30,6 +30,37 @@ pub(crate) enum ModalEvent {
 /// through `ModalStack::get_mut::<T>()` while everything the stack has to do
 /// blind -- bind, close, poll -- lives here.
 pub(crate) trait Modal: Any {
+    /// Stable name exposed by the typed control API. Most transient field
+    /// pickers are intentionally not exposed; project/file dialogs opt in.
+    fn control_name(&self) -> Option<&'static str> {
+        None
+    }
+
+    /// Map a semantic control-field name to the form's internal field id.
+    fn control_field_name(&self, name: &str) -> Option<String> {
+        Some(name.to_string())
+    }
+
+    /// Select an item by its VFS/domain path without going through hit testing.
+    fn control_select(
+        &mut self,
+        _path: &str,
+        _interface: &NativeInterfaceRef,
+        _document: u64,
+    ) -> Result<bool, Error> {
+        Ok(false)
+    }
+
+    /// Queue the same accepted event as the dialog's visible OK button.
+    fn control_accept(&mut self) -> bool {
+        false
+    }
+
+    /// Queue the same cancellation event as the dialog's visible Cancel button.
+    fn control_cancel(&mut self) -> bool {
+        false
+    }
+
     /// Creates data bindings needed by this modal's static shell. It runs
     /// before the RML is parsed, which is required for structural bindings such
     /// as `data-for`.

@@ -1,12 +1,75 @@
 //! The narrow automation/control channel for opening editors and setting fields.
 
 use super::PanelManager;
+use crate::sbc::actions::Action;
+use crate::sbc::command_system::model::Models;
 use crate::sbc::control::ControlError;
 use crate::sbc::panels::field::{FieldSpec, FieldValue};
 use crate::sbc::panels::registry::EditorSpec;
 use crate::sbc::panels::view::ShellEvent;
 
 impl PanelManager {
+    pub(crate) fn control_open_dialog(
+        &mut self,
+        name: &str,
+        models: &mut Models,
+    ) -> Result<&'static str, ControlError> {
+        let action = Action::from_dialog_name(name).ok_or_else(|| {
+            ControlError::unknown(format!(
+                "no such dialog: {name}. Call describe for the list."
+            ))
+        })?;
+        let canonical = action
+            .dialog_name()
+            .expect("dialog names map only to dialog actions");
+        self.run_action(action, models)
+            .map_err(|err| ControlError::failed(format!("opening dialog {name}: {err:?}")))?;
+        Ok(canonical)
+    }
+
+    pub(crate) fn control_dialog_is_open(&self, name: &str) -> bool {
+        self.modals.control_is_open(name)
+    }
+
+    pub(crate) fn control_dialog_field_value(
+        &self,
+        dialog: &str,
+        field: &str,
+    ) -> Result<(FieldSpec, String), ControlError> {
+        self.modals.control_field_value(dialog, field)
+    }
+
+    pub(crate) fn control_set_dialog_field(
+        &mut self,
+        dialog: &str,
+        field: &str,
+        value: FieldValue,
+    ) -> Result<FieldValue, ControlError> {
+        self.modals
+            .control_set_field(dialog, field, value, &self.interface)
+    }
+
+    pub(crate) fn control_select_dialog(
+        &mut self,
+        dialog: &str,
+        path: &str,
+    ) -> Result<(), ControlError> {
+        let document = self
+            .view
+            .document_handle()
+            .ok_or_else(|| ControlError::failed("panel document is not ready"))?;
+        self.modals
+            .control_select(dialog, path, &self.interface, document)
+    }
+
+    pub(crate) fn control_accept_dialog(&mut self, dialog: &str) -> Result<(), ControlError> {
+        self.modals.control_accept(dialog)
+    }
+
+    pub(crate) fn control_cancel_dialog(&mut self, dialog: &str) -> Result<(), ControlError> {
+        self.modals.control_cancel(dialog)
+    }
+
     pub(crate) fn control_open(&mut self, spec: &'static EditorSpec) {
         self.view.queue_event(ShellEvent::Tab(spec.tab));
         self.view.queue_event(ShellEvent::Editor(spec.name));

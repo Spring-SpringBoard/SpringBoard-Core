@@ -127,6 +127,7 @@ def compare(
     *,
     update: bool,
     tolerance: int = 0,
+    channel_tolerance: int = 1,
     ignored_bottom: int = 0,
 ) -> str:
     """Compare `actual` against its golden.
@@ -155,7 +156,12 @@ def compare(
             f"Inspect it, record what you checked, then have it approved."
         )
 
-    diff = differing_pixels(golden, actual, ignored_bottom=ignored_bottom)
+    diff = differing_pixels(
+        golden,
+        actual,
+        channel_tolerance=channel_tolerance,
+        ignored_bottom=ignored_bottom,
+    )
     if diff == 0:
         return "match"
     if diff is not None and diff <= tolerance:

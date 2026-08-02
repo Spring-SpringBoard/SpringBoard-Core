@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 from e2e.driver.timing import Delay
 from e2e.scenarios.helpers.camera import zoom_map
 from e2e.scenarios.helpers.geometry import (
-    MAP,
     MAP_ACTIONS,
     TAB_X,
     TAB_Y,
@@ -15,7 +14,7 @@ from e2e.scenarios.helpers.geometry import (
 )
 from e2e.scenarios.helpers.registry import scenario
 
-from .common import MAP_STROKE_PIXELS, _paint_stroke
+from .common import MAP_STROKE_PIXELS, TERRAIN_PATTERN_PATH, _paint_stroke
 
 if TYPE_CHECKING:
     from e2e.driver.state import RunState
@@ -35,7 +34,7 @@ def metal_paint(run_state: "RunState") -> None:
     zoom_map(run_state, factor=0.5, point=(paint_x, paint_y))
 
     metal = run_state.control.editor("metalEditor")
-    run_state.click(*panel_point(left, MAP["texture_pattern"]), delay=Delay.SETTLE)
+    metal.set("patternTexture", TERRAIN_PATTERN_PATH)
     metal.size = 180.0
     metal.amount = 3.25
     run_state.click(*panel_point(left, MAP_ACTIONS["texture_paint"]), delay=Delay.READY)

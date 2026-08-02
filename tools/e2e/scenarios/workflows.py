@@ -26,7 +26,6 @@ def project_workflows(run_state: "RunState") -> None:
 def map_workflows(run_state: "RunState") -> None:
     """Export and reopen maps in one process, keeping each pipeline explicit."""
     _step(run_state, "map-export", _map_export)
-    _clear_test_maps(run_state)
     _step(run_state, "map-roundtrip", _map_roundtrip)
 
 
@@ -39,13 +38,3 @@ def _step(run_state: "RunState", name: str, function: Callable[["RunState"], Non
         run_state.event("workflow_step_end", name=name, status="failed", error=str(error))
         raise
     run_state.event("workflow_step_end", name=name, status="complete")
-
-
-def _clear_test_maps(run_state: "RunState") -> None:
-    assert run_state.write_dir is not None
-    maps_dir = run_state.write_dir / "maps"
-    if not maps_dir.is_dir():
-        return
-    for path in maps_dir.iterdir():
-        if path.is_file() or path.is_symlink():
-            path.unlink()

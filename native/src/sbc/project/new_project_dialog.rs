@@ -227,6 +227,30 @@ impl NewProjectDialog {
 }
 
 impl Modal for NewProjectDialog {
+    fn control_name(&self) -> Option<&'static str> {
+        self.open.then_some("new_project")
+    }
+
+    fn control_field_name(&self, name: &str) -> Option<String> {
+        match name {
+            "name" => Some("np-name".to_string()),
+            "map" => Some("np-map".to_string()),
+            "size_x" => Some("np-size-x".to_string()),
+            "size_y" => Some("np-size-y".to_string()),
+            _ => None,
+        }
+    }
+
+    fn control_accept(&mut self) -> bool {
+        self.events.borrow_mut().push(PickerEvent::Accept);
+        true
+    }
+
+    fn control_cancel(&mut self) -> bool {
+        self.events.borrow_mut().push(PickerEvent::Cancel);
+        true
+    }
+
     fn prepare_data_model(
         &mut self,
         interface: &NativeInterfaceRef,

@@ -20,6 +20,10 @@ pub(crate) enum Effect {
     },
     /// An editor was asked to open; the panel opens it on its next update.
     EditorOpen(&'static str),
+    /// A typed dialog was asked to open.
+    DialogOpen(&'static str),
+    /// A typed dialog was asked to accept/cancel and close.
+    DialogClosed(&'static str),
     /// A capture was queued; the file appears once the draw pass has written it.
     Capture(PathBuf),
 }

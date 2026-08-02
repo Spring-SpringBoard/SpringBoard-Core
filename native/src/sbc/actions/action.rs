@@ -23,6 +23,30 @@ pub enum Action {
 }
 
 impl Action {
+    /// The stable name used by the programmatic dialog API for actions that
+    /// collect file/project input.
+    pub fn dialog_name(self) -> Option<&'static str> {
+        match self {
+            Action::NewProject => Some("new_project"),
+            Action::Load => Some("load_project"),
+            Action::Import => Some("import"),
+            Action::SaveAs => Some("save_project_as"),
+            Action::Export => Some("export"),
+            _ => None,
+        }
+    }
+
+    pub fn from_dialog_name(name: &str) -> Option<Self> {
+        match name {
+            "new_project" => Some(Action::NewProject),
+            "load_project" => Some(Action::Load),
+            "import" => Some(Action::Import),
+            "save_project_as" => Some(Action::SaveAs),
+            "export" => Some(Action::Export),
+            _ => None,
+        }
+    }
+
     /// All actions, in a stable order.
     pub const ALL: [Action; 15] = [
         Action::NewProject,
