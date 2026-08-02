@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from .errors import UNKNOWN_NAME_CODE, ControlError, UnknownNameError
+from .errors import UNKNOWN_NAME_CODE, ConnectionClosedError, ControlError, UnknownNameError
 
 DISCOVERY_NAME = "control.json"
 PROTOCOL_VERSION = 1
@@ -48,7 +48,7 @@ class Connection:
     def _receive(self) -> dict[str, Any]:
         line = self._stream.readline()
         if not line:
-            raise ControlError(0, "the editor closed the control connection")
+            raise ConnectionClosedError(0, "the editor closed the control connection")
         return dict(json.loads(line))
 
 
@@ -69,6 +69,26 @@ def open_connection(write_dir: Path, timeout_s: float = CONNECT_TIMEOUT_S) -> Co
     if instance_id != discovery["instance_id"]:
         raise ControlError(0, f"connected to a different session: {instance_id} != {discovery['instance_id']}")
     return Connection(sock, instance_id)
+
+
+def open_replacement_connection(
+    write_dir: Path, previous_instance_id: str, timeout_s: float = CONNECT_TIMEOUT_S
+) -> Connection:
+    """Connect only after a native-module reload has published a new server."""
+    deadline = time.monotonic() + timeout_s
+    path = write_dir / DISCOVERY_NAME
+    while time.monotonic() < deadline:
+        if path.is_file():
+            try:
+                discovery = dict(json.loads(path.read_text()))
+                if str(discovery.get("instance_id")) == previous_instance_id:
+                    time.sleep(0.05)
+                    continue
+                return open_connection(write_dir, max(0.1, deadline - time.monotonic()))
+            except (json.JSONDecodeError, OSError, ControlError):
+                pass
+        time.sleep(0.05)
+    raise ControlError(0, f"native module did not publish a replacement control channel within {timeout_s:.0f}s")
 
 
 def _authenticate(sock: socket.socket, token: str) -> str:

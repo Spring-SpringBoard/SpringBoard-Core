@@ -20,7 +20,7 @@ None.
 | `selection` | Reviewed and recaptured for the versioned 1371px window geometry. A subsequent regression holds left during a box drag, right-clicks to cancel it, checks that the transient outline is gone, then completes a fresh box selection. |
 | `feature-placement-actions` | Its panel-local visual comparison was using full-window coordinates; corrected crop coordinates now assert the Add → Brush change. |
 | `gallery`, `gallery-dialogs`, `gallery-pickers`, `gallery-tooltips` | Reviewed the current fields, drag, dialogs, pickers, and tooltips; stale references were recaptured. |
-| `native-dev-console` | Reviewed the current console/status presentation, including the live line count; stale references were recaptured. |
+| `developer-console` | Reviewed the current console/status presentation, including the live line count; stale references were recaptured. |
 | `props-panel` | Form references were updated for full-width controls. The outside-drag assertion now unambiguously marks the releasing drag and tolerates only the documented live numeric glyph variation. |
 | `units-panel` | Reviewed panel and world output; stale references were recaptured. |
 

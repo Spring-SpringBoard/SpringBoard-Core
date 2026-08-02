@@ -17,6 +17,7 @@ class Registered:
     func: Scenario
     crop: str | None = None
     env: Environment = field(default_factory=dict[str, str])
+    isolated: bool = False
 
 
 REGISTERED: dict[str, Registered] = {}
@@ -27,8 +28,8 @@ def scenario(
     crop: str | None = None,
     target: str | None = None,
     env: Environment | None = None,
+    isolated: bool = False,
 ) -> Callable[[Scenario], Scenario]:
-
     def register(func: Scenario) -> Scenario:
         name = target or func.__name__.replace("_", "-")
         if name in REGISTERED:
@@ -39,6 +40,7 @@ def scenario(
             func=func,
             crop=crop,
             env=dict[str, str]() if env is None else env,
+            isolated=isolated,
         )
         return func
 

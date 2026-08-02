@@ -143,15 +143,41 @@ class Camera:
         self,
         *,
         position: Sequence[float] | None = None,
+        controller_position: Sequence[float] | None = None,
+        direction: Sequence[float] | None = None,
+        fov: float | None = None,
+        height: float | None = None,
+        angle: float | None = None,
+        distance: float | None = None,
         target: Sequence[float] | None = None,
         transition: float = 0.0,
     ) -> dict[str, Any]:
         params: dict[str, object] = {"transition": transition}
         if position is not None:
             params["position"] = [float(v) for v in position]
+        if controller_position is not None:
+            params["controller_position"] = [float(v) for v in controller_position]
+        if direction is not None:
+            params["direction"] = [float(v) for v in direction]
+        if fov is not None:
+            params["fov"] = float(fov)
+        if height is not None:
+            params["height"] = float(height)
+        if angle is not None:
+            params["angle"] = float(angle)
+        if distance is not None:
+            params["distance"] = float(distance)
         if target is not None:
             params["target"] = [float(v) for v in target]
         return self._control.call("camera.set", **params)
+
+    def zoom(self, factor: float) -> dict[str, Any]:
+        """Zoom deterministically through the engine camera API."""
+        return self._control.call("camera.zoom", factor=float(factor))
+
+    def trace_screen_ray(self, x: float, y: float) -> dict[str, Any]:
+        """Trace a top-origin screen point onto the ground."""
+        return self._control.call("camera.trace", screen=[float(x), float(y)])
 
 
 def index_editors(control: Caller, schema: Mapping[str, Any]) -> dict[str, Editor]:

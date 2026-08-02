@@ -65,6 +65,14 @@ impl TextureUndoStack {
         }
     }
 
+    /// Restore a stroke that never became a command, releasing both sides of
+    /// the temporary swap. Used when a multi-tile operation fails partway.
+    pub(super) fn abort(&self, entries: Vec<Backup>) {
+        for entry in self.restore(entries) {
+            self.delete(&entry.texture);
+        }
+    }
+
     /// React to command-history changes (drop / merge / clear).
     pub(super) fn on_history_events(&mut self, events: &[HistoryEvent]) {
         for event in events {
@@ -93,6 +101,10 @@ impl TextureUndoStack {
 
     pub(super) fn redo_depth(&self) -> usize {
         self.redo.len()
+    }
+
+    pub(super) fn has_redo(&self, cmd_id: CommandId) -> bool {
+        self.redo.iter().any(|stroke| stroke.cmd_id == Some(cmd_id))
     }
 
     pub(super) fn mark_backups_dirty_for(&mut self, surface: &super::surface::Surface) {

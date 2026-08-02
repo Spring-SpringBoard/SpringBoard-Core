@@ -12,6 +12,10 @@ class ControlError(RuntimeError):
         self.code = code
 
 
+class ConnectionClosedError(ControlError):
+    """The native module ended this socket while its server was replaced."""
+
+
 class UnknownNameError(ControlError):
     """An editor, field, command or option that does not exist.
 

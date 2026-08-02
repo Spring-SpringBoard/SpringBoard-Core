@@ -6,9 +6,13 @@ from typing import TYPE_CHECKING
 from e2e.driver.timing import Delay
 from e2e.driver.utils.paths import GAME_DIRNAME
 
+from .helpers.camera import zoom_map
 from .helpers.geometry import (
+    COLOR_PICKER,
     DIALOG,
     EDITORS,
+    ENV_LIGHTING_COLORS,
+    MISC_INFO_FIELDS,
     TAB_X,
     TAB_Y,
     TOOLBAR,
@@ -118,6 +122,29 @@ def panel_tabs_are_choices(run_state: "RunState") -> None:
 
 
 @scenario()
+def field_modal_handoff(run_state: "RunState") -> None:
+    """A generic colour modal must release its bindings before another editor
+    accepts text input.
+
+    This used to live in Scenario Info because that was where the regression
+    surfaced. Its subject is the cross-panel widget lifecycle, not metadata.
+    """
+    run_state.focus()
+    left = panel_left(run_state)
+    run_state.click(left + TAB_X["env"], TAB_Y, delay=Delay.CONTROL)
+    run_state.click(*editor_point(left, "env", "lighting"), delay=Delay.SETTLE)
+    run_state.click(*panel_point(left, ENV_LIGHTING_COLORS[0][1]), delay=Delay.SETTLE)
+    run_state.click(ENV_LIGHTING_COLORS[0][2], COLOR_PICKER["sample_y"], delay=Delay.CONTROL)
+    run_state.click(*dialog_point(run_state, DIALOG["color_ok_compact"]), delay=Delay.SETTLE)
+
+    run_state.click(left + TAB_X["misc"], TAB_Y, delay=Delay.FRAME)
+    run_state.click(*editor_point(left, "misc", "info"), delay=Delay.DIALOG)
+    point, value = MISC_INFO_FIELDS[0]
+    run_state.fill_text(*panel_point(left, point), value, click_delay=Delay.CONTROL, commit_delay=Delay.FRAME)
+    run_state.assert_any_command("SetScenarioInfoCommand")
+
+
+@scenario()
 def import_action(run_state: "RunState") -> None:
     """The Import toolbar icon picks an image and dispatches its command.
 
@@ -140,6 +167,14 @@ def import_action(run_state: "RunState") -> None:
     run_state.click(*dialog_point(run_state, DIALOG["asset_first_cell"]), delay=Delay.SETTLE)
     run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=Delay.DIALOG)
     run_state.assert_any_command("ImportDiffuseCommand")
+    # Importing replaces every diffuse tile. It must be a real undoable edit so
+    # the shared-session reset can restore the map for the next scenario.
+    # This is a state reset, not a keyboard-shortcut test. Drive the native
+    # command directly so the shared-session cleanup does not depend on X11
+    # input timing.
+    run_state.control.commands["UndoCommand"]()
+    run_state.control.wait_for_update()
+    run_state.assert_any_command("UndoCommand")
 
     # Import has two typed options, while Load has none. Opening Load straight
     # afterwards exercises the shrinking collection path without relying on a
@@ -156,7 +191,7 @@ def clipboard_actions(run_state: "RunState") -> None:
     Exact toolbar clicks, not their keyboard shortcuts. Clicking the Paste icon
     leaves the cursor over the panel, so the paste must land at the map centre —
     in view — rather than off-screen behind the panel; the golden checks that
-    centre region changed. Cut is then undone with Ctrl+Z. Each step asserts its
+    centre region changed. Cut is then undone through the typed UndoCommand. Each step asserts its
     grouped native command and a real change to the map.
     """
     run_state.focus()
@@ -164,7 +199,7 @@ def clipboard_actions(run_state: "RunState") -> None:
     _arm_tree(run_state, left)
     width, height = window_size(run_state)
     source = (width // 3 - 130, height // 2)
-    run_state.wheel(*source, clicks=8, up=True)
+    zoom_map(run_state, point=source)
     run_state.click(*source, delay=Delay.READY)
     run_state.key("Escape", delay=Delay.SETTLE)
     run_state.click(*source, delay=Delay.DIALOG)
@@ -186,7 +221,9 @@ def clipboard_actions(run_state: "RunState") -> None:
     cut = run_state.screenshot("cut")
     if not any(entry["data"].get("className") == "CompoundCommand" for entry in run_state.commands()[mark:]):
         raise AssertionError("toolbar Cut did not dispatch its grouped native command")
-    run_state.key("ctrl+z", delay=Delay.READY)
+    run_state.control.commands["UndoCommand"]()
+    run_state.control.wait_for_update()
+    run_state.assert_any_command("UndoCommand")
     restored = run_state.screenshot("cut-undone")
     run_state.assert_screenshot_pixels(cut, restored, min_changed=400)
 
@@ -255,6 +292,6 @@ def export_warning(run_state: "RunState") -> None:
     run_state.assert_region_pixels(before, warning, strip, min_changed=300)
 
     # It carries its own timer (~4s) and clears without any interaction.
-    run_state.move(left - 200, height // 2, delay=Delay.SAVE)
+    run_state.move(left - 200, height // 2, delay=Delay.NOTIFICATION)
     expired = run_state.screenshot("expired")
     run_state.assert_region_pixels(warning, expired, strip, min_changed=300)

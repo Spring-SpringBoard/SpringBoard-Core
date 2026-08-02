@@ -14,6 +14,6 @@ mod error;
 mod reply;
 
 pub(crate) use channel::ControlServer;
-pub(crate) use dispatch::drain;
+pub(crate) use dispatch::{begin_update, finish_update};
 pub(crate) use error::ControlError;
 pub(crate) use reply::{Handled, Reply};

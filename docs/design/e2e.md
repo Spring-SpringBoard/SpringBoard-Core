@@ -5,28 +5,33 @@ description: How the SBC E2E harness drives a real editor session and records re
 
 # Graphical end-to-end testing
 
-The E2E harness tests the editor as a user sees it. It launches an isolated
-Spring process, finds its window, drives mouse and keyboard input through X11,
-and records the observable result. It complements the headless Smoke suite:
+The E2E harness tests the editor as a user sees it. It launches Spring, finds
+its window, drives mouse and keyboard input through X11, and records the
+observable result. Grouped runs reuse one resettable process per compatible
+launch environment by default; scenarios marked `@scenario(isolated=True)` get
+their own process. It
+complements the headless Smoke suite:
 Smoke proves native integration and in-engine tests; E2E proves UI ownership,
 input routing, and rendered behaviour.
 
-Scenarios that are about a feature rather than about a widget belong in
-`scenarios/control.py`, driven through the control channel instead of X11 — no
-coordinates, no sleeps, and several times faster. See
+Scenarios that are about a feature rather than about a widget belong in the
+domain modules under `tools/e2e/scenarios/`, driven through the control channel
+instead of X11 — no coordinates, no sleeps, and several times faster. See
 [programmatic-control.md](programmatic-control.md).
 
 ## Run a scenario
 
 ```bash
-just test-e2e map-export
-just test-e2e map-export --tag ui:rust
+just test-e2e map-workflows
+just test-e2e map-workflows --tag ui
 ```
 
-The runner writes one directory under `artifacts/ui-e2e/` per case. It contains
-the scenario report, input/event trace, command trace, engine log, and the
-individual screenshots taken at meaningful checkpoints. Review images at their
-native resolution.
+The runner writes the scenario report, input/event trace, command trace, engine
+log, and individual screenshots under `artifacts/ui-e2e/`. A focused invocation
+uses one run directory and writes `suite-report.md` beside it. A grouped
+invocation puts its scenario directories and one aggregate `suite-report.md`
+under a timestamped suite directory; every run report links back to that
+summary. Review images at their native resolution.
 
 ## What a scenario may assert
 
@@ -74,7 +79,9 @@ tool is required.
 
 ## Lifecycle
 
-Every run owns a temporary Spring write directory. It is removed after logs
-and screenshots have been copied to the artifact directory. `--keep-open`
-preserves the process and write directory for diagnosis; it is not normal test
-behaviour.
+Each process owns a temporary Spring write directory. Shared cases with the
+same launch environment reuse it after an undo/reload reset; isolated cases
+get a fresh one. The directory is removed after logs and screenshots have been
+copied to the artifact directory.
+`--keep-open` preserves the process and write directory for diagnosis; it is
+not normal test behaviour.

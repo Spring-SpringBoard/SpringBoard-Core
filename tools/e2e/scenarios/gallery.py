@@ -258,7 +258,10 @@ def gallery_pickers(run_state: "RunState") -> None:
         raise AssertionError(f"the asset field committed {asset!r}, not a file")
 
 
-@scenario(crop="right-panel", env={**DEV_PANEL, "SBC_HIDE_TOOLTIPS": "0"})
+@scenario(
+    crop="right-panel",
+    env=DEV_PANEL,
+)
 def gallery_tooltips(run_state: "RunState") -> None:
     """Hovering a control shows its tooltip.
 
@@ -336,141 +339,9 @@ def gallery_dialogs(run_state: "RunState") -> None:
     # A blank project cannot export.
     run_state.click(*panel_point(left, TOOLBAR["export"]), delay=Delay.POLL)
     run_state.screenshot("export-requires-save")
-
-
-@scenario(env=DEV_PANEL)
-def new_project_create(run_state: "RunState") -> None:
-    """Actually create a project: fill the New Project dialog and click Create.
-
-    Create emits SaveProjectInfoCommand + ReloadIntoProjectCommand; the latter
-    reloads the engine into the new map, so this asserts on the command log
-    rather than a golden (the frame after a reload is not stable). Both are
-    logged before they execute, so the entries survive the reload. It also
-    proves the reload path does not crash: a stale-RmlUi use-after-free on
-    teardown would exit the engine and the run would fail.
-    """
-    left = _open_gallery(run_state)
-    run_state.click(*panel_point(left, TOOLBAR["new_project"]), delay=Delay.LOAD)
-    run_state.click(*dialog_point(run_state, DIALOG["new_project_name"]), delay=Delay.CONTROL)
-    run_state.type_text("E2E created")
-    run_state.key("Return", delay=Delay.FRAME)
-    for field, value in (("new_project_size_x", "12"), ("new_project_size_y", "14")):
-        run_state.fill_text(
-            *dialog_point(run_state, DIALOG[field]),
-            value,
-            click_delay=Delay.CONTROL,
-            commit_delay=Delay.FRAME,
-        )
-    run_state.click(*dialog_point(run_state, DIALOG["new_project_create"]), delay=Delay.PROJECT_CREATE)
-
-    # Save persists the project; the reload reads it back and boots into the new
-    # map, where the engine loads it (LoadProjectCommand). The dialog fields do
-    # not reach the log (neither command serializes), so assert the trio fired,
-    # which is what "Create made a real, loadable project" means.
-    run_state.assert_command("SaveProjectInfoCommand")
-    run_state.assert_command("ReloadIntoProjectCommand")
-    run_state.assert_command("LoadProjectCommand")
-
-
-@scenario()
-def project_round_trip(run_state: "RunState") -> None:
-    """Create a project, then reopen it through Load -- proving it is on disk
-    and openable.
-
-    Create writes the project and reloads into it; the Load dialog must then
-    list the `.sdd` folder, and selecting it reloads back into it. Two reloads,
-    so this asserts on the command log rather than goldens. Guards the engine
-    ListDir directory-listing gap: a regression there empties Load.
-    """
-    left = panel_left(run_state)
-    run_state.focus()
-
-    run_state.click(*panel_point(left, TOOLBAR["new_project"]), delay=Delay.LOAD)
-    run_state.click(*dialog_point(run_state, DIALOG["new_project_name"]), delay=Delay.CONTROL)
-    run_state.type_text("RoundTrip")
-    run_state.key("Return", delay=Delay.FRAME)
-    run_state.click(*dialog_point(run_state, DIALOG["new_project_create"]), delay=Delay.DEEP_RELOAD)
-
-    # Reloaded into the new project; Load must now list it.
-    run_state.click(*panel_point(left, TOOLBAR["load"]), delay=Delay.PROJECT_LOAD)
-    run_state.screenshot("load-lists-project")
-    run_state.click(*dialog_point(run_state, DIALOG["file_first_cell"]), delay=Delay.DIALOG)
-    run_state.click(*dialog_point(run_state, DIALOG["file_ok"]), delay=Delay.DEEP_RELOAD)
-    # Create + Load each reload; both entries survive in the append-only log.
-    run_state.assert_command_at_least("ReloadIntoProjectCommand", 2)
-    run_state.screenshot("after-load")
-
-
-@scenario()
-def project_save_as(run_state: "RunState") -> None:
-    """Save As writes the current project under a new name and reloads into it.
-
-    Emits SetProjectNamePath + SaveProjectInfo + Save + Reload, as Lua's
-    Project:Save does for a new project. The name-input row pushes the dialog
-    footer down, so this uses the taller dialog's OK position.
-    """
-    left = panel_left(run_state)
-    run_state.focus()
-    run_state.click(*panel_point(left, TOOLBAR["save_as"]), delay=Delay.LOAD)
-    run_state.screenshot("save-as-open")
-    run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=Delay.FRAME)
-    run_state.type_text("SavedProj")
-    run_state.key("Return", delay=Delay.FRAME)
-    run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=Delay.DEEP_RELOAD)
-    run_state.assert_command("SetProjectNamePathCommand")
-    run_state.assert_command("SaveProjectInfoCommand")
-    run_state.assert_command("SaveCommand")
-    run_state.assert_command("ReloadIntoProjectCommand")
-    # The reload must actually complete: a screenshot here fails the run if the
-    # engine died reloading (a crash would exit it before this capture).
-    run_state.move(1280, 700, delay=Delay.MAP_LOAD)
-    run_state.screenshot("after-reload")
-
-
-@scenario()
-def project_thumbnail(run_state: "RunState") -> None:
-    """Saving captures a map thumbnail that the Open dialog shows.
-
-    Save As saves the project (grabbing a screenshot of the map on the draw
-    after the save) and reloads into it; the Open dialog then renders that
-    screenshot as the project's grid image instead of a bare folder.
-    """
-    left = panel_left(run_state)
-    run_state.focus()
-    run_state.click(*panel_point(left, TOOLBAR["save_as"]), delay=Delay.LOAD)
-    run_state.click(*dialog_point(run_state, DIALOG["file_name"]), delay=Delay.FRAME)
-    run_state.type_text("ShotProj")
-    run_state.key("Return", delay=Delay.FRAME)
-    run_state.click(*dialog_point(run_state, DIALOG["file_ok_name"]), delay=Delay.MAP_LOAD)
-    # Open the project list; the saved project shows its map thumbnail.
-    run_state.click(*panel_point(left, TOOLBAR["load"]), delay=Delay.PROJECT_CREATE)
-    run_state.screenshot("open-with-thumbnail")
-
-
-@scenario()
-def large_map_create(run_state: "RunState") -> None:
-    """Create the largest map the dialog allows (32x32) and boot into it.
-
-    The size fields clamp at 32, so this is the biggest a user can make. A
-    32x32 blank map is generated and reloaded into; the engine surviving to the
-    screenshot (a bigger map is more memory and a slower generate) is the check.
-    """
-    left = panel_left(run_state)
-    run_state.focus()
-    run_state.click(*panel_point(left, TOOLBAR["new_project"]), delay=Delay.LOAD)
-    run_state.click(*dialog_point(run_state, DIALOG["new_project_name"]), delay=Delay.CONTROL)
-    run_state.type_text("BigMap")
-    run_state.key("Return", delay=Delay.FRAME)
-    for field, value in (("new_project_size_x", "32"), ("new_project_size_y", "32")):
-        run_state.fill_text(
-            *dialog_point(run_state, DIALOG[field]),
-            value,
-            click_delay=Delay.CONTROL,
-            commit_delay=Delay.FRAME,
-        )
-    run_state.click(*dialog_point(run_state, DIALOG["new_project_create"]), delay=Delay.MAP_LOAD)
-    run_state.assert_command("ReloadIntoProjectCommand")
-    run_state.screenshot("big-map-loaded")
+    # This case owns the prompt's appearance, not its later dismissal. Close
+    # it so the next independent gallery case has the same modal-free baseline.
+    run_state.key("Escape", delay=Delay.POLL)
 
 
 def _values(run_state: "RunState") -> dict[str, str]:

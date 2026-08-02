@@ -4,23 +4,29 @@ from enum import Enum
 
 
 class Delay(float, Enum):
+    """Small input pacing values; completion uses explicit waits."""
+
     POLL = 0.02
-    EVENT = 0.05
+    EVENT = 0.01
     INPUT = 0.0
-    CONTROL = 0.2
-    FRAME = 0.3
-    SETTLE = 0.4
-    DIALOG = 0.6
-    READY = 0.8
-    LOAD = 1.0
-    PROJECT_LOAD = 1.5
-    PROJECT_CREATE = 2.5
-    RELOAD = 3.0
-    DEEP_RELOAD = 4.0
-    SAVE = 5.0
-    MAP_LOAD = 6.0
-    MAP_EXPORT = 8.0
-    ARCHIVE = 9.0
+    CONTROL = 0.03
+    FRAME = 0.04
+    SETTLE = 0.06
+    DIALOG = 0.08
+    READY = 0.12
+    LOAD = 0.20
+    PROJECT_LOAD = 0.30
+    PROJECT_CREATE = 0.50
+    RELOAD = 0.70
+    DEEP_RELOAD = 0.90
+    SAVE = 1.00
+    MAP_LOAD = 1.50
+    MAP_EXPORT = 2.00
+    ARCHIVE = 2.50
+    NOTIFICATION = 4.20
+    # A held painting stroke is explicitly testing an engine repeat timer.
+    # This is intentional elapsed interaction time, not a UI-settle guess.
+    STROKE_REPEAT = 0.10
 
 
 class Timeout(float, Enum):

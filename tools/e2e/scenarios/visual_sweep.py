@@ -1,6 +1,6 @@
-"""Fast native visual smoke sweep.
+"""Fast visual smoke sweep.
 
-This deliberately does no editing: it opens every shipped Rust tab and editor
+This deliberately does no editing: it opens every shipped tab and editor
 with short settles, then captures the resulting panel. It is the first visual
 gate after a shell/style change, before slower behavioural E2Es and goldens.
 """
@@ -16,9 +16,9 @@ if TYPE_CHECKING:
     from e2e.driver.state import RunState
 
 
-@scenario(target="rust-ui-sweep")
-def rust_ui_sweep(run_state: "RunState") -> None:
-    """Fast visual pass over status strip plus every native tab/editor."""
+@scenario(target="ui-sweep")
+def ui_sweep(run_state: "RunState") -> None:
+    """Fast visual pass over status strip plus every tab/editor."""
     run_state.focus()
     left = panel_left(run_state)
 

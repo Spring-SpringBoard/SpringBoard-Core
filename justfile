@@ -144,18 +144,28 @@ dev-panel config="config/ui-rust.json": build-native
 run config="config/ui-rust.json": build-native
     PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-smoke manual --config "{{config}}"
 
-# Run black-box UI E2E tests. Does not rebuild native code; run `just build`
-# first when testing Rust UI changes.
+# Run black-box UI E2E tests. The native plugin is rebuilt first. Multi-case
+# invocations store all scenario artifacts and the aggregate suite report under
+# one timestamped suite folder.
 [group('test')]
-test-e2e target *args:
+test-e2e target *args: build-native
     PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e run "{{target}}" {{args}}
+
+# `just test-e2e all` shares compatible launch environments by default and
+# isolates only scenarios explicitly marked `@scenario(isolated=True)`.
+
+# Summarise existing E2E artifacts without launching Spring. For a bounded run:
+# `just e2e-report --after 20260730-115416 --before 20260730-121013`.
+[group('test')]
+e2e-report *args:
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e report {{args}}
 
 # List every reference image and whether it is approved or still ai-reviewed.
 [group('test')]
 goldens-status:
     @PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e goldens-status
 
-# Approve a case's reference images (the human OK): `just goldens-approve rotation-rust`.
+# Approve a case's reference images (the human OK): `just goldens-approve rotation`.
 # Optionally name individual shots. Only a human runs this.
 [group('test')]
 goldens-approve case *shots:

@@ -1,4 +1,5 @@
 from pathlib import Path
+from time import monotonic
 from typing import TYPE_CHECKING, cast, override
 
 from PIL import Image, ImageChops, ImageColor
@@ -59,6 +60,7 @@ class PixelMixin(RunState):
     def _finish_pixel_assertions(self) -> list[str]:
         failures: list[str] = []
         for check in self.pending_pixel_checks:
+            started = monotonic()
             try:
                 before = self._image(check.before)
                 after = self._image(check.after)
@@ -76,6 +78,13 @@ class PixelMixin(RunState):
             except Exception as error:
                 failures.append(f"pixels {check.before.name} -> {check.after.name}: {error}")
                 self.event("assert_pixels_failed", before=check.before.name, after=check.after.name, error=str(error))
+            finally:
+                self.event(
+                    "assert_pixels_timed",
+                    before=check.before.name,
+                    after=check.after.name,
+                    elapsed_ms=int((monotonic() - started) * 1000),
+                )
         self.pending_pixel_checks.clear()
         return failures
 
@@ -108,10 +117,12 @@ class PixelMixin(RunState):
     ) -> int:
         if before_image.size != after_image.size:
             raise AssertionError(f"image sizes differ: {before.name} -> {after.name}")
-        changed = sum(
-            pixel != (0, 0, 0, 0)
-            for pixel in ImageChops.difference(before_image.convert("RGBA"), after_image.convert("RGBA")).getdata()
-        )
+        difference = ImageChops.difference(before_image.convert("RGBA"), after_image.convert("RGBA"))
+        channels = difference.split()
+        pixel_maximum = channels[0]
+        for channel in channels[1:]:
+            pixel_maximum = ImageChops.lighter(pixel_maximum, channel)
+        changed = sum(pixel_maximum.histogram()[1:])
         if changed < minimum or (maximum is not None and changed > maximum):
             expected = f">= {minimum}" if maximum is None else f">= {minimum} and <= {maximum}"
             raise AssertionError(f"expected changed pixels {expected}, got {changed}: {before.name} -> {after.name}")
@@ -131,4 +142,4 @@ class PixelMixin(RunState):
             return source.copy()
 
     def _source_image(self, shot: Path) -> Path:
-        return self._wait_for_screenshot(shot).shot.png_path
+        return self.screenshot_worker.source(shot)

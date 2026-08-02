@@ -30,7 +30,7 @@ Rules:
 Run a native target with:
 
 ```bash
-just test-e2e <target> --tag ui:rust
+just test-e2e <target> --tag ui
 ```
 
 ## Editors
@@ -46,9 +46,9 @@ just test-e2e <target> --tag ui:rust
 | 7 | Map → Metal | VERIFIED | Pattern, size, rotation, amount, and painting. E2E `map-editors`, `metal-paint`. |
 | 8 | Map → Grass | VERIFIED | Pattern, detail, size, rotation, and painting. E2E `map-editors`, `grass-paint`. |
 | 9 | Map → Settings | VERIFIED | Rendering flags, splat fields, detail texture, and New/Existing texture paths. E2E `map-editors`, `settings-panel`. |
-| 10 | Env → Lighting | VERIFIED | Shadow mode, direction, six colours, and densities. E2E `lighting-panel`. |
-| 11 | Env → Sky | VERIFIED | Atmosphere colours, fog bounds, and skybox picker. E2E `sky-panel`. |
-| 12 | Env → Water | VERIFIED | Scalars, booleans, colours, Normal/Foam/base textures, and visible water. E2E `water-panel`. |
+| 10 | Env → Lighting | VERIFIED | Shadow mode, direction, six colours, and densities through typed control. E2E `lighting`. |
+| 11 | Env → Sky | VERIFIED | Atmosphere colours and fog bounds through typed control. E2E `sky`; skybox picker remains UI coverage. |
+| 12 | Env → Water | VERIFIED | Scalars, booleans, colours, and texture fields through typed control. E2E `water`; visible water and pickers remain UI coverage. |
 | 13 | Misc → Info | VERIFIED | Name, description, version, and author commit a complete scenario record. E2E `info-panel`. |
 | 14 | Misc → Teams | VERIFIED | Roster, add/remove, edit modal, resources, colour, position, side, and row refresh. E2E `teams-panel`. |
 
@@ -73,7 +73,7 @@ just test-e2e <target> --tag ui:rust
 | 36b | Cursor tooltip | VERIFIED | Empty-ground suppression, feature/unit content, and map hover. E2E `cursortip`. |
 | 37 | Pattern brush preview | VERIFIED | Fresh E2E `pattern-preview` (2026-07-18): a Terrain/Add state without a pattern had no footprint; choosing the pattern produced the inspected textured ground projection beneath the same cursor. |
 | 38 | Ray-trace agreement | TODO | Existing selection tests do not prove click, drag, and preview resolve the same point. |
-| 39 | Developer console | VERIFIED | Fresh E2E `native-dev-console` and `native-dev-console-copy` (2026-07-18): reviewed cleared/visible/hidden/Problems screens, live status controls, multiline selection, Ctrl+C, and Ctrl+A copy ownership. |
+| 39 | Developer console | VERIFIED | Fresh E2E `developer-console` and `developer-console-copy` (2026-07-18): reviewed cleared/visible/hidden/Problems screens, live status controls, multiline selection, Ctrl+C, and Ctrl+A copy ownership. |
 | 40 | Chonsole | DONE | Dedicated scenarios cover editing, completion cycling, mouse hover/click, scroll, texture/rule completion, persistence, and native reload. Re-run and inspect them as one current verification pass. |
 | 41 | Status strip | DONE | Metrics, command journal, undo/redo/clear controls, and a status golden are implemented. Re-run with developer console and inspect layout/current metrics. |
 

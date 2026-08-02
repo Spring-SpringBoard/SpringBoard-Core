@@ -112,7 +112,7 @@ def differing_pixels(
             first_rgba = first_rgba.crop((0, 0, first_rgba.width, bottom))
             second_rgba = second_rgba.crop((0, 0, second_rgba.width, bottom))
         difference = ImageChops.difference(first_rgba, second_rgba)
-        return sum(max(pixel) > channel_tolerance for pixel in difference.get_flattened_data())
+        return _count_pixels_over(difference, channel_tolerance)
 
 
 def write_diff(golden: Path, actual: Path, out: Path) -> None:
@@ -174,3 +174,18 @@ def compare(
 
 def review_path(case_name: str) -> Path:
     return GOLDEN_ROOT / case_name / "review.json"
+
+
+def _count_pixels_over(image: Image.Image, threshold: int) -> int:
+    """Count pixels whose largest channel exceeds ``threshold``.
+
+    The former Python loop inspected every RGBA tuple in a full engine frame.
+    Reducing the channels with Pillow's C implementation retains the exact
+    `max(channel) > threshold` predicate while making large golden comparisons
+    cheap enough to keep the suite's visual coverage.
+    """
+    channels = image.split()
+    maximum = channels[0]
+    for channel in channels[1:]:
+        maximum = ImageChops.lighter(maximum, channel)
+    return sum(maximum.histogram()[threshold + 1 :])

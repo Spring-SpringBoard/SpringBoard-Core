@@ -186,6 +186,9 @@ pub fn load_image_texture(
             constants::GL_UNSIGNED_BYTE,
             rgba.as_raw(),
         )
-        .map_err(|err| format!("upload {}: {err:?}", path.display()))?;
+        .map_err(|err| {
+            let _ = interface.gfx().delete_texture(&texture);
+            format!("upload {}: {err:?}", path.display())
+        })?;
     Ok(texture)
 }

@@ -292,13 +292,6 @@ impl ChonsoleRml {
         Ok(())
     }
 
-    pub(super) fn set_suggestion_rows(&self, rows: &[RmlChoiceRow]) -> Result<(), Error> {
-        self.suggestion_rows
-            .as_ref()
-            .expect("chonsole suggestion rows are bound before its markup")
-            .set(rows)
-    }
-
     pub(super) fn set_suggestion_details(
         &self,
         details: Option<(&str, &str)>,

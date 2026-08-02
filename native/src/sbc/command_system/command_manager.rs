@@ -41,6 +41,14 @@ impl CommandManager {
         self.history.command_ids()
     }
 
+    pub(crate) fn undo_depth(&self) -> usize {
+        self.history.undo_len()
+    }
+
+    pub(crate) fn is_streaming(&self) -> bool {
+        self.stream.is_streaming()
+    }
+
     pub fn execute(
         &mut self,
         mut command: Box<dyn Command>,

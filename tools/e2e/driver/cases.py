@@ -4,7 +4,7 @@ from e2e.driver._scenarios import registered_scenarios
 from e2e.driver.utils.models import Environment, PortFlags
 
 REGISTERED = registered_scenarios()
-RUST_FLAGS: PortFlags = {"chonsole": "rust", "ui": "rust"}
+E2E_FLAGS: PortFlags = {"chonsole": "rust", "ui": "rust"}
 
 
 @dataclass(frozen=True)
@@ -15,6 +15,7 @@ class Case:
     crop: str | None = None
     tags: frozenset[str] = frozenset()
     env: Environment = field(default_factory=dict[str, str])
+    isolated: bool = False
 
 
 def targets() -> tuple[str, ...]:
@@ -40,15 +41,16 @@ def target_cases(target: str) -> list[Case]:
         raise ValueError(f"unknown target: {target}")
     return [
         Case(
-            name=f"{target}-rust",
-            flags=RUST_FLAGS,
+            name=target,
+            flags=E2E_FLAGS,
             scenario=registered.scenario,
             crop=registered.crop,
             tags=_tags_for(target),
             env=registered.env,
+            isolated=registered.isolated,
         )
     ]
 
 
 def _tags_for(target: str) -> frozenset[str]:
-    return frozenset({f"target:{target}", "ui:rust", "chonsole:rust"})
+    return frozenset({f"target:{target}", "ui", "chonsole"})

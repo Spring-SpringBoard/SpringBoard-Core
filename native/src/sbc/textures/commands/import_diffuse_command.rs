@@ -26,8 +26,21 @@ impl Command for ImportDiffuseCommand {
     fn execute(&mut self, ctx: &mut Context) {
         let path = PathBuf::from(&self.texture_path);
         let interface = *ctx.interface;
-        match import::import_diffuse(&interface, ctx.model::<TextureModel>(), &path) {
+        let id = ctx.current_command_id;
+        let tm = ctx.model::<TextureModel>();
+        if tm.history.has_redo(id) {
+            tm.history.redo_stroke(Some(id));
+            return;
+        }
+        let Some((_, tiles_x, tiles_z)) = tm.tiles.grid() else {
+            error!("import diffuse: could not initialize tile store");
+            return;
+        };
+        tm.history
+            .back_up_region(&tm.tiles, 0.0, 0.0, tiles_x as f32, tiles_z as f32);
+        match import::import_diffuse(&interface, tm, &path) {
             Ok(()) => {
+                tm.history.push_stack(Some(id));
                 info!("import diffuse: {}", path.display());
                 ctx.model::<NotificationManager>().info(
                     "import",
@@ -36,6 +49,7 @@ impl Command for ImportDiffuseCommand {
                 );
             }
             Err(err) => {
+                tm.history.abort_active();
                 error!("import diffuse failed for {}: {err}", path.display());
                 ctx.model::<NotificationManager>()
                     .warn("import", &format!("Diffuse import failed: {err}"));
@@ -44,7 +58,12 @@ impl Command for ImportDiffuseCommand {
     }
 
     fn undoable(&self) -> bool {
-        false
+        true
+    }
+
+    fn unexecute(&mut self, ctx: &mut Context) {
+        let id = ctx.current_command_id;
+        ctx.model::<TextureModel>().history.pop_stack(Some(id));
     }
 }
 

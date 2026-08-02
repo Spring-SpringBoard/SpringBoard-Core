@@ -6,6 +6,7 @@ use spring_native::prelude::*;
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::command::CommandId;
 use crate::sbc::command_system::model::{Model, Models};
+use crate::sbc::command_system::UndoCommand;
 use crate::sbc::commands_api::{parse_json_command, CommandManager, Context};
 use crate::sbc::control::ControlServer;
 use crate::sbc::events::EventDispatcher;
@@ -20,6 +21,7 @@ pub struct SBC {
     events: EventDispatcher,
     io_worker: IoWorker,
     tests_ran: bool,
+    input_epoch: u64,
     /// The machine-facing control channel, when `SBC_CONTROL_FILE` asked for
     /// one. Taken out of `self` while its requests are handled, since they
     /// operate on everything else here.
@@ -47,6 +49,7 @@ impl NativeModule for SBC {
             events: EventDispatcher::new(interface),
             io_worker: IoWorker::new(),
             tests_ran: false,
+            input_epoch: 0,
             control: ControlServer::start(),
         }
     }
@@ -58,12 +61,14 @@ impl NativeModule for SBC {
 
     fn update(&mut self) -> Result<(), Error> {
         self.drain_io();
-        // Control requests are applied before the registered update schedule.
-        crate::sbc::control::drain(self);
+        // Incoming controls apply before the schedule; their deferred replies
+        // resolve after it, once the requested update effects have landed.
+        crate::sbc::control::begin_update(self);
         let mut update = self.events.begin_update();
         while let Some(commands) = self.events.run_update_step(&mut self.models, &mut update)? {
             self.submit_commands(commands);
         }
+        crate::sbc::control::finish_update(self);
         if !self.tests_ran {
             self.tests_ran = crate::sbc::tests::tests_api::run_if_requested(self);
         }
@@ -89,6 +94,7 @@ impl NativeModule for SBC {
     }
 
     fn key_press(&mut self, key_code: i32, scan_code: i32, is_repeat: bool) -> Result<bool, Error> {
+        self.note_input();
         let handled = self
             .events
             .key_press(&mut self.models, key_code, scan_code, is_repeat)?;
@@ -106,15 +112,18 @@ impl NativeModule for SBC {
     }
 
     fn key_release(&mut self, key_code: i32, scan_code: i32) -> Result<bool, Error> {
+        self.note_input();
         self.events
             .key_release(&mut self.models, key_code, scan_code)
     }
 
     fn text_input(&mut self, utf8: &str) -> Result<bool, Error> {
+        self.note_input();
         self.events.text_input(&mut self.models, utf8)
     }
 
     fn mouse_move(&mut self, x: i32, y: i32, dx: i32, dy: i32, button: i32) -> Result<bool, Error> {
+        self.note_input();
         let handled = self
             .events
             .mouse_move(&mut self.models, x, y, dx, dy, button)?;
@@ -123,18 +132,21 @@ impl NativeModule for SBC {
     }
 
     fn mouse_press(&mut self, x: i32, y: i32, button: i32) -> Result<bool, Error> {
+        self.note_input();
         let handled = self.events.mouse_press(&mut self.models, x, y, button)?;
         self.submit_pending_listener_commands();
         Ok(handled)
     }
 
     fn mouse_release(&mut self, x: i32, y: i32, button: i32) -> Result<(), Error> {
+        self.note_input();
         self.events.mouse_release(&mut self.models, x, y, button)?;
         self.submit_pending_listener_commands();
         Ok(())
     }
 
     fn mouse_wheel(&mut self, up: bool, value: f32) -> Result<bool, Error> {
+        self.note_input();
         self.events.mouse_wheel(&mut self.models, up, value)
     }
 }
@@ -142,6 +154,10 @@ impl NativeModule for SBC {
 impl SBC {
     pub fn interface(&self) -> &NativeInterfaceRef {
         &self.interface
+    }
+
+    pub(crate) fn input_epoch(&self) -> u64 {
+        self.input_epoch
     }
 
     /// Apply any finished background-IO outcomes on the engine thread. Called
@@ -213,6 +229,29 @@ impl SBC {
         self.events.command_applied(&mut self.models);
         self.models.on_history_events(&history_events);
         self.sync_command_history();
+    }
+
+    /// Restore the native command state to its pre-edit baseline. This is a
+    /// session-boundary primitive for the control channel, not a user-facing
+    /// action: every undoable native command is undone in history order.
+    pub(crate) fn undo_all(&mut self) -> Result<usize, String> {
+        let mut undone = 0;
+        while self.command_manager.undo_depth() > 0 {
+            if self.command_manager.is_streaming() {
+                return Err("cannot undo all while a streaming command is active".to_string());
+            }
+            let before = self.command_manager.undo_depth();
+            self.submit_command(Box::new(UndoCommand));
+            if self.command_manager.undo_depth() >= before {
+                return Err("undo command did not advance the history cursor".to_string());
+            }
+            undone += 1;
+        }
+        Ok(undone)
+    }
+
+    fn note_input(&mut self) {
+        self.input_epoch = self.input_epoch.wrapping_add(1);
     }
 
     /// Submit commands gathered from registered event listeners. Producers only

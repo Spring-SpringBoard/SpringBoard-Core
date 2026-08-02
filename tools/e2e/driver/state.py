@@ -44,6 +44,7 @@ class RunState(ABC):
     case: Case
     update_golden: bool = False
     stage_goldens: bool = False
+    artifact_parent: Path | None = field(default=None, repr=False)
     golden_results: list[tuple[str, str]] = field(default_factory=list[tuple[str, str]], init=False)
     pending_goldens: list[GoldenCheck] = field(default_factory=list[GoldenCheck], init=False)
     pending_pixel_checks: list[PixelCheck] = field(default_factory=list[PixelCheck], init=False)
@@ -59,11 +60,15 @@ class RunState(ABC):
     screenshot_worker: ScreenshotWorker = field(init=False)
     _control: "Control | None" = field(default=None, init=False)
     _rml_diagnostic_cursor: int = field(default=0, init=False)
+    _command_base: int = field(default=0, init=False)
+    _input_pending: bool = field(default=False, init=False)
 
     def __post_init__(self) -> None:
         stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
         self.run_id = f"{stamp}-{self.case.name}"
-        self.artifacts = RunArtifacts(ARTIFACT_ROOT / self.run_id)
+        artifact_root = self.artifact_parent or ARTIFACT_ROOT
+        artifact_dir = artifact_root / self.case.name if self.artifact_parent else artifact_root / self.run_id
+        self.artifacts = RunArtifacts(artifact_dir)
         self.out_dir.mkdir(parents=True, exist_ok=True)
         self.screenshot_dir.mkdir(parents=True, exist_ok=True)
         self.screenshot_worker = ScreenshotWorker()
@@ -160,6 +165,9 @@ class RunState(ABC):
     def commands(self) -> list[CommandEntry]: ...
 
     @abstractmethod
+    def case_commands(self) -> list[CommandEntry]: ...
+
+    @abstractmethod
     def count_color(
         self, shot: Path, region: tuple[int, int, int, int], color: str = "#00FF00", fuzz: str = "12%"
     ) -> int: ...
@@ -236,6 +244,9 @@ class RunState(ABC):
     def set_clipboard(self, text: str) -> None: ...
 
     @abstractmethod
+    def sync_input(self) -> None: ...
+
+    @abstractmethod
     def type_text(self, text: str, delay_ms: int = 10) -> None: ...
 
     @abstractmethod
@@ -249,7 +260,13 @@ class RunState(ABC):
     ) -> CommandData: ...
 
     @abstractmethod
+    def wait_for_command_at_least(self, class_name: str, count: int, timeout_s: Timeout = Timeout.COMMAND) -> int: ...
+
+    @abstractmethod
     def wait_for_log(self, text: str, *, after: int = 0, timeout_s: Timeout = Timeout.LOG) -> str: ...
+
+    @abstractmethod
+    def wait_for_stable_region(self, region: tuple[int, int, int, int], attempts: int = 8) -> None: ...
 
     @abstractmethod
     def wheel(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: Delay = Delay.FRAME) -> None: ...

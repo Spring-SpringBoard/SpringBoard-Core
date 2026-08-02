@@ -9,7 +9,8 @@ def find_windows() -> list[str]:
     if ids:
         return ids
     result = run("xdotool", "search", "--name", "Spring", check=False)
-    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    ids = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    return ids or _spring_client_windows()
 
 
 def spring_processes() -> dict[int, str]:
@@ -46,3 +47,11 @@ def window_geometry_values(window_id: str) -> dict[str, int]:
         if value.lstrip("-").isdigit():
             values[key] = int(value)
     return values
+
+
+def _spring_client_windows() -> list[str]:
+    """Find the engine window without traversing the whole X11 window tree."""
+    result = run("xprop", "-root", "_NET_CLIENT_LIST", check=False)
+    client_ids = re.findall(r"0x[0-9a-fA-F]+", result.stdout)
+    spring_pids = set(spring_processes())
+    return [window_id for window_id in client_ids if window_pid(window_id) in spring_pids]

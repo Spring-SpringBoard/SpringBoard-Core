@@ -2,6 +2,8 @@ from pathlib import Path
 from time import monotonic
 from typing import override
 
+from PIL import Image, ImageChops
+
 from e2e.fixtures.golden import compare as compare_golden
 
 from .state import GoldenCheck, RunState
@@ -13,6 +15,12 @@ from .utils.x11 import window_geometry
 
 
 class CaptureMixin(RunState):
+    @override
+    def sync_input(self) -> None:
+        """Wait only until input already sent to the engine has been consumed."""
+        if not FAST:
+            self._wait_for_input_frame()
+
     @override
     def screenshot(self, name: str) -> Path:
         if FAST:
@@ -100,6 +108,28 @@ class CaptureMixin(RunState):
         self.assert_no_rml_diagnostics()
         return png_path
 
+    @override
+    def wait_for_stable_region(self, region: tuple[int, int, int, int], attempts: int = 8) -> None:
+        """Wait until two consecutive engine frames agree in ``region``."""
+        if FAST:
+            self.event("stable_region_skipped", region=region)
+            return
+        if attempts < 1:
+            raise ValueError("stable region needs at least one comparison")
+        previous = self._stability_capture(0)
+        try:
+            for attempt in range(1, attempts + 1):
+                current = self._stability_capture(attempt)
+                if self._region_changed(previous, current, region) == 0:
+                    current.unlink(missing_ok=True)
+                    self.event("stable_region", region=region, frames=attempt + 1)
+                    return
+                previous.unlink(missing_ok=True)
+                previous = current
+        finally:
+            previous.unlink(missing_ok=True)
+        raise AssertionError(f"region {region} did not settle within {attempts + 1} engine frames")
+
     def _skip_capture(self, kind: str, name: str) -> Path:
         self.event(f"{kind}_skipped", name=name)
         return self.screenshot_dir / f"{name}.png"
@@ -158,16 +188,48 @@ class CaptureMixin(RunState):
         return conversion
 
     def _capture_screenshot(self, shot: Screenshot) -> int:
-        assert self.write_dir is not None
         started = monotonic()
-        shot.bmp_path.unlink(missing_ok=True)
-        request_path = self.write_dir / "e2e-screenshot-request.txt"
-        pending_request = request_path.with_suffix(".pending")
-        pending_request.write_text(str(shot.bmp_path))
-        pending_request.replace(request_path)
-        self._wait_for_capture(shot.bmp_path)
+        self.sync_input()
+        self._capture_bmp(shot.bmp_path)
         self.screenshot_worker.submit(shot)
         return int((monotonic() - started) * 1000)
+
+    def _stability_capture(self, index: int) -> Path:
+        path = self.screenshot_dir / f".stability-{len(self.screenshots)}-{index}.bmp"
+        self._capture_bmp(path)
+        return path
+
+    def _capture_bmp(self, path: Path) -> None:
+        assert self.write_dir is not None
+        path.unlink(missing_ok=True)
+        request_path = self.write_dir / "e2e-screenshot-request.txt"
+        pending_request = request_path.with_suffix(".pending")
+        pending_request.write_text(str(path))
+        pending_request.replace(request_path)
+        self._wait_for_capture(path)
+
+    @staticmethod
+    def _region_changed(before: Path, after: Path, region: tuple[int, int, int, int]) -> int:
+        x, y, width, height = region
+        with Image.open(before) as source:
+            before_region = source.crop((x, y, x + width, y + height)).convert("RGBA")
+        with Image.open(after) as source:
+            after_region = source.crop((x, y, x + width, y + height)).convert("RGBA")
+        difference = ImageChops.difference(before_region, after_region)
+        channels = difference.split()
+        maximum = channels[0]
+        for channel in channels[1:]:
+            maximum = ImageChops.lighter(maximum, channel)
+        return sum(maximum.histogram()[1:])
+
+    def _wait_for_input_frame(self) -> None:
+        """Make the next capture observe input sent immediately before it."""
+        if not self._input_pending:
+            return
+        started = monotonic()
+        self.control.wait_for_update()
+        self._input_pending = False
+        self.event("input_update_barrier", elapsed_ms=int((monotonic() - started) * 1000))
 
     def _wait_for_capture(self, path: Path) -> None:
         deadline = monotonic() + Timeout.COMMAND
@@ -176,4 +238,4 @@ class CaptureMixin(RunState):
                 return
             self.assert_running()
             pause(Delay.POLL)
-        raise TimeoutError(f"engine did not write screenshot within {Timeout.COMMAND:.0f}s: {path}")
+        raise TimeoutError(f"engine did not write screenshot within {float(Timeout.COMMAND):.0f}s: {path}")

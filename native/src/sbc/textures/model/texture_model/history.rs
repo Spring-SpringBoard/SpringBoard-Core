@@ -86,6 +86,16 @@ impl TextureHistory {
         self.undo.clear();
     }
 
+    /// Abort an in-progress operation, restoring any live surfaces it touched.
+    pub(crate) fn abort_active(&mut self) {
+        let entries = self.active.take();
+        self.undo.abort(entries);
+    }
+
+    pub(crate) fn has_redo(&self, cmd_id: CommandId) -> bool {
+        self.undo.has_redo(cmd_id)
+    }
+
     pub(crate) fn undo_depth(&self) -> usize {
         self.undo.undo_depth()
     }

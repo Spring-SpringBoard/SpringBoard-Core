@@ -41,7 +41,7 @@ impl ChonsoleController {
         if self.view.process_suggestion_clicks(core) {
             self.view.refresh(interface, core)?;
         }
-        self.view.process_suggestion_hovers();
+        self.view.process_suggestion_hovers()?;
         self.view.update(interface)
     }
     pub fn draw_screen(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {

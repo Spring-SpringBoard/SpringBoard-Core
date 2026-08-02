@@ -19,6 +19,10 @@ class CommandLogMixin(RunState):
     undo history -- because a scenario almost always means the committed one.
     """
 
+    def begin_scenario(self) -> None:
+        """Scope command assertions to this case in a shared engine session."""
+        self._command_base = len(self.commands())
+
     @override
     def engine_log(self) -> list[str]:
         """The engine's infolog for this run, a line at a time.
@@ -58,7 +62,7 @@ class CommandLogMixin(RunState):
                     return line
             self.assert_running()
             pause(Delay.EVENT)
-        raise AssertionError(f"timed out waiting {timeout_s:.1f}s for log line containing {text!r}")
+        raise AssertionError(f"timed out waiting {float(timeout_s):.1f}s for log line containing {text!r}")
 
     @override
     def wait_for_command(
@@ -74,9 +78,14 @@ class CommandLogMixin(RunState):
         This is for asynchronous UI paths such as modal acceptance.  Unlike an
         assertion, it returns as soon as the command bridge records the event.
         """
+        # A shared engine keeps the complete command log.  The default wait is
+        # scoped to the current scenario, just like the assertion helpers;
+        # otherwise a later workflow step can immediately consume an older
+        # command and race the command it actually requested.
+        start = self._command_base if after == 0 else after
         deadline = time.monotonic() + timeout_s
         while time.monotonic() < deadline:
-            for entry in self.commands()[after:]:
+            for entry in self.commands()[start:]:
                 data = entry["data"]
                 if data.get("__preview") or data.get("className") != class_name:
                     continue
@@ -89,7 +98,23 @@ class CommandLogMixin(RunState):
                     return data
             self.assert_running()
             pause(Delay.EVENT)
-        raise AssertionError(f"timed out waiting {timeout_s:.1f}s for {class_name} with keys {sorted(expected)}")
+        raise AssertionError(f"timed out waiting {float(timeout_s):.1f}s for {class_name} with keys {sorted(expected)}")
+
+    @override
+    def wait_for_command_at_least(self, class_name: str, count: int, timeout_s: Timeout = Timeout.COMMAND) -> int:
+        """Wait for a held interaction to emit its required command count."""
+        deadline = time.monotonic() + timeout_s
+        while time.monotonic() < deadline:
+            sent = sum(
+                entry["data"].get("className") == class_name and not entry["data"].get("__preview")
+                for entry in self._case_commands()
+            )
+            if sent >= count:
+                self.event("wait_for_command_at_least", className=class_name, count=sent)
+                return sent
+            self.assert_running()
+            pause(Delay.EVENT)
+        raise AssertionError(f"timed out waiting for at least {count} committed {class_name}")
 
     @override
     def commands(self) -> list[CommandEntry]:
@@ -137,7 +162,7 @@ class CommandLogMixin(RunState):
         reach the undo history, and a drag emits a stream of them. Use
         `assert_previews` for those.
         """
-        committed = [entry["data"] for entry in self.commands() if not entry["data"].get("__preview")]
+        committed = [entry["data"] for entry in self._case_commands() if not entry["data"].get("__preview")]
         matches = [
             data
             for data in committed
@@ -150,7 +175,8 @@ class CommandLogMixin(RunState):
         ] or [data for data in committed if data.get("className") == class_name and not expected]
         if len(matches) != 1:
             sent = [
-                (entry["data"].get("className"), sorted(command_fields(entry["data"]))) for entry in self.commands()
+                (entry["data"].get("className"), sorted(command_fields(entry["data"])))
+                for entry in self._case_commands()
             ]
             raise AssertionError(
                 f"expected exactly one {class_name} with keys {sorted(expected)}, got {len(matches)}. Sent: {sent}"
@@ -169,7 +195,7 @@ class CommandLogMixin(RunState):
         emitting as the mouse moves on.
         """
         seen_marker = False
-        for entry in self.commands():
+        for entry in self._case_commands():
             data = entry["data"]
             if data is marker or data.get("__cmd_id") == marker.get("__cmd_id"):
                 seen_marker = True
@@ -189,7 +215,7 @@ class CommandLogMixin(RunState):
         """
         sent = [
             entry["data"]
-            for entry in self.commands()
+            for entry in self._case_commands()
             if entry["data"].get("className") == class_name and not entry["data"].get("__preview")
         ]
         if len(sent) != count:
@@ -205,7 +231,7 @@ class CommandLogMixin(RunState):
         """
         sent = [
             entry["data"]
-            for entry in self.commands()
+            for entry in self._case_commands()
             if entry["data"].get("className") == class_name and not entry["data"].get("__preview")
         ]
         if len(sent) < count:
@@ -223,7 +249,7 @@ class CommandLogMixin(RunState):
         this keeps the assertion about the specific mode/property rather than
         requiring the scenario to isolate every click in a fresh process.
         """
-        for entry in self.commands():
+        for entry in self._case_commands():
             data = entry["data"]
             if data.get("__preview") or data.get("className") != class_name:
                 continue
@@ -235,7 +261,7 @@ class CommandLogMixin(RunState):
                 return data
         sent = [
             (entry["data"].get("className"), sorted(command_fields(entry["data"])))
-            for entry in self.commands()
+            for entry in self._case_commands()
             if entry["data"].get("className") == class_name
         ]
         raise AssertionError(f"expected at least one {class_name} matching {expected}, got {sent}")
@@ -248,7 +274,7 @@ class CommandLogMixin(RunState):
         """
         matches = [
             entry["data"]
-            for entry in self.commands()
+            for entry in self._case_commands()
             if entry["data"].get("__preview")
             and entry["data"].get("className") == class_name
             and all(key in command_fields(entry["data"]) for key in expected)
@@ -265,3 +291,11 @@ class CommandLogMixin(RunState):
             )
         self.event("assert_previews", className=class_name, count=len(good))
         return len(good)
+
+    @override
+    def case_commands(self) -> list[CommandEntry]:
+        """Commands recorded since this scenario began."""
+        return self.commands()[self._command_base :]
+
+    def _case_commands(self) -> list[CommandEntry]:
+        return self.case_commands()

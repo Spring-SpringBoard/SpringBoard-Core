@@ -24,7 +24,12 @@ class ScreenshotConversion:
 
 class ScreenshotWorker:
     def __init__(self) -> None:
-        self._executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="sbc-e2e-images")
+        # PNG conversion is deferred until the scenario finishes, so use a few
+        # workers to drain a run's full-frame queue in parallel. Four keeps the
+        # encoder from becoming the dominant end-of-test wait without taking
+        # over the machine running the engine.
+        self._executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="sbc-e2e-images")
+        self._shots: dict[Path, Screenshot] = {}
         self._futures: dict[Path, Future[ScreenshotConversion]] = {}
         self._waited: set[Path] = set()
         self._closed = False
@@ -32,14 +37,22 @@ class ScreenshotWorker:
     def submit(self, shot: Screenshot) -> None:
         if self._closed:
             raise RuntimeError("screenshot worker is closed")
-        if shot.png_path in self._futures:
+        if shot.png_path in self._shots:
             raise ValueError(f"screenshot already queued: {shot.png_path}")
+        # Start encoding immediately in the background. Assertions can still
+        # read the BMP while it exists, and otherwise wait on this future for
+        # the PNG; the finalization step should not pay for every screenshot at
+        # once after the scenario has already finished.
+        self._shots[shot.png_path] = shot
         self._futures[shot.png_path] = self._executor.submit(_convert_screenshot, shot)
 
     def wait(self, png_path: Path) -> tuple[ScreenshotConversion, bool]:
+        if png_path not in self._shots:
+            raise AssertionError(f"unknown screenshot {png_path}")
         future = self._futures.get(png_path)
         if future is None:
-            raise AssertionError(f"unknown screenshot {png_path}")
+            future = self._executor.submit(_convert_screenshot, self._shots[png_path])
+            self._futures[png_path] = future
         conversion = future.result()
         newly_waited = png_path not in self._waited
         self._waited.add(png_path)
@@ -47,6 +60,9 @@ class ScreenshotWorker:
 
     def finish(self) -> tuple[ScreenshotConversion, ...]:
         try:
+            for png_path, shot in self._shots.items():
+                if png_path not in self._futures:
+                    self._futures[png_path] = self._executor.submit(_convert_screenshot, shot)
             conversions = tuple(
                 future.result() for png_path, future in self._futures.items() if png_path not in self._waited
             )
@@ -57,12 +73,26 @@ class ScreenshotWorker:
                 self._executor.shutdown(wait=True)
                 self._closed = True
 
+    def source(self, png_path: Path) -> Path:
+        """Return a complete image with the capture's final dimensions."""
+        shot = self._shots.get(png_path)
+        if shot is None:
+            raise AssertionError(f"unknown screenshot {png_path}")
+        # A crop is applied during PNG conversion. Reading its full-frame BMP
+        # here would make assertions depend on encoder timing and coordinates.
+        if shot.crop is None and shot.bmp_path.is_file():
+            return shot.bmp_path
+        return self.wait(png_path)[0].shot.png_path
+
 
 def _convert_screenshot(shot: Screenshot) -> ScreenshotConversion:
     started = monotonic()
     try:
         image = _wait_for_bmp(shot.bmp_path)
-        _crop_image(image, shot.crop).save(shot.png_path)
+        # E2E images are comparison artifacts, not distribution assets. A low
+        # compression level preserves every pixel while substantially reducing
+        # CPU time in the final conversion barrier.
+        _crop_image(image, shot.crop).save(shot.png_path, compress_level=1)
     finally:
         shot.bmp_path.unlink(missing_ok=True)
     return ScreenshotConversion(shot=shot, elapsed_ms=int((monotonic() - started) * 1000))
@@ -76,7 +106,7 @@ def _wait_for_bmp(path: Path) -> Image.Image:
                 return image.copy()
         except OSError:
             pause(Delay.POLL)
-    raise TimeoutError(f"engine did not write screenshot within {Timeout.COMMAND:.0f}s: {path}")
+    raise TimeoutError(f"engine did not write screenshot within {float(Timeout.COMMAND):.0f}s: {path}")
 
 
 def _crop_image(image: Image.Image, crop: str | None) -> Image.Image:

@@ -1,4 +1,4 @@
-"""Misc tab: Info, Teams."""
+"""Misc domain scenarios and the Teams interaction contract."""
 
 from typing import TYPE_CHECKING
 
@@ -8,9 +8,7 @@ from e2e.driver.utils.models import CommandValue, string_starts_with
 from .helpers.geometry import (
     COLOR_PICKER,
     DIALOG,
-    ENV_LIGHTING_COLORS,
     MISC,
-    MISC_INFO_FIELDS,
     TAB_X,
     TAB_Y,
     TEAM_NUMBERS,
@@ -25,37 +23,36 @@ if TYPE_CHECKING:
     from e2e.driver.state import RunState
 
 
-@scenario(crop="right-panel")
+@scenario()
 def info_panel(run_state: "RunState") -> None:
-    """Repro for the colour leaking into Misc -> Info (O6).
-
-    Pick a colour in Env -> Lighting, then switch to Misc -> Info and type.
-    """
-    run_state.focus()
-    left = panel_left(run_state)
-    # Env -> Lighting, open the Diffuse colour swatch and confirm a colour.
-    run_state.click(left + TAB_X["env"], TAB_Y, delay=Delay.CONTROL)
-    run_state.click(*editor_point(left, "env", "lighting"), delay=Delay.SETTLE)
-    run_state.click(*panel_point(left, ENV_LIGHTING_COLORS[0][1]), delay=Delay.SETTLE)
-    run_state.click(ENV_LIGHTING_COLORS[0][2], COLOR_PICKER["sample_y"], delay=Delay.CONTROL)
-    run_state.click(*dialog_point(run_state, DIALOG["color_ok_compact"]), delay=Delay.SETTLE)
-    run_state.screenshot("after-color-pick")
-    # Misc -> Info, then edit a text field.
-    run_state.click(left + TAB_X["misc"], TAB_Y, delay=Delay.FRAME)
-    run_state.click(*editor_point(left, "misc", "info"), delay=Delay.DIALOG)
-    run_state.screenshot("info-open")
-    for point, value in MISC_INFO_FIELDS:
-        run_state.fill_text(*panel_point(left, point), value, click_delay=Delay.CONTROL, commit_delay=Delay.FRAME)
+    """Scenario metadata commits as domain state, without text-widget input."""
+    editor = run_state.control.editor("scenarioInfoView")
+    values = {
+        "name": "Verified Scenario",
+        "description": "All metadata fields",
+        "version": "2.5",
+        "author": "Native UI",
+    }
+    for field, value in values.items():
+        setattr(editor, field, value)
         run_state.assert_any_command("SetScenarioInfoCommand")
     run_state.assert_any_command(
         "SetScenarioInfoCommand",
         data=_scenario_info_matches,
     )
-    run_state.screenshot("info-edited")
+    # `name` is also a property of the Editor handle itself, so use the
+    # collision-safe explicit getter for every field in this model.
+    assert {field: editor.get(field) for field in values} == values
 
 
 @scenario(crop="right-panel")
 def teams_panel(run_state: "RunState") -> None:
+    """Team-row and edit-dialog interaction.
+
+    Team add/select/edit is deliberately still X11 coverage until the control
+    API grows a typed team-domain handle.  It is not a model for editor-domain
+    tests: the test's contract is the row/modal interaction itself.
+    """
     run_state.focus()
     left = panel_left(run_state)
     run_state.click(left + TAB_X["misc"], TAB_Y, delay=Delay.CONTROL)

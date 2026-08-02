@@ -1,12 +1,64 @@
-from typing import Annotated
+from collections.abc import Iterator
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Annotated, cast
 
 import typer
 
 from .driver.cases import TARGETS, Case, select_cases, target_cases
+from .driver.utils.paths import ARTIFACT_ROOT, create_suite_artifact_dir
 from .fixtures.golden import GOLDEN_ROOT, STATUS_APPROVED, approve_review, load_review
 from .runner import E2ERun
+from .suite_report import artifact_paths, default_report_path, write_report
 
 app = typer.Typer(no_args_is_help=True)
+
+
+@dataclass
+class SharedSession:
+    """One process shared by the default resettable scenario group."""
+
+    owner: E2ERun | None = None
+    camera_baseline: dict[str, object] | None = None
+
+    def attach(self, runner: E2ERun) -> None:
+        if self.owner is None:
+            self.owner = runner
+            runner.launch()
+            self.camera_baseline = runner.control.camera.get()
+            return
+        runner.reuse_session(self.owner)
+        undone = runner.control.reset_session()
+        runner.event("session_reset", strategy="undo-reload", undone=undone)
+        self._restore_camera(runner)
+
+    def close(self) -> None:
+        if self.owner is not None:
+            self.owner.stop()
+            self.owner.cleanup_write_dir()
+
+    def _restore_camera(self, runner: E2ERun) -> None:
+        state = self.camera_baseline
+        if state is None:
+            return
+        controller_position = cast("list[float]", state["controller_position"])
+        direction = cast("list[float]", state["direction"])
+        height = float(state["height"])
+        angle = float(state["angle"])
+        distance = float(state["distance"])
+        runner.control.camera.set(
+            controller_position=controller_position,
+            direction=direction,
+            fov=float(state["fov"]),
+            height=height if height > 0.0 else None,
+            angle=angle if angle > 0.0 else None,
+            distance=distance if distance > 0.0 else None,
+        )
+        runner.control.wait_for_update()
+        runner.event(
+            "camera_reset",
+            fields=["controller_position", "direction", "fov", "height", "angle", "distance"],
+        )
 
 
 @app.command()
@@ -18,18 +70,37 @@ def run(
     keep_open: Annotated[bool, typer.Option(help="Keep the editor and write directory after the run.")] = False,
 ) -> None:
     tags = tag or []
-    if target != "all" and target not in TARGETS:
-        raise typer.BadParameter(f"unknown target {target!r}; choose one of: {', '.join(TARGETS)}")
-    if update_golden and stage_golden:
-        raise typer.BadParameter("--update-golden and --stage-golden are mutually exclusive")
-    cases = select_cases([target], tags) if tags or target == "all" else target_cases(target)
-    if not cases:
-        raise typer.BadParameter(f"no cases match target={target!r}, tags={tags!r}")
-    failures = sum(
-        _run_case(case, update_golden=update_golden, stage_golden=stage_golden, keep_open=keep_open) for case in cases
+    cases = _select_run_cases(target, tags, update_golden, stage_golden)
+    artifact_parent = create_suite_artifact_dir() if len(cases) > 1 else None
+    results = _run_batches(
+        cases,
+        update_golden=update_golden,
+        stage_golden=stage_golden,
+        keep_open=keep_open,
+        reuse_sessions=not keep_open,
+        artifact_parent=artifact_parent,
     )
-    if failures:
+    _write_suite_report(target, results)
+    if any(failed for failed, _runner in results):
         raise typer.Exit(1)
+
+
+@app.command()
+def report(
+    after: Annotated[str | None, typer.Option(help="Inclusive UTC artifact timestamp, YYYYMMDD-HHMMSS.")] = None,
+    before: Annotated[str | None, typer.Option(help="Inclusive UTC artifact timestamp, YYYYMMDD-HHMMSS.")] = None,
+    output: Annotated[
+        Path | None,
+        typer.Option(help="Report path; default creates one under the artifact root."),
+    ] = None,
+) -> None:
+    """Write a timing/API summary from existing artifacts; does not launch Spring."""
+    paths = artifact_paths(ARTIFACT_ROOT, after=after, before=before)
+    if not paths:
+        raise typer.BadParameter("no run artifacts match the requested range")
+    destination = output or default_report_path(ARTIFACT_ROOT)
+    write_report(paths, destination)
+    typer.echo(f"suite report: {destination}")
 
 
 @app.command("goldens-status")
@@ -59,33 +130,129 @@ def approve_goldens(
     typer.echo(f"approved {approved} image(s) for {case}")
 
 
-def _run_case(case: Case, *, update_golden: bool, stage_golden: bool, keep_open: bool) -> bool:
-    runner = E2ERun(case, update_golden=update_golden, stage_goldens=stage_golden)
+def _select_run_cases(
+    target: str,
+    tags: list[str],
+    update_golden: bool,
+    stage_golden: bool,
+) -> list[Case]:
+    if target != "all" and target not in TARGETS:
+        raise typer.BadParameter(f"unknown target {target!r}; choose one of: {', '.join(TARGETS)}")
+    if update_golden and stage_golden:
+        raise typer.BadParameter("--update-golden and --stage-golden are mutually exclusive")
+    cases = select_cases([target], tags) if tags or target == "all" else target_cases(target)
+    if not cases:
+        raise typer.BadParameter(f"no cases match target={target!r}, tags={tags!r}")
+    return cases
+
+
+def _run_batches(
+    cases: list[Case],
+    *,
+    update_golden: bool,
+    stage_golden: bool,
+    keep_open: bool,
+    reuse_sessions: bool,
+    artifact_parent: Path | None,
+) -> list[tuple[bool, E2ERun]]:
+    results: list[tuple[bool, E2ERun]] = []
+    for batch in _case_batches(cases, reuse_sessions):
+        shared = SharedSession() if len(batch) > 1 else None
+        try:
+            results.extend(
+                _run_case(
+                    case,
+                    update_golden=update_golden,
+                    stage_golden=stage_golden,
+                    keep_open=keep_open,
+                    shared_session=shared,
+                    artifact_parent=artifact_parent,
+                )
+                for case in batch
+            )
+        finally:
+            if shared is not None:
+                shared.close()
+    return results
+
+
+def _write_suite_report(target: str, results: list[tuple[bool, E2ERun]]) -> None:
+    if not results:
+        return
+    # A grouped run has a suite directory containing each scenario directory;
+    # a focused run keeps the summary beside its sole scenario.
+    first_run = results[0][1].out_dir
+    report = first_run.parent / "suite-report.md" if len(results) > 1 else first_run / "suite-report.md"
+    write_report((runner.out_dir for _failed, runner in results), report, title=f"UI E2E: {target}")
+    typer.echo(f"suite report: {report}")
+
+
+def _run_case(
+    case: Case,
+    *,
+    update_golden: bool,
+    stage_golden: bool,
+    keep_open: bool,
+    shared_session: SharedSession | None = None,
+    artifact_parent: Path | None = None,
+) -> tuple[bool, E2ERun]:
+    runner = E2ERun(
+        case,
+        update_golden=update_golden,
+        stage_goldens=stage_golden,
+        artifact_parent=artifact_parent,
+    )
     typer.echo(f"run.md: {runner.run_md}")
     scenario_error: Exception | None = None
     try:
-        runner.launch()
+        if shared_session is None:
+            runner.launch()
+        else:
+            shared_session.attach(runner)
         runner.run_scenario()
     except Exception as error:
         scenario_error = error
-        runner.event("error", error=str(error))
+        runner.event("error", error=_error_message(error))
     try:
-        extra = {"error": str(scenario_error)} if scenario_error else {}
+        extra = {"error": _error_message(scenario_error)} if scenario_error else {}
         runner.finish("failed" if scenario_error else "complete", **extra)
-    except AssertionError as error:
-        # Golden and pixel checks are evaluated during finalization. They must
-        # fail this case without preventing `run all` from advancing to the
-        # remaining independent scenarios.
+    except Exception as error:
+        # Finalization includes captures, image conversion, diagnostics, and
+        # assertions. Any ordinary failure belongs to this case, not the suite.
         if scenario_error is None:
-            runner.event("error", error=str(error))
-        typer.echo(f"ERROR: {case.name}: {error}", err=True)
-        return True
+            runner.event("error", error=_error_message(error))
+        typer.echo(f"ERROR: {case.name}: {_error_message(error)}", err=True)
+        return True, runner
     finally:
-        if not keep_open:
+        if shared_session is not None:
+            runner.close_control()
+        elif not keep_open:
             runner.stop()
             runner.cleanup_write_dir()
         typer.echo(f"run.md: {runner.run_md}")
     if scenario_error is not None:
-        typer.echo(f"ERROR: {case.name}: {scenario_error}", err=True)
-        return True
-    return False
+        typer.echo(f"ERROR: {case.name}: {_error_message(scenario_error)}", err=True)
+        return True, runner
+    return False, runner
+
+
+def _error_message(error: Exception) -> str:
+    return str(error) or error.__class__.__name__
+
+
+def _case_batches(cases: list[Case], reuse_sessions: bool) -> Iterator[list[Case]]:
+    """Share compatible launch environments; isolate only marked cases."""
+    emitted: set[tuple[tuple[tuple[str, str], ...], tuple[tuple[str, str], ...]]] = set()
+    for case in cases:
+        if case.isolated or not reuse_sessions:
+            yield [case]
+            continue
+        key = _batch_key(case)
+        if key in emitted:
+            continue
+        emitted.add(key)
+        yield [candidate for candidate in cases if not candidate.isolated and _batch_key(candidate) == key]
+
+
+def _batch_key(case: Case) -> tuple[tuple[tuple[str, str], ...], tuple[tuple[str, str], ...]]:
+    return tuple(sorted(case.flags.items())), tuple(sorted(case.env.items()))

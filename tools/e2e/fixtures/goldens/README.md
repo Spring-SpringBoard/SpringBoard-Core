@@ -37,7 +37,7 @@ and would break every frame it appeared in.
 
 ---
 
-## def-grid-rust
+## def-grid
 
 The fastest look at thumbnail rendering: open Objects → Features, capture, stop.
 
@@ -45,7 +45,7 @@ The fastest look at thumbnail rendering: open Objects → Features, capture, sto
 | --- | --- |
 | `def-grid` | The def grid: every tree model rendered upright, full crown, filling its cell, on the tinted background. Catches the whole thumbnail pipeline — RTT, the model shader, the framing, and the alphabetical, stable ordering. |
 
-## units-panel-rust
+## units-panel
 
 Units and Features: the grid, its filters, and placement.
 
@@ -59,7 +59,7 @@ Units and Features: the grid, its filters, and placement.
 | `before-amount-5` / `amount-5-placed` | Five more trees actually appear. |
 | `features-wreckage-empty` | Type = Wreckage empties the grid: the filter filters, rather than merely rendering. |
 
-## props-panel-rust
+## props-panel
 
 Properties: editing the selected object.
 
@@ -74,7 +74,7 @@ Properties: editing the selected object.
 | `props-blocking-toggled` | A checkbox commits. |
 | `props-after-map-clicks` | Clicking the map afterwards does not re-enter placement. |
 
-## collision-rust
+## collision
 
 The collision volume, which is the point of the editor — so it is shown, not just commanded.
 
@@ -86,7 +86,7 @@ The collision volume, which is the point of the editor — so it is shown, not j
 | `volume-type-changed` | A different volume type is a different shape on screen. |
 | `collision-fields` | The Collision form itself. |
 
-## selection-rust
+## selection
 
 Rectangle select.
 
@@ -96,7 +96,7 @@ Rectangle select.
 | `box-selected` | The feature ends up selected (green box). |
 | `props-after-box-select` | Proof it is really selected: Properties can edit it. Nothing to edit means nothing was selected. |
 
-## deselect-rust
+## deselect
 
 Deselecting has to clear the box, not just the selection — a box left behind is an
 object the editor thinks it still has.
@@ -110,7 +110,7 @@ object the editor thinks it still has.
 | `box-selected` | A box-select selects. |
 | `box-selected-empty` | A box-select over empty ground **drops** the previous selection. |
 
-## rotation-rust
+## rotation
 
 Ctrl-drag rotates the selection about its midpoint.
 
@@ -120,7 +120,7 @@ Ctrl-drag rotates the selection about its midpoint.
 | `rotating` | **The ghosts.** Two extra trees at the would-be positions while the originals stay put — the object does not move until the button comes up, exactly as the Lua state behaves. Captured after the *third* move: the first enters the rotate and the second only seeds the baseline angle (a zero rotation, whose ghosts sit on the originals). |
 | `rotated` | The pair has actually swung. |
 
-## brush-size-rust
+## brush-size
 
 Feature brushing fills unoccupied space, and Shift+wheel resizes its reach.
 
@@ -129,7 +129,7 @@ Feature brushing fills unoccupied space, and Shift+wheel resizes its reach.
 | `brush-size-default` | Brush mode, Size 100. |
 | `brush-size-enlarged` | Shift+wheel raised it to 264 — the panel's Size field follows the wheel. The scenario asserts a repeat default-size dab adds nothing over its existing feature, then checks the enlarged brush still produces a wider multi-feature scatter. |
 
-## gallery-rust / gallery-pickers-rust
+## gallery / gallery-pickers
 
 The Dev tab's **control gallery** — a kitchen sink holding every field type. It is
 behind `SBC_DEV_PANEL=1`, so it neither ships in the tab bar nor appears in any
@@ -155,7 +155,7 @@ change**, so there is nothing else to observe.
 | `export-dialog` / `export-type-open` / `export-dialog-configured` | The File dialog's optional shared string/dropdown form: a name is entered and a visibly left-aligned non-default export type is selected. |
 | `no-tooltip` / `numeric-tooltip` / `tooltip-gone` | Hovering a control shows its tooltip, and moving away removes it. The only scenario with tooltips on — they follow the pointer, so every other run hides them (`SBC_HIDE_TOOLTIPS`). |
 
-## cursortip-rust
+## cursortip
 
 Hovering a unit or feature shows a tooltip describing it.
 
@@ -169,7 +169,7 @@ capture: the harness hides it (`SBC_HIDE_CURSORTIP`) and this scenario is the on
 that asks for it back (`env=` on `@scenario`). Both frames are `park=False` — the
 tip is drawn *at* the pointer, so parking it out of shot takes the subject away.
 
-## native-dev-console-rust
+## developer-console
 
 The dev console, cleared first, so an empty log is the deterministic state; its
 toolbar and F8 toggle are what the goldens pin down.

@@ -76,6 +76,14 @@ def list_first_is(expected: CommandValue) -> Callable[[CommandValue], bool]:
     return lambda value: isinstance(value, list) and bool(value) and value[0] == expected
 
 
+def list_first_matches(predicate: Callable[[CommandValue], bool]) -> Callable[[CommandValue], bool]:
+    return lambda value: isinstance(value, list) and bool(value) and predicate(value[0])
+
+
+def list_item_matches(index: int, predicate: Callable[[CommandValue], bool]) -> Callable[[CommandValue], bool]:
+    return lambda value: isinstance(value, list) and len(value) > index and predicate(value[index])
+
+
 def is_list(value: CommandValue) -> bool:
     return isinstance(value, list)
 

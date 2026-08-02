@@ -173,6 +173,17 @@ impl Behavior for SettingsBehavior {
         Ok(())
     }
 
+    fn release_bindings(
+        &mut self,
+        model: &mut SettingsModel,
+        interface: &NativeInterfaceRef,
+    ) -> Result<(), Error> {
+        // The shading picker owns a context-level grid model. EditorSlot drops
+        // the field model when switching editors, but that model outlives the
+        // editor itself unless the grid releases it here.
+        model.shading_grid.release_bindings(interface)
+    }
+
     fn tick(
         &mut self,
         model: &mut SettingsModel,

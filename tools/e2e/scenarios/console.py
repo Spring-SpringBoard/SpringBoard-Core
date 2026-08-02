@@ -12,6 +12,7 @@ from e2e.driver.utils.models import object_number_close
 if TYPE_CHECKING:
     from e2e.driver.state import RunState
 
+from .helpers.camera import zoom_map
 from .helpers.geometry import (
     CHONSOLE,
     DEV_CONSOLE,
@@ -31,7 +32,7 @@ from .helpers.objects import open_object_editor as _open
 from .helpers.registry import scenario
 
 
-@scenario(target="e2e-reloadnativemodules")
+@scenario(target="module-reload")
 def reload_native_modules(run_state: "RunState") -> None:
     """Native reload preserves input and can re-adopt pre-reload engine features.
 
@@ -44,16 +45,14 @@ def reload_native_modules(run_state: "RunState") -> None:
     _arm_tree(run_state, left)
     width, height = window_size(run_state)
     spot_x, spot_y = width // 3, height // 2
-    run_state.wheel(spot_x, spot_y, clicks=8, up=True)
+    zoom_map(run_state, point=(spot_x, spot_y))
     run_state.click(spot_x, spot_y, delay=Delay.READY)  # place before reload
     run_state.key("Escape", delay=Delay.CONTROL)  # leave placement mode
 
-    run_state.key("Return", delay=Delay.CONTROL)
-    run_state.type_text("/reloadnativemodules")
-    # Reload is deliberately deferred by the engine until all event callbacks
-    # have returned. The delay covers that next update; assert_running catches
-    # ASAN aborts from unloading a module on its own Chonsole callback stack.
-    run_state.key("Return", delay=Delay.READY)
+    # The control call returns only after the replacement module has published
+    # its new channel. This avoids an arbitrary reload sleep while retaining a
+    # later Chonsole interaction as the user-facing recovery check.
+    run_state.control.reload_native_modules()
     run_state.assert_running()
     run_state.key("Return", delay=Delay.CONTROL)
     run_state.type_text("/h")
@@ -80,8 +79,19 @@ def reload_native_modules(run_state: "RunState") -> None:
         value=object_number_close("x", 1800, tolerance=1.0),
     )
 
+    # LuaUI teardown used to free the native console document while handling
+    # its Enter callback. Keep that recovery check with the module-reload
+    # boundary instead of paying for another cold engine session.
+    run_state.key("Return", delay=Delay.FRAME)
+    run_state.type_text("/luaui reload")
+    run_state.key("Return", delay=Delay.RELOAD)
+    run_state.screenshot("after-lua-ui-reload")
+    run_state.key("Return", delay=Delay.SETTLE)
+    run_state.type_text("recovered")
+    run_state.screenshot("console-recovered")
 
-@scenario(target="chonsole-native-input")
+
+@scenario(target="chonsole-input")
 def chonsole_native_input(run_state: "RunState") -> None:
     """Native input editing: selection plus system clipboard copy, cut, and paste."""
     run_state.focus()
@@ -119,7 +129,7 @@ def chonsole_native_input(run_state: "RunState") -> None:
     run_state.screenshot("cut")
 
 
-@scenario(target="chonsole-native-suggestions")
+@scenario(target="chonsole-suggestions")
 def chonsole_native_suggestions(run_state: "RunState") -> None:
     """Native suggestions keep their list while Tab-cycling, hovering, and clicking.
 
@@ -155,10 +165,10 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
 
     # `/set` exposes the engine configuration catalogue, which is long enough
     # to exercise a real scrollbar in the deterministic test map.
-    # Escape clears Chonsole's input; reopening avoids relying on selection
-    # ownership just after the click assertion above.
+    # Escape hides Chonsole but keeps its input; clear it before the next query.
     run_state.key("Escape")
     run_state.key("Return", delay=Delay.CONTROL)
+    _clear_chonsole_input(run_state)
     run_state.type_text("/set ")
     run_state.move(*chonsole_header_point(width, height))
     unhovered = run_state.screenshot("scroll-start")
@@ -179,6 +189,7 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
     # Reopen from the top for the independent mouse-wheel/scrollbar checks.
     run_state.key("Escape")
     run_state.key("Return", delay=Delay.CONTROL)
+    _clear_chonsole_input(run_state)
     run_state.type_text("/set ")
     run_state.move(*chonsole_header_point(width, height))
     unhovered = run_state.screenshot("scroll-start-reset")
@@ -221,6 +232,7 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
     # paints but never receives mouse presses.
     run_state.key("Escape")
     run_state.key("Return", delay=Delay.CONTROL)
+    _clear_chonsole_input(run_state)
     run_state.type_text("/set ")
     track_start = run_state.screenshot("track-scroll-start")
     track_bottom_y = suggestion_box[1] + CHONSOLE["header_height"] + CHONSOLE["scrollbar_height"] - 8
@@ -233,6 +245,7 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
     # centre; the previous additional inset clicked outside it.
     run_state.key("Escape")
     run_state.key("Return", delay=Delay.CONTROL)
+    _clear_chonsole_input(run_state)
     run_state.type_text("/set ")
     drag_start = run_state.screenshot("drag-scroll-start")
     run_state.drag(
@@ -241,15 +254,17 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
         scrollbar_x,
         suggestion_box[1] + CHONSOLE["header_height"] + CHONSOLE["scrollbar_drag_end_y"],
     )
+    run_state.wait_for_stable_region(suggestion_content)
     drag_down = run_state.screenshot("drag-scroll-down")
     run_state.assert_region_pixels(drag_start, drag_down, suggestion_content, min_changed=100)
     run_state.move(int(width * (CHONSOLE["left_fraction"] + CHONSOLE["width_fraction"] + 0.03)), third_row_y)
     run_state.move(scrollbar_x, scrollbar_y)
+    run_state.wait_for_stable_region(suggestion_content)
     drag_reentered = run_state.screenshot("drag-scroll-reentered")
     run_state.assert_region_pixels(drag_down, drag_reentered, suggestion_content, max_changed=0)
 
 
-@scenario(target="chonsole-native-commands")
+@scenario(target="chonsole-commands")
 def chonsole_native_commands(run_state: "RunState") -> None:
     """Native command completion is populated from the live engine catalogue."""
     run_state.focus()
@@ -264,7 +279,7 @@ def chonsole_native_commands(run_state: "RunState") -> None:
     )
 
 
-@scenario(target="chonsole-native-gamerules")
+@scenario(target="chonsole-gamerules")
 def chonsole_native_gamerules(run_state: "RunState") -> None:
     """`/gamerules` sets a live rule, then later reads the same value back."""
     name = "__sbc_e2e_gamerule"
@@ -287,7 +302,7 @@ def chonsole_native_gamerules(run_state: "RunState") -> None:
     run_state.wait_for_log(f"{name} = 42", after=output_log)
 
 
-@scenario(target="chonsole-native-texture")
+@scenario(target="chonsole-texture")
 def chonsole_native_texture(run_state: "RunState") -> None:
     """`/texture` previews a non-uniform texture and exports its real PNG data."""
     # `$detail` is enabled by the standalone test map. `$units` is listed by
@@ -315,34 +330,9 @@ def chonsole_native_texture(run_state: "RunState") -> None:
     _wait_for_non_uniform_png(run_state.write_dir / output)
 
 
-@scenario(target="chonsole-luaui-reload")
-def chonsole_luaui_reload(run_state: "RunState") -> None:
-    """Running `/luaui reload` from the rust console.
-
-    Executing a command that runs `Rml::Shutdown()` frees the console's own
-    document mid-keypress; hiding that dangling handle right after was a
-    use-after-free that aborted the engine. The engine surviving to the
-    screenshots below -- a crash would exit it and fail the run on the next capture
-    -- is the assertion, plus that the console recreates its context and works
-    again after the reload.
-    """
-    run_state.focus()
-    run_state.key("Escape")
-    run_state.key("Return", delay=Delay.FRAME)
-    run_state.type_text("/luaui reload")
-    run_state.screenshot("before-reload")
-    # Enter executes it: RmlUi is torn down, then the console hides itself.
-    run_state.key("Return", delay=Delay.RELOAD)
-    run_state.screenshot("after-reload")
-    # The console must recreate its context and accept input again.
-    run_state.key("Return", delay=Delay.SETTLE)
-    run_state.type_text("recovered")
-    run_state.screenshot("console-recovered")
-
-
-@scenario(crop="dev-console")
-def native_dev_console(run_state: "RunState") -> None:
-    """The native (Rust) developer console.
+@scenario(target="developer-console", crop="dev-console")
+def developer_console(run_state: "RunState") -> None:
+    """The developer console.
 
     Log content varies run to run, so every golden is taken after `Clear`: an
     empty log is the deterministic state. The toolbar, F8 visibility, and the
@@ -385,10 +375,13 @@ def native_dev_console(run_state: "RunState") -> None:
 
     run_state.key("F8", delay=Delay.DIALOG)
     run_state.golden("console-shown")
+    # Preserve the harness baseline for the following clipboard case. The
+    # hide/show contract above has already been captured and asserted.
+    run_state.key("F8", delay=Delay.FRAME)
 
 
-@scenario()
-def native_dev_console_copy(run_state: "RunState") -> None:
+@scenario(target="developer-console-copy")
+def developer_console_copy(run_state: "RunState") -> None:
     """Selecting log lines and copying them with Ctrl+C.
 
     The clipboard is read back: the panel's toolbar binds Ctrl+C to Copy, so this
@@ -439,6 +432,11 @@ def _assert_non_uniform_image(path: Path, region: tuple[int, int, int, int], sub
         except OSError:
             pause(Delay.POLL)
     raise AssertionError(f"timed out reading {subject}")
+
+
+def _clear_chonsole_input(run_state: "RunState") -> None:
+    run_state.key("ctrl+a", delay=Delay.INPUT)
+    run_state.key("Backspace", delay=Delay.CONTROL)
 
 
 def _wait_for_non_uniform_png(path: Path, timeout_s: Timeout = Timeout.COMMAND) -> None:

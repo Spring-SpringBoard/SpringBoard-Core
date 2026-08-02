@@ -224,22 +224,18 @@ impl ChonsoleView {
         index.is_some_and(|index| self.suggestions.select(core, &mut self.input, index))
     }
 
-    pub(super) fn process_suggestion_hovers(&mut self) {
+    pub(super) fn process_suggestion_hovers(&mut self) -> Result<(), Error> {
         let hovered = self.suggestion_hovers.borrow_mut().pop();
         self.suggestion_hovers.borrow_mut().clear();
         let Some(hovered) = hovered else {
-            return;
+            return Ok(());
         };
         if hovered == self.hovered_suggestion {
-            return;
+            return Ok(());
         }
         self.hovered_suggestion = hovered;
-        let _ = self
-            .rml
-            .set_suggestion_rows(&self.suggestions.rml_rows(hovered));
-        let _ = self
-            .rml
-            .set_suggestion_details(self.suggestions.detail(hovered));
+        self.rml
+            .set_suggestion_details(self.suggestions.detail(hovered))
     }
 
     pub(super) fn refresh(

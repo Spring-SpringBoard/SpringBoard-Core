@@ -97,6 +97,10 @@ impl CommandHistory {
         )
     }
 
+    pub(super) fn undo_len(&self) -> usize {
+        self.undo.len()
+    }
+
     fn push_undo_impl(&mut self, entry: HistoryEntry, clear_redo: bool) -> Vec<HistoryEvent> {
         self.undo.push_back(entry);
         let mut events = Vec::new();

@@ -72,7 +72,7 @@ body {
     background-color: #4f9ed1c0;
 }
 
-.hovered-suggestion {
+.suggestion:hover {
     background-color: #2b5878d8;
 }
 

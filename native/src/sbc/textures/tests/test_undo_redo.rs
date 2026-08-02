@@ -475,6 +475,65 @@ fn texture_command_multi_stroke_redo(ctx: &mut TestCtx) -> Result<(), String> {
     Ok(())
 }
 
+/// Diffuse import participates in the same command history as map painting.
+/// This is the boundary used by shared E2E sessions: undo must restore every
+/// tile, and redo must reapply the imported image.
+fn texture_import_undo_redo(ctx: &mut TestCtx) -> Result<(), String> {
+    generate(ctx);
+    route(
+        ctx,
+        serde_json::json!({ "className": "ClearUndoRedoCommand" }),
+    );
+    ctx.sbc.model::<TextureModel>().history.clear();
+
+    let tile = ctx
+        .sbc
+        .model::<TextureModel>()
+        .tiles
+        .texture(0, 0)
+        .ok_or("no tile (0,0)")?;
+    let baseline = read_first_pixel(ctx, &tile).ok_or("read import baseline")?;
+    let path = std::env::temp_dir().join(format!("sbc-import-undo-{}.png", std::process::id()));
+    image::RgbaImage::from_pixel(16, 16, image::Rgba([240, 8, 16, 255]))
+        .save(&path)
+        .map_err(|err| format!("write import fixture: {err}"))?;
+
+    let result = (|| {
+        route(
+            ctx,
+            serde_json::json!({
+                "className": "ImportDiffuseCommand",
+                "texturePath": path.to_string_lossy(),
+            }),
+        );
+        let imported = read_first_pixel(ctx, &tile).ok_or("read imported tile")?;
+        if approx_eq(imported, baseline) {
+            return Err(format!(
+                "diffuse import did not change tile: {imported:?} == {baseline:?}"
+            ));
+        }
+
+        route(ctx, serde_json::json!({ "className": "UndoCommand" }));
+        let undone = read_first_pixel(ctx, &tile).ok_or("read imported tile after undo")?;
+        if !approx_eq(undone, baseline) {
+            return Err(format!(
+                "diffuse undo did not restore baseline: {undone:?} vs {baseline:?}"
+            ));
+        }
+
+        route(ctx, serde_json::json!({ "className": "RedoCommand" }));
+        let redone = read_first_pixel(ctx, &tile).ok_or("read imported tile after redo")?;
+        if !approx_eq(redone, imported) {
+            return Err(format!(
+                "diffuse redo did not reapply import: {redone:?} vs {imported:?}"
+            ));
+        }
+        Ok(())
+    })();
+    let _ = std::fs::remove_file(&path);
+    result
+}
+
 crate::integration_test!("texture_model_undo", texture_model_undo);
 crate::integration_test!("texture_undo_redo_ladder", texture_undo_redo_ladder);
 crate::integration_test!("texture_redo_fork", texture_redo_fork);
@@ -488,6 +547,7 @@ crate::integration_test!(
     "texture_command_multi_stroke_redo",
     texture_command_multi_stroke_redo
 );
+crate::integration_test!("texture_import_undo_redo", texture_import_undo_redo);
 crate::integration_test!(
     "tile_undo_pixel_roundtrip",
     export::tile_undo_pixel_roundtrip

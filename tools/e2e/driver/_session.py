@@ -69,29 +69,50 @@ class SessionMixin(RunState):
         self.wait_for_ui_ready()
         self.wait_for_ui_settle()
         self.assert_no_rml_diagnostics()
-        self.screenshot("00-initial")
 
     def run_scenario(self) -> None:
         from ._scenarios import run_scenario
 
+        self.begin_scenario()
         run_scenario(cast("E2ERun", self))
 
+    def reuse_session(self, source: "E2ERun") -> None:
+        """Attach this case's artifacts to an already-ready engine session."""
+        assert source.write_dir is not None
+        assert source.proc is not None
+        self.write_dir = source.write_dir
+        self.proc = source.proc
+        self.window = source.window
+        self.command = source.command
+        self._rml_diagnostic_cursor = len(self.engine_log())
+        self.event("session_reused", source_run=source.run_id)
+        # Input scenarios own their focus boundary; control-only scenarios do
+        # not need one. Re-focusing here duplicated the first action of every
+        # shared case and added a full X11/window round trip before it began.
+
     def finish(self, status: str, **extra: object) -> None:
-        failures = [*self._finish_screenshots(), *self._finish_pixel_assertions()]
+        try:
+            failures = [*self._finish_screenshots(), *self._finish_pixel_assertions()]
+        finally:
+            # Preserve the engine log even when image finalization or a
+            # diagnostic check fails; the artifact is the evidence for the
+            # failed case.
+            self.collect_logs()
         self.assert_no_rml_diagnostics()
         if failures:
             status = "failed"
             extra = {**extra, "assertion_failures": failures}
-        self.collect_logs()
         self.event("finish", status=status, **extra)
         self.write_run_md(status, **extra)
         if failures:
             raise AssertionError("E2E assertions failed:\n" + "\n".join(failures))
 
     def stop(self) -> None:
+        self.event("teardown_start")
         self.close_control()
         if self.proc is None or self.proc.poll() is not None:
             self.close_process_logs()
+            self.event("teardown_complete")
             return
         self.proc.terminate()
         try:
@@ -100,6 +121,7 @@ class SessionMixin(RunState):
             self.proc.kill()
             self.proc.wait(timeout=Timeout.SHUTDOWN)
         self.close_process_logs()
+        self.event("teardown_complete")
 
     def wait_for_window(self, timeout_s: Timeout = Timeout.UI_START) -> str:
         started = time.monotonic()
@@ -158,7 +180,7 @@ class SessionMixin(RunState):
             self.assert_running()
             pause(Delay.FRAME)
         self.event("ui_ready_timeout", logs=[str(path) for path in log_paths], timeout_s=timeout_s)
-        raise RuntimeError(f"editor UI did not become ready within {timeout_s:.0f}s")
+        raise RuntimeError(f"editor UI did not become ready within {float(timeout_s):.0f}s")
 
     def wait_for_ui_settle(self) -> None:
         started = time.monotonic()

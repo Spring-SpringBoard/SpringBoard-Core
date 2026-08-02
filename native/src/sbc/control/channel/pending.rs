@@ -12,6 +12,12 @@ const PENDING_TICKS: u32 = 600;
 /// An effect a handler started that has not landed yet. Returning one is how a
 /// handler says "reply when this is true", without knowing about request ids.
 pub(crate) enum Effect {
+    /// Two native updates have passed without new external input. This is an
+    /// ordering barrier for callers that have just sent engine input.
+    InputIdle {
+        observed_input: u64,
+        quiet_updates: u8,
+    },
     /// An editor was asked to open; the panel opens it on its next update.
     EditorOpen(&'static str),
     /// A capture was queued; the file appears once the draw pass has written it.

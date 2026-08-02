@@ -36,8 +36,42 @@ pub(crate) fn execute(sbc: &mut SBC, params: Execute) -> Handled {
 fn payload(params: &Execute) -> Value {
     let mut payload = params.fields.clone();
     payload.insert("className".to_string(), params.class_name.clone().into());
-    payload
-        .entry("opts")
-        .or_insert_with(|| Value::Object(params.fields.clone()));
+    // Do not add an empty `opts` object. Unit commands (for example
+    // `UndoCommand`) deserialize from `null`, while commands with fields still
+    // receive the compatibility wrapper below.
+    if !params.fields.is_empty() {
+        payload
+            .entry("opts")
+            .or_insert_with(|| Value::Object(params.fields.clone()));
+    }
     Value::Object(payload)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn unit_commands_have_no_synthetic_options() {
+        let params = Execute {
+            class_name: "UndoCommand".to_string(),
+            fields: Map::new(),
+        };
+
+        assert_eq!(payload(&params), json!({ "className": "UndoCommand" }));
+    }
+
+    #[test]
+    fn field_commands_keep_the_compatibility_options_wrapper() {
+        let fields = serde_json::from_value(json!({ "value": 1 })).unwrap();
+        let params = Execute {
+            class_name: "SomeCommand".to_string(),
+            fields,
+        };
+
+        assert_eq!(
+            payload(&params),
+            json!({ "className": "SomeCommand", "value": 1, "opts": { "value": 1 } })
+        );
+    }
 }

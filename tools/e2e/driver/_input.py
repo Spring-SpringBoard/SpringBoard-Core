@@ -86,6 +86,10 @@ class InputMixin(RunState):
     @override
     def type_text(self, text: str, delay_ms: int = TEXT_INTERVAL_MS) -> None:
         self.require_window()
+        # A focused text field (notably Chonsole after Return) has to exist
+        # before its characters arrive. This is a next-frame barrier for the
+        # preceding click/key, not a fixed text-entry delay.
+        self.sync_input()
         self.event("type", text=text)
         for index, fragment in enumerate(text.split("/")):
             if fragment:
@@ -186,9 +190,10 @@ class InputMixin(RunState):
 
     @override
     def wheel(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: Delay = Delay.FRAME) -> None:
-        """Scroll the wheel over a point. Over the map this zooms the camera,
-        which is the only way to get close enough to *see* what a scenario placed
-        -- the default camera is so far out that a feature is a few pixels.
+        """Scroll the wheel over a point for a UI interaction under test.
+
+        Domain scenarios frame the map through ``control.camera.zoom``; this
+        remains for genuine wheel contracts such as Chonsole suggestion scroll.
         """
         self.require_window()
         self.event("wheel", x=x, y=y, clicks=clicks, up=up)
@@ -258,7 +263,7 @@ class InputMixin(RunState):
         self.event("press", x=x, y=y, button=button)
         run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
         pause(Delay.CONTROL)
-        run("xdotool", "mousedown", str(button))
+        run("xdotool", "mousedown", "--window", self.window, str(button))
         pause(delay)
 
     @override
@@ -266,7 +271,7 @@ class InputMixin(RunState):
         self.require_window()
         self.event("release", x=x, y=y, button=button)
         run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
-        run("xdotool", "mouseup", str(button))
+        run("xdotool", "mouseup", "--window", self.window, str(button))
         pause(delay)
 
     @override
@@ -291,14 +296,14 @@ class InputMixin(RunState):
         # traces from the *previous* spot -- off the map, if that was a parked
         # screenshot -- and the brush refuses to paint.
         pause(Delay.CONTROL)
-        run("xdotool", "mousedown", str(button))
+        run("xdotool", "mousedown", "--window", self.window, str(button))
         pause(step_delay)
         for i in range(1, steps + 1):
             xi = round(x1 + (x2 - x1) * i / steps)
             yi = round(y1 + (y2 - y1) * i / steps)
             run("xdotool", "mousemove", "--window", self.window, str(xi), str(yi))
             pause(step_delay)
-        run("xdotool", "mouseup", str(button))
+        run("xdotool", "mouseup", "--window", self.window, str(button))
         pause(Delay.CONTROL)
 
     @override

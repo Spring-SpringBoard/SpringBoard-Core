@@ -38,7 +38,7 @@ one small, reviewed domain at a time into `rust-stable`.
 Native UI scenarios run against the real editor window:
 
 ```bash
-just test-e2e <target> --tag ui:rust
+just test-e2e <target> --tag ui
 ```
 
 Every changed golden must be visually inspected before it is recorded as

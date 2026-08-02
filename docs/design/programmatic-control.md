@@ -9,7 +9,8 @@ A control channel lets a script drive a running SpringBoard the way a user
 drives it — open an editor, set its fields, run a command, place the camera,
 capture the result — without synthesising X11 input.
 
-Status: **design, not built.**
+Status: **implemented for editor fields, registered commands, camera state, and
+ordered capture; domain handles are the next layer.**
 
 ## Why
 
@@ -41,6 +42,11 @@ requests cross to the main thread on a queue drained once per `update()`;
 replies return the same way. One request per line, no JSON-RPC batches —
 requests on a connection apply in order and reply in order.
 
+Project reloads replace the native module and therefore close existing sockets.
+The Python client detects that replacement, waits for the new `instance_id`,
+refreshes the schema, and reconnects subsequent calls; a caller does not need
+to rebuild its editor or camera handles.
+
 ## Three surfaces, all first-class
 
 **Editors** — `ui.open(tab, editor)`, `ui.set(editor, field, value)`,
@@ -64,7 +70,13 @@ is what makes binding fail fast: a client resolves its handles at connect time,
 so an unknown editor or field raises immediately with a list of what exists,
 rather than silently doing nothing three minutes into a run.
 
-Alongside these: `camera.set/get` (position, target, fov) and `capture(path)`.
+Alongside these: `camera.set/get` (rendered position, direction, fov, and
+controller distance/height), `camera.trace_screen_ray(x, y)`,
+`camera.zoom(factor)`, `capture(path)`,
+`runtime.barrier()` (two input-idle native updates, for ordering external input), and
+`runtime.reload_native_modules()` for native-module lifecycle testing. The
+reload deliberately preserves engine world/project state; it is not a project
+reset.
 
 ## The Python client
 
@@ -89,7 +101,7 @@ with control.connect(write_dir) as sb:
     lighting.groundDiffuseColor = (0.9, 0.45, 0.2, 1.0)  # and here, listing the fields
     lighting.shadowMode = "Full"
 
-    sb.camera.set(position=(2048, 900, 2048), target=(2048, 0, 2048))
+    sb.camera.set(position=(2048, 900, 2048), direction=(0, -1, 0), height=900)
     sun(dirX=0.5)
     sb.capture(out / "lit.png")
 ```
@@ -125,9 +137,10 @@ other:
 
 A reply is sent once its effect has landed, not once the request was accepted:
 `ui.open` answers when the editor is on screen, `capture` when the image is on
-disk. Requests on a connection apply and answer in order, and `capture` is
-queued at `draw_screen_post`, so an image already contains every call before it.
-No scenario needs a sleep to make a screenshot honest.
+disk, and `runtime.barrier` after two input-idle native updates. Requests on a
+connection apply and answer in order, and `capture` is queued at
+`draw_screen_post`, so an image already contains every call before it. No
+scenario needs a sleep to make a screenshot honest.
 
 Unknown method, unknown editor, unknown field, out-of-range value, and failed
 deserialisation are all structured errors returned before anything is applied.
@@ -135,8 +148,9 @@ Nothing in this channel may fail by doing nothing.
 
 ## Scope
 
-**Built**: `describe`, `ui.open/set/get`, `command.execute`, `camera.set/get`,
-`capture`. `SBC_CONTROL_FILE` names the discovery file and turns the channel on;
+**Built**: `describe`, `ui.open/set/get`, `command.execute`,
+`camera.set/get/trace_screen_ray/zoom`,
+`capture`, `runtime.barrier`, `runtime.reload_native_modules`. `SBC_CONTROL_FILE` names the discovery file and turns the channel on;
 the E2E harness sets it per run and exposes the connection as
 `run_state.control`.
 
@@ -153,7 +167,7 @@ widget needs a real display server, and stays with the X11 harness.
 ## Relationship to the X11 harness
 
 The two coexist. Feature scenarios — set things up, run the feature, look at the
-result — move to `tools/e2e/scenarios/control.py` and get faster and
-layout-independent: `lighting` there covers what `env.lighting_panel` covers, in
+result — move to the relevant domain module under `tools/e2e/scenarios/` and get
+faster and layout-independent: `lighting` there covers the environment lighting domain, in
 2s of scenario time against 14s. Scenarios genuinely about input routing, focus
 and hit-testing keep clicking. See [e2e.md](e2e.md).
