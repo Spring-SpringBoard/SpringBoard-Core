@@ -297,7 +297,11 @@ local function collectFeatureMaps()
 	for id = 1, #FeatureDefs do
 		local def = FeatureDefs[id]
 		local custom = def and def.customParams
-		if custom and custom.normaltex then
+		-- `normaltex` alone is not ours to key on -- it is the standard Custom Unit
+		-- Shaders customparam, so anything else in the game that sets it for CUS's
+		-- benefit (a tree, say) would match too. `author` is what genassets actually
+		-- stamps on the featureDefs it writes; nothing else has reason to set it.
+		if custom and custom.normaltex and custom.author == "genassets" then
 			featureMaps[id] = {
 				normal = custom.normaltex,
 				material = custom.materialtex,
@@ -442,7 +446,7 @@ function gadget:FeatureDestroyed(featureID)
 end
 
 function gadget:DrawGenesis()
-	if not shader then
+	if not shader or not params.enabled then
 		return
 	end
 
