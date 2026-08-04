@@ -99,6 +99,9 @@ fn preview_path(model: &TableModel<AssetShaderField>) -> String {
     PREVIEW_MAPS
         .iter()
         .find(|(name, _)| *name == selected)
-        .map(|(_, texture)| format!("unittextures/{}.png", texture.replace("{}", ASSET)))
+        // `.dds`, since the generator ships an offline mip chain and the engine only uses an
+        // embedded one from a DDS. The panel kept asking for the old `.png` and RmlUi logged
+        // "Could not load texture" once per preview, leaving the pane blank.
+        .map(|(_, texture)| format!("unittextures/{}.dds", texture.replace("{}", ASSET)))
         .unwrap_or_default()
 }

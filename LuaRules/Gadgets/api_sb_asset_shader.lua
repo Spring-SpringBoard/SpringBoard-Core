@@ -31,6 +31,9 @@ local NORMAL_TEXUNIT = 2
 local MATERIAL_TEXUNIT = 3
 local DETAIL_TEXUNIT = 4
 local SHADOW_TEXUNIT = 5
+local DETAIL_COLOUR_TEXUNIT = 6
+local DETAIL_DISTRIBUTION_TEXUNIT = 7
+local DETAIL_DIRT_TEXUNIT = 8
 
 local params = {
 	enabled = true,
@@ -41,6 +44,13 @@ local params = {
 	-- `asset_shader/ui/model.rs`. Kept in step with it, since this is what applies
 	-- before the panel has said anything.
 	detailStrength = 4.0,
+	detailPitDensity = 0.30,
+	detailPitDepth = 2.0,
+	detailPitRoughness = 0.22,
+	detailPitColourStrength = {3.75, 3.30, 4.10},
+	detailDirtNormalStrength = 1.20,
+	detailDirtRoughness = 0.90,
+	detailDirtAlbedoStrength = 0.92,
 	roughnessBias = 0.0,
 	shadowDensity = 0.7,
 	shadowBias = 1.5,
@@ -86,6 +96,9 @@ uniform sampler2D albedoTex;
 uniform sampler2D normalTex;
 uniform sampler2D materialTex;
 uniform sampler2D detailTex;
+uniform sampler2D detailColourTex;
+uniform sampler2D detailDistributionTex;
+uniform sampler2D detailDirtTex;
 uniform sampler2DShadow shadowTex;
 
 uniform mat4 shadowMatrix;
@@ -99,6 +112,15 @@ uniform vec3 upDirView;
 uniform float detailScaleFine;
 uniform float detailScaleCoarse;
 uniform float detailStrength;
+uniform float detailColourEnabled;
+uniform float detailDirtEnabled;
+uniform float detailPitDensity;
+uniform float detailPitDepth;
+uniform float detailPitRoughness;
+uniform vec3 detailPitColourStrength;
+uniform float detailDirtNormalStrength;
+uniform float detailDirtRoughness;
+uniform float detailDirtAlbedoStrength;
 uniform float roughnessBias;
 uniform float shadowDensity;
 uniform float shadowBias;
@@ -116,6 +138,17 @@ varying vec3 viewPos;
 
 const float PI = 3.14159265359;
 const vec3 F0_DIELECTRIC = vec3(0.04);
+const float COLOUR_DETAIL_SECONDARY_SCALE = 0.61803398875;
+const float PIT_COLOUR_STRENGTH_REFERENCE = 3.75;
+
+// Mortar's tiling detail, relative to the stone's.
+//
+// Finer, so the two materials differ in feature size rather than only in strength -- that is
+// what actually reads as a different material. And weaker, because a mortar bed is a narrow
+// strip usually seen at a grazing angle, where a full-strength detail normal contributes
+// almost no apparent shape but plenty of aliasing.
+const float MORTAR_DETAIL_TILE = 2.6;
+const float MORTAR_DETAIL_STRENGTH = 0.35;
 
 // The two UV debug views answer different questions, so they are separate views.
 //
@@ -182,6 +215,37 @@ vec4 sampleDetail(vec3 position, vec3 normal, float scale)
 	     + texture2D(detailTex, p.xy) * weights.z;
 }
 
+vec4 sampleDetailColour(vec3 position, vec3 normal, float scale)
+{
+	vec3 weights = abs(normalize(normal));
+	weights /= max(weights.x + weights.y + weights.z, 1e-5);
+
+	vec3 p = position * scale;
+	return texture2D(detailColourTex, p.yz) * weights.x
+	     + texture2D(detailColourTex, p.zx) * weights.y
+	     + texture2D(detailColourTex, p.xy) * weights.z;
+}
+
+vec4 sampleDetailDirt(vec3 position, vec3 normal, float scale)
+{
+	vec3 weights = abs(normalize(normal));
+	weights /= max(weights.x + weights.y + weights.z, 1e-5);
+
+	vec3 p = position * scale;
+	return texture2D(detailDirtTex, p.yz) * weights.x
+	     + texture2D(detailDirtTex, p.zx) * weights.y
+	     + texture2D(detailDirtTex, p.xy) * weights.z;
+}
+
+float detailDistributionDensity(vec2 uv, float density)
+{
+	float distribution = texture2D(detailDistributionTex, uv).r;
+	float feathered = clamp((distribution - 0.16) / (0.78 - 0.16), 0.0, 1.0);
+	float baseline = max(0.08, min(0.14, density * 0.30));
+	float maximum = max(baseline, min(0.82, 0.30 + density * 1.65));
+	return mix(baseline, maximum, feathered);
+}
+
 vec3 blendNormals(vec3 base, vec3 detail)
 {
 	return normalize(vec3(base.xy + detail.xy, base.z * detail.z));
@@ -191,24 +255,102 @@ void main()
 {
 	// tex1 stores sRGB; the engine binds it without a decode.
 	vec3 albedo = pow(texture2D(albedoTex, texCoord).rgb, vec3(2.2));
-	vec2 material = texture2D(materialTex, texCoord).rg;
+	vec3 material = texture2D(materialTex, texCoord).rgb;
 	float occlusion = material.g;
+
+	// B carries which material this texel is: 0 stone, 1 mortar.
+	//
+	// Everything else about a material bakes into the maps, which is why mortar already
+	// differs in colour, roughness and base normal without the shader knowing anything. The
+	// tiling detail is the exception -- it is sampled here, per pixel, and was applied
+	// identically everywhere. So a different material still wore the stone's grain, and on a
+	// thin mortar bed seen near edge-on that grain is also what aliased and shimmered.
+	float mortar = clamp(material.b, 0.0, 1.0);
 
 	vec3 baseTangentNormal = texture2D(normalTex, texCoord).xyz * 2.0 - 1.0;
 
-	vec4 fineDetail = sampleDetail(objectPos, objectNormal, detailScaleFine);
+	// Mortar is sampled at a different scale, not merely weaker. It is an aggregate and
+	// mottles at a few elmos where dressed stone weathers across tens, and feature *size* is
+	// what the eye reads as a different material long before a change in strength does.
+	//
+	// Sampled twice and *the results* blended, rather than blending the scale and sampling
+	// once. The mask is mipmapped along with the rest of the material map, so at distance its
+	// clean 0 and 1 average into fractions; feeding those into the scale produced a tiling
+	// that matched neither material and slid around as the mip level changed, which is what
+	// made the beds shimmer and swim with zoom. Blending two correctly filtered samples is
+	// stable, because each one is a valid appearance at every level and a partial mask just
+	// crossfades between them.
+	vec4 stoneFine = sampleDetail(objectPos, objectNormal, detailScaleFine);
+	vec4 mortarFine = sampleDetail(objectPos, objectNormal, detailScaleFine * MORTAR_DETAIL_TILE);
+	vec4 fineDetail = mix(stoneFine, mortarFine, mortar);
 	vec4 coarseDetail = sampleDetail(objectPos, objectNormal, detailScaleCoarse);
 	vec3 detailNormal = mix(
 		fineDetail.xyz * 2.0 - 1.0,
 		coarseDetail.xyz * 2.0 - 1.0,
 		clamp(coarseDetail.a, 0.0, 1.0)
 	);
-	detailNormal.xy *= detailStrength;
+	vec3 dirtClasses = vec3(0.0);
+	float dirtFactor = 0.0;
+	float dirtAlbedoFactor = 0.0;
+	if (detailDirtEnabled > 0.5) {
+		vec4 dirtA = sampleDetailDirt(objectPos, objectNormal, detailScaleFine);
+		vec4 dirtB = sampleDetailDirt(
+			objectPos, objectNormal, detailScaleFine * COLOUR_DETAIL_SECONDARY_SCALE);
+		vec4 dirt = vec4(max(dirtA.rgb, dirtB.rgb), max(dirtA.a, dirtB.a));
+		float faceBias = 0.05 + 0.95 * abs(normalize(objectNormal).y);
+		float dirtDensity = detailDistributionDensity(texCoord, detailPitDensity) * faceBias;
+		float dirtThreshold = 1.0 - dirtDensity;
+		vec3 dirtPresent = step(vec3(dirtThreshold), dirt.rgb);
+		dirtClasses = clamp(dirt.rgb * dirtPresent, vec3(0.0), vec3(1.0));
+		dirtFactor = clamp(
+			dirtClasses.r * 0.35 + dirtClasses.g * 0.72 + dirtClasses.b,
+			0.0,
+			1.0
+		);
+		// The red class is pixel-scale grit. Leave it continuous for albedo so it averages into a
+		// middle tone at distance; the selected classes above still drive localized dents and
+		// roughness.
+		dirtAlbedoFactor = max(max(dirtClasses.g, dirtClasses.b), dirt.r * dirtDensity);
+	}
+	// And weaker on mortar: a bed is a narrow strip, usually seen at a grazing angle, so
+	// full-strength normal perturbation there buys almost no shape and a lot of shimmer.
+	detailNormal.xy *= detailStrength * mix(1.0, MORTAR_DETAIL_STRENGTH, mortar)
+		* (1.0 + dirtFactor * detailDirtNormalStrength);
 
 	vec3 tangentNormal = blendNormals(baseTangentNormal, normalize(detailNormal));
 
+	// The colour tile is white outside a pit and black at its centre. It is localized dirt,
+	// not another broad base-colour layer: the distribution map chooses where it may appear.
+	float pitFactor = 0.0;
+	if (detailColourEnabled > 0.5) {
+		vec4 pitA = sampleDetailColour(objectPos, objectNormal, detailScaleFine);
+		vec4 pitB = sampleDetailColour(
+			objectPos, objectNormal, detailScaleFine * COLOUR_DETAIL_SECONDARY_SCALE);
+		// The tile RGB is an independent per-mark value: white is clean, darker RGB is a darker
+		// grain. Alpha remains the sparse occurrence/shape signal used by the distribution gate.
+		vec4 pit = vec4(min(pitA.rgb, pitB.rgb), max(pitA.a, pitB.a));
+		// The atlas distribution favours the top island, but triplanar projection can make the
+		// same sparse tile look denser on a long rim. Keep edge pits subdued without removing them.
+		float faceBias = 0.05 + 0.95 * abs(normalize(objectNormal).y);
+		vec3 pitDarkness = vec3(1.0) - clamp(pit.rgb, vec3(0.0), vec3(1.0));
+		float pitStrength = dot(detailPitColourStrength, vec3(0.3333333333))
+			/ PIT_COLOUR_STRENGTH_REFERENCE;
+		vec3 pitTint = clamp(
+			vec3(1.0) - pitDarkness * vec3(pitStrength),
+			vec3(0.0),
+			vec3(1.0)
+		);
+		float pitDensity = detailDistributionDensity(texCoord, detailPitDensity) * faceBias;
+		float pitPresent = step(1.0 - pitDensity, clamp(pit.a, 0.0, 1.0));
+		pitFactor = pitPresent * clamp(pit.a, 0.0, 1.0);
+		float pitAmount = clamp(pitFactor * detailPitDepth, 0.0, 1.0);
+		albedo *= mix(vec3(1.0), pitTint, pitAmount);
+	}
+	albedo *= 1.0 - dirtAlbedoFactor * detailDirtAlbedoStrength;
+
 	float roughness = clamp(
-		material.r + roughnessBias + (mix(fineDetail.a, coarseDetail.a, 0.5) - 0.5) * 0.28,
+		material.r + roughnessBias + (mix(fineDetail.a, coarseDetail.a, 0.5) - 0.5) * 0.28
+			+ pitFactor * detailPitRoughness + dirtFactor * detailDirtRoughness,
 		0.045,
 		1.0
 	);
@@ -240,8 +382,18 @@ void main()
 		// shadows itself and the result is the speckled fringe of shadow acne.
 		// Weighted towards grazing incidence, which is where the shadow map's
 		// texel footprint on the surface is largest.
-		vec3 worldNormal = normalize((viewInverse * vec4(N, 0.0)).xyz);
-		world.xyz += worldNormal * shadowBias * (0.25 + (1.0 - NdotL));
+		//
+		// Offset along the *geometric* normal, never the normal-mapped one. The shadow
+		// map records where the geometry is; it has never heard of the detail texture.
+		// Biasing along the shaded normal made the offset direction jitter from pixel to
+		// pixel with the detail normal -- at detailStrength 4 it swings hard -- so
+		// neighbouring pixels were pushed different distances and some cleared the depth
+		// comparison while others did not. That is the stippled fringe, and it tracked
+		// the grain rather than the geometry.
+		vec3 geometricNormal = normalize(viewNormal);
+		float geometricNdotL = max(dot(geometricNormal, L), 0.0);
+		vec3 worldNormal = normalize((viewInverse * vec4(geometricNormal, 0.0)).xyz);
+		world.xyz += worldNormal * shadowBias * (0.25 + (1.0 - geometricNdotL));
 
 		vec4 shadowVertexPos = shadowMatrix * world;
 		shadowVertexPos.xy += vec2(0.5);
@@ -292,6 +444,14 @@ local function uniformLocation(name)
 	return uniforms[name]
 end
 
+local function customNumber(custom, key, fallback)
+	local value = tonumber(custom[key])
+	if value == nil then
+		return fallback
+	end
+	return value
+end
+
 local function collectFeatureMaps()
 	local found = 0
 	for id = 1, #FeatureDefs do
@@ -306,6 +466,22 @@ local function collectFeatureMaps()
 				normal = custom.normaltex,
 				material = custom.materialtex,
 				detail = custom.detailtex,
+				detailColour = custom.detailcolortex,
+				detailDirt = custom.detaildirttex,
+				detailDistribution = custom.detaildisttex,
+				detailTileFine = customNumber(custom, "detail_tile_elmos", params.detailTileFine),
+				detailStrength = customNumber(custom, "detail_strength", params.detailStrength),
+				detailPitDensity = customNumber(custom, "detail_pit_density", params.detailPitDensity),
+				detailPitDepth = customNumber(custom, "detail_pit_depth", params.detailPitDepth),
+				detailPitRoughness = customNumber(custom, "detail_pit_roughness", params.detailPitRoughness),
+				detailPitColourStrength = {
+					customNumber(custom, "detail_pit_colour_strength_r", params.detailPitColourStrength[1]),
+					customNumber(custom, "detail_pit_colour_strength_g", params.detailPitColourStrength[2]),
+					customNumber(custom, "detail_pit_colour_strength_b", params.detailPitColourStrength[3]),
+				},
+				detailDirtNormalStrength = customNumber(custom, "detail_dirt_normal_strength", params.detailDirtNormalStrength),
+				detailDirtRoughness = customNumber(custom, "detail_dirt_roughness", params.detailDirtRoughness),
+				detailDirtAlbedoStrength = customNumber(custom, "detail_dirt_albedo_strength", params.detailDirtAlbedoStrength),
 			}
 			found = found + 1
 		end
@@ -322,6 +498,9 @@ local function compileShader()
 			normalTex = NORMAL_TEXUNIT,
 			materialTex = MATERIAL_TEXUNIT,
 			detailTex = DETAIL_TEXUNIT,
+			detailColourTex = DETAIL_COLOUR_TEXUNIT,
+			detailDistributionTex = DETAIL_DISTRIBUTION_TEXUNIT,
+			detailDirtTex = DETAIL_DIRT_TEXUNIT,
 			shadowTex = SHADOW_TEXUNIT,
 		},
 	})
@@ -343,17 +522,53 @@ local function applyMaterial(featureID, featureDefID)
 	end
 
 	Spring.FeatureRendering.SetLODCount(featureID, 1)
+	local texunits = {
+		[0] = ("%%%d:0"):format(-featureDefID),
+		[NORMAL_TEXUNIT] = maps.normal,
+		[MATERIAL_TEXUNIT] = maps.material,
+		[DETAIL_TEXUNIT] = maps.detail,
+		[SHADOW_TEXUNIT] = "$shadow",
+	}
+	if maps.detailColour then
+		texunits[DETAIL_COLOUR_TEXUNIT] = maps.detailColour
+	end
+	if maps.detailDistribution then
+		texunits[DETAIL_DISTRIBUTION_TEXUNIT] = maps.detailDistribution
+	end
+	if maps.detailDirt then
+		texunits[DETAIL_DIRT_TEXUNIT] = maps.detailDirt
+	end
 	Spring.FeatureRendering.SetMaterial(featureID, 1, "opaque", {
 		shader = shader,
-		texunits = {
-			[0] = ("%%%d:0"):format(-featureDefID),
-			[NORMAL_TEXUNIT] = maps.normal,
-			[MATERIAL_TEXUNIT] = maps.material,
-			[DETAIL_TEXUNIT] = maps.detail,
-			[SHADOW_TEXUNIT] = "$shadow",
-		},
+		texunits = texunits,
 		usecamera = true,
 	})
+	if Spring.FeatureRendering.SetForwardMaterialUniform then
+		local hasColour = maps.detailColour and maps.detailDistribution and 1.0 or 0.0
+		local hasDirt = maps.detailDirt and maps.detailDistribution and 1.0 or 0.0
+		Spring.FeatureRendering.SetForwardMaterialUniform(featureID, "opaque", 1,
+			"detailColourEnabled", GL_FLOAT, hasColour)
+		Spring.FeatureRendering.SetForwardMaterialUniform(featureID, "opaque", 1,
+			"detailDirtEnabled", GL_FLOAT, hasDirt)
+		Spring.FeatureRendering.SetForwardMaterialUniform(featureID, "opaque", 1,
+			"detailScaleFine", GL_FLOAT, 1.0 / math.max(maps.detailTileFine, 0.01))
+		Spring.FeatureRendering.SetForwardMaterialUniform(featureID, "opaque", 1,
+			"detailStrength", GL_FLOAT, maps.detailStrength)
+		Spring.FeatureRendering.SetForwardMaterialUniform(featureID, "opaque", 1,
+			"detailPitDensity", GL_FLOAT, maps.detailPitDensity)
+		Spring.FeatureRendering.SetForwardMaterialUniform(featureID, "opaque", 1,
+			"detailPitDepth", GL_FLOAT, maps.detailPitDepth)
+		Spring.FeatureRendering.SetForwardMaterialUniform(featureID, "opaque", 1,
+			"detailPitRoughness", GL_FLOAT, maps.detailPitRoughness)
+		Spring.FeatureRendering.SetForwardMaterialUniform(featureID, "opaque", 1,
+			"detailPitColourStrength", GL_FLOAT_VEC3, maps.detailPitColourStrength)
+		Spring.FeatureRendering.SetForwardMaterialUniform(featureID, "opaque", 1,
+			"detailDirtNormalStrength", GL_FLOAT, maps.detailDirtNormalStrength)
+		Spring.FeatureRendering.SetForwardMaterialUniform(featureID, "opaque", 1,
+			"detailDirtRoughness", GL_FLOAT, maps.detailDirtRoughness)
+		Spring.FeatureRendering.SetForwardMaterialUniform(featureID, "opaque", 1,
+			"detailDirtAlbedoStrength", GL_FLOAT, maps.detailDirtAlbedoStrength)
+	end
 	applied[featureID] = true
 end
 
@@ -468,6 +683,18 @@ function gadget:DrawGenesis()
 	gl.Uniform(uniformLocation("detailScaleFine"), 1.0 / math.max(params.detailTileFine, 0.01))
 	gl.Uniform(uniformLocation("detailScaleCoarse"), 1.0 / math.max(params.detailTileCoarse, 0.01))
 	gl.Uniform(uniformLocation("detailStrength"), params.detailStrength)
+	gl.Uniform(uniformLocation("detailColourEnabled"), 0.0)
+	gl.Uniform(uniformLocation("detailDirtEnabled"), 0.0)
+	gl.Uniform(uniformLocation("detailPitDensity"), params.detailPitDensity)
+	gl.Uniform(uniformLocation("detailPitDepth"), params.detailPitDepth)
+	gl.Uniform(uniformLocation("detailPitRoughness"), params.detailPitRoughness)
+	gl.Uniform(uniformLocation("detailPitColourStrength"),
+		params.detailPitColourStrength[1],
+		params.detailPitColourStrength[2],
+		params.detailPitColourStrength[3])
+	gl.Uniform(uniformLocation("detailDirtNormalStrength"), params.detailDirtNormalStrength)
+	gl.Uniform(uniformLocation("detailDirtRoughness"), params.detailDirtRoughness)
+	gl.Uniform(uniformLocation("detailDirtAlbedoStrength"), params.detailDirtAlbedoStrength)
 	gl.Uniform(uniformLocation("roughnessBias"), params.roughnessBias)
 	gl.Uniform(uniformLocation("shadowDensity"), params.shadowDensity)
 	gl.Uniform(uniformLocation("shadowBias"), params.shadowBias)
