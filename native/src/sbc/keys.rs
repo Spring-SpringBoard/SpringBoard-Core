@@ -2,6 +2,14 @@
 
 use spring_native::prelude::NativeInterfaceRef;
 
+/// Modifier state as the engine reported it with the key event itself, rather
+/// than as a later query of live SDL state.
+#[derive(Copy, Clone, Default, Debug)]
+pub(crate) struct KeyMods {
+    pub ctrl: bool,
+    pub shift: bool,
+}
+
 /// Whether `key_code` is the named key. The engine resolves the name; the SDL2
 /// table below covers the keys it does not know.
 pub(crate) fn is_key(interface: &NativeInterfaceRef, key_code: i32, key_name: &str) -> bool {

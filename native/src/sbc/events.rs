@@ -8,6 +8,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::command::{Command, CommandId};
 use crate::sbc::command_system::model::Models;
+use crate::sbc::keys::KeyMods;
 
 mod order;
 
@@ -42,6 +43,7 @@ pub(crate) trait EventListener {
         _key_code: i32,
         _scan_code: i32,
         _is_repeat: bool,
+        _mods: KeyMods,
     ) -> Result<bool, Error> {
         Ok(false)
     }
@@ -50,6 +52,7 @@ pub(crate) trait EventListener {
         _models: &mut Models,
         _key_code: i32,
         _scan_code: i32,
+        _mods: KeyMods,
     ) -> Result<bool, Error> {
         Ok(false)
     }
@@ -257,10 +260,11 @@ impl EventDispatcher {
         key_code: i32,
         scan_code: i32,
         is_repeat: bool,
+        mods: KeyMods,
     ) -> Result<bool, Error> {
         for index in self.indices(Event::KeyPress) {
             let handled =
-                self.listeners[index].key_press(models, key_code, scan_code, is_repeat)?;
+                self.listeners[index].key_press(models, key_code, scan_code, is_repeat, mods)?;
             self.flush_after_listener(index, models, Event::KeyPress);
             if handled {
                 return Ok(true);
@@ -274,9 +278,10 @@ impl EventDispatcher {
         models: &mut Models,
         key_code: i32,
         scan_code: i32,
+        mods: KeyMods,
     ) -> Result<bool, Error> {
         for index in self.indices(Event::KeyRelease) {
-            let handled = self.listeners[index].key_release(models, key_code, scan_code)?;
+            let handled = self.listeners[index].key_release(models, key_code, scan_code, mods)?;
             self.flush_after_listener(index, models, Event::KeyRelease);
             if handled {
                 return Ok(true);

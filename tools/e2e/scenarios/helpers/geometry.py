@@ -401,10 +401,14 @@ CHONSOLE: Final[Chonsole] = {
     "row_height": 27,
     "row_inset_x": 40,
     "header_hover_y": 18,
-    "scrollbar_inset_x": 5,
+    # The six-pixel sliderbar is left-aligned inside the ten-pixel scrollbar;
+    # use its centre rather than the scrollbar's right-hand edge.
+    "scrollbar_inset_x": 8,
     "scrollbar_width": 12,
     "scrollbar_height": 380,
-    "scrollbar_thumb_start_y": 12,
+    # RmlUi's vertical scrollbar reserves an internal arrow/track inset before
+    # the thumb even though the visible arrow controls are hidden by CSS.
+    "scrollbar_thumb_start_y": 50,
     "scrollbar_hover_y": 80,
     "scrollbar_drag_end_y": 300,
 }

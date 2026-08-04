@@ -3,10 +3,17 @@
 use spring_native::prelude::Error;
 
 use super::PanelManager;
+use crate::sbc::keys::KeyMods;
 use crate::sbc::panels::field_target::ActiveFieldEditor;
 
 impl PanelManager {
-    pub fn key_press(&mut self, key: i32, _scan: i32, _repeat: bool) -> Result<bool, Error> {
+    pub fn key_press(
+        &mut self,
+        key: i32,
+        _scan: i32,
+        _repeat: bool,
+        mods: KeyMods,
+    ) -> Result<bool, Error> {
         if !self.enabled {
             return Ok(false);
         }
@@ -16,7 +23,7 @@ impl PanelManager {
             if key == ESCAPE && self.close_top_modal()? {
                 return Ok(true);
             }
-            return Ok(self.hotkeys.match_hotkey(&self.interface, key));
+            return Ok(self.hotkeys.match_hotkey(&self.interface, key, mods));
         };
         if key == RETURN {
             let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
@@ -32,13 +39,7 @@ impl PanelManager {
                 .revert_field(&name, target.get_mut(), &self.interface);
             return Ok(true);
         }
-        let ctrl = self
-            .interface
-            .input()
-            .get_mod_key_state()
-            .map(|(_, ctrl, _, _)| ctrl)
-            .unwrap_or(false);
-        if ctrl && crate::sbc::keys::is_key(&self.interface, key, "a") {
+        if mods.ctrl && crate::sbc::keys::is_key(&self.interface, key, "a") {
             let mut target = ActiveFieldEditor::new(&mut self.modals, &mut self.slot);
             if let Some(ed) = target.get_mut() {
                 ed.select_edit_field(&name, &self.interface);
@@ -66,6 +67,7 @@ impl PanelManager {
         if !self.enabled {
             return Ok(false);
         }
+        let y = self.rml_y(y);
         self.input.mouse_move(&self.interface, &self.view, x, y)
     }
 
@@ -73,6 +75,7 @@ impl PanelManager {
         if !self.enabled {
             return Ok(false);
         }
+        let y = self.rml_y(y);
         // This must happen before the hit test below. A right-click on the map
         // is outside the panel, but it still interrupts an active numeric drag
         // owned by the panel.
@@ -92,6 +95,7 @@ impl PanelManager {
         if !self.enabled {
             return Ok(());
         }
+        let y = self.rml_y(y);
         self.input
             .mouse_release(&self.interface, &self.view, x, y, button)
     }
@@ -102,5 +106,14 @@ impl PanelManager {
         }
         self.input
             .mouse_wheel(&self.interface, &self.view, up, value)
+    }
+
+    /// Mouse callbacks report the engine's bottom-origin y; every hit test
+    /// above is against RmlUi's top-origin layout.
+    fn rml_y(&self, y: i32) -> i32 {
+        match self.interface.display().get_view_geometry() {
+            Ok(geometry) => geometry.viewSizeY - 1 - y,
+            Err(_) => y,
+        }
     }
 }

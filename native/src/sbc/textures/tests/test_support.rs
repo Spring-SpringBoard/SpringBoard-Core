@@ -147,7 +147,19 @@ pub(crate) fn save_texture_png(
     let path_s = path.to_str().ok_or("non-utf8 png path")?;
     let err: Cell<Option<String>> = Cell::new(None);
     gfx.render_to_texture(tex, || {
-        match gfx.save_image(0, 0, width, height, path_s, true, false, false, 0) {
+        match gfx.save_image(
+            0,
+            0,
+            width,
+            height,
+            path_s,
+            spring_native::GfxSaveImageOptions {
+                alpha: true,
+                yflip: false,
+                grayscale16bit: false,
+            },
+            0,
+        ) {
             Ok(true) => {}
             Ok(false) => err.set(Some("save_image returned false".to_string())),
             Err(e) => err.set(Some(format!("save_image: {e:?}"))),

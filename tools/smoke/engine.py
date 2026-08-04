@@ -72,33 +72,9 @@ def prepare(
         write_dir = Path(tempfile.mkdtemp(prefix=prefix))
     else:
         write_dir.mkdir(parents=True, exist_ok=True)
-    (write_dir / "games").mkdir(exist_ok=True)
-    game_dir = write_dir / "games" / "SpringBoard Core.sdd"
-    if game_dir.exists():
-        shutil.rmtree(game_dir)
-    shutil.copytree(
-        sbc_root,
-        game_dir,
-        symlinks=True,
-        ignore=shutil.ignore_patterns(
-            ".git",
-            ".mypy_cache",
-            ".pytest_cache",
-            ".ruff_cache",
-            "target",
-            "__pycache__",
-            "artifacts",
-            ".venv",
-        ),
-    )
-
-    fontcache = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "sbc-fontcache"
-    fontcache.mkdir(parents=True, exist_ok=True)
-    fontcache_link = write_dir / "fontcache"
-    fontcache_link.unlink(missing_ok=True)
-    fontcache_link.symlink_to(fontcache)
-
-    shutil.copyfile(DEV_DIR / "springsettings.cfg", write_dir / "springsettings.cfg")
+    game_dir = _stage_game_dir(sbc_root, write_dir)
+    _link_fontcache(write_dir)
+    (write_dir / "springsettings.cfg").write_text(_settings_text())
     shutil.copyfile(DEV_DIR / "script.txt", write_dir / "script.txt")
     config_env: dict[str, str] = {}
     if port_flags_config is not None:
@@ -129,6 +105,63 @@ def prepare(
         str(write_dir / "script.txt"),
     ]
     return write_dir, env, cmd
+
+
+def _stage_game_dir(sbc_root: Path, write_dir: Path) -> Path:
+    (write_dir / "games").mkdir(exist_ok=True)
+    game_dir = write_dir / "games" / "SpringBoard Core.sdd"
+    if game_dir.exists():
+        shutil.rmtree(game_dir)
+    shutil.copytree(
+        sbc_root,
+        game_dir,
+        symlinks=True,
+        ignore=shutil.ignore_patterns(
+            ".git",
+            ".mypy_cache",
+            ".pytest_cache",
+            ".ruff_cache",
+            "target",
+            "__pycache__",
+            "artifacts",
+            ".venv",
+        ),
+    )
+    return game_dir
+
+
+def _link_fontcache(write_dir: Path) -> None:
+    fontcache = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "sbc-fontcache"
+    fontcache.mkdir(parents=True, exist_ok=True)
+    fontcache_link = write_dir / "fontcache"
+    fontcache_link.unlink(missing_ok=True)
+    fontcache_link.symlink_to(fontcache)
+
+
+def _settings_text() -> str:
+    """The dev settings, with the window position overridable per run.
+
+    The development window normally lives on the second monitor. Automated runs
+    relocate it when that monitor is unavailable (a headless CI display, or the
+    user's monitors being off), leaving the developer setting untouched on disk.
+    """
+    settings_text = (DEV_DIR / "springsettings.cfg").read_text()
+    window_pos_x = os.environ.get("SBC_WINDOW_POS_X")
+    if not window_pos_x:
+        return settings_text
+    try:
+        int(window_pos_x)
+    except ValueError as err:
+        raise RuntimeError("SBC_WINDOW_POS_X must be an integer") from err
+    settings_lines = settings_text.splitlines(keepends=True)
+    for index, line in enumerate(settings_lines):
+        if line.startswith("WindowPosX ="):
+            newline = "\n" if line.endswith("\n") else ""
+            settings_lines[index] = f"WindowPosX = {window_pos_x}{newline}"
+            break
+    else:
+        settings_lines.append(f"WindowPosX = {window_pos_x}\n")
+    return "".join(settings_lines)
 
 
 def _configure_lsan(env: dict[str, str]) -> None:

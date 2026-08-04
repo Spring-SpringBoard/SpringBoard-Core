@@ -12,6 +12,7 @@ use spring_native::{prelude::NativeInterfaceRef, sys::Float3};
 use crate::sbc::command_system::model::Models;
 use crate::sbc::objects::{ObjectKind, ObjectManager, SelectionManager};
 use crate::sbc::states::state::{mod_state, EditorState, StateContext, Transition};
+use crate::sbc::states::trace::{screen_rect, world_to_screen};
 
 const GL_LINE_LOOP: u32 = 0x0002;
 const GL_MODELVIEW: u32 = 0x1700;
@@ -36,36 +37,14 @@ impl RectangleSelectState {
         }
     }
 
-    /// The axis-aligned bounds in the mouse callback's top-origin space.
-    fn pointer_bounds(&self) -> (i32, i32, i32, i32) {
-        let (x0, x1) = min_max(self.start.0, self.end.0);
-        let (y0, y1) = min_max(self.start.1, self.end.1);
-        (x0, y0, x1, y1)
-    }
-
-    /// Convert the pointer rectangle to camera projection space. Mouse events
-    /// use a top-left origin; `world_to_screen_coords` and our OpenGL overlay
-    /// use a bottom-left origin.
-    fn camera_bounds(&self, view_height: i32) -> (i32, i32, i32, i32) {
-        let (left, top, right, bottom) = self.pointer_bounds();
-        (
-            left,
-            flip_y(bottom, view_height),
-            right,
-            flip_y(top, view_height),
-        )
-    }
-
     /// Objects whose projected position falls inside the drag rectangle.
     fn objects_in_box(
         &self,
         interface: &NativeInterfaceRef,
         models: &mut Models,
     ) -> Vec<(ObjectKind, i32)> {
-        let Ok(geometry) = interface.display().get_view_geometry() else {
-            return Vec::new();
-        };
-        let (left, bottom, right, top) = self.camera_bounds(geometry.viewSizeY);
+        let rect = screen_rect(self.start, self.end);
+        let (left, bottom, right, top) = (rect.left, rect.bottom, rect.right, rect.top);
         // These screen-rectangle APIs use bottom-origin coordinates, like the
         // camera. Query engine objects directly instead of the editor model: a
         // hot reload deliberately recreates that model while its units/features
@@ -97,15 +76,17 @@ impl RectangleSelectState {
         // projection path for them.
         for id in objects.all_model_ids(ObjectKind::Area) {
             if let Some(pos) = objects.object_pos(ObjectKind::Area, id) {
-                let Ok((screen, valid)) = interface.camera().world_to_screen_coords(Float3 {
-                    x: pos.x,
-                    y: pos.y,
-                    z: pos.z,
-                }) else {
+                let Some(screen) = world_to_screen(
+                    interface,
+                    Float3 {
+                        x: pos.x,
+                        y: pos.y,
+                        z: pos.z,
+                    },
+                ) else {
                     continue;
                 };
-                if valid
-                    && screen.x >= left as f32
+                if screen.x >= left as f32
                     && screen.x <= right as f32
                     && screen.y >= bottom as f32
                     && screen.y <= top as f32
@@ -179,7 +160,8 @@ impl EditorState for RectangleSelectState {
         let Ok(geometry) = interface.display().get_view_geometry() else {
             return;
         };
-        let (left, bottom, right, top) = self.camera_bounds(geometry.viewSizeY);
+        let rect = screen_rect(self.start, self.end);
+        let (left, bottom, right, top) = (rect.left, rect.bottom, rect.right, rect.top);
         let gfx = interface.gfx();
         // `draw_screen` has no guaranteed projection matrix. Establish a local
         // pixel-space projection, then restore both matrix stacks before RmlUi
@@ -198,7 +180,11 @@ impl EditorState for RectangleSelectState {
         let _ = gfx.matrix_mode(GL_MODELVIEW);
         let _ = gfx.push_matrix();
         let _ = gfx.load_identity();
-        let _ = gfx.depth_test(false, false, 0);
+        let _ = gfx.depth_test(spring_native::GfxDepthTestOptions {
+            enable: false,
+            set_func: false,
+            func: 0,
+        });
         let _ = gfx.line_width(2.0);
         let _ = gfx.color(0.3, 0.7, 1.0, 0.9);
         let _ = gfx.begin_end(GL_LINE_LOOP, || {
@@ -228,20 +214,6 @@ fn mirror_units_to_engine(ctx: &mut StateContext) {
         .select_unit_array(&spring_ids, false);
 }
 
-fn min_max<T: Ord>(a: T, b: T) -> (T, T) {
-    if a <= b {
-        (a, b)
-    } else {
-        (b, a)
-    }
-}
-
-/// Translate a top-origin input y coordinate to the bottom-origin camera and
-/// OpenGL coordinate space.
-fn flip_y(y: i32, view_height: i32) -> i32 {
-    view_height - 1 - y
-}
-
 /// The symmetric difference of two selections: everything in exactly one of
 /// them. Matches Lua's shift-select (toggle the boxed set against the original).
 fn symmetric_difference(
@@ -258,21 +230,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn min_max_orders_the_pair() {
-        assert_eq!(min_max(3, 1), (1, 3));
-        assert_eq!(min_max(1, 3), (1, 3));
-    }
-
-    #[test]
-    fn camera_bounds_flip_pointer_y_without_moving_x() {
-        let state = RectangleSelectState {
-            start: (120, 80),
-            end: (640, 420),
-            original: Vec::new(),
-        };
-        // A drag from (120, 80) to (640, 420) in a 1,000px-high window is
-        // drawn and tested from (120, 919) to (640, 579) in camera space.
-        assert_eq!(state.camera_bounds(1000), (120, 579, 640, 919));
+    fn camera_bounds_sort_the_drag_corners() {
+        // Both corners arrive in the engine's bottom-origin space, so a drag
+        // from (120, 420) down to (640, 80) still bounds (120, 80)-(640, 420).
+        let rect = screen_rect((120, 420), (640, 80));
+        assert_eq!(
+            (rect.left, rect.bottom, rect.right, rect.top),
+            (120, 80, 640, 420)
+        );
     }
 
     #[test]

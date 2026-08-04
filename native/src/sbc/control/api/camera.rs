@@ -2,9 +2,11 @@
 
 use serde::Deserialize;
 use serde_json::json;
+
 use spring_native::prelude::NativeInterfaceRef;
 
 use crate::sbc::sbc::SBC;
+use crate::sbc::states::trace::{flip_screen_y, trace_editor_ground, trace_ground};
 
 use super::super::{ControlError, Handled, Reply};
 
@@ -162,7 +164,13 @@ pub(crate) fn set(sbc: &mut SBC, params: Set) -> Handled {
     if let Some([x, y, z]) = params.target {
         let target = spring_native::prelude::sys::Float3 { x, y, z };
         camera
-            .set_camera_target(target, params.transition)
+            .set_camera_target(
+                target,
+                spring_native::SetCameraTargetOptions {
+                    transition_time: Some(params.transition),
+                    ..Default::default()
+                },
+            )
             .map_err(|err| ControlError::failed(format!("set_camera_target: {err:?}")))?;
     }
     get(sbc)
@@ -181,7 +189,8 @@ pub(crate) fn zoom(sbc: &mut SBC, params: Zoom) -> Handled {
                 "camera.zoom screen coordinates must be finite",
             ));
         }
-        trace_ground(interface, screen)?
+        trace_ground(interface, screen[0], engine_screen_y(interface, screen[1]))
+            .map(|hit| [hit.x, hit.y, hit.z])
     } else {
         None
     };
@@ -211,7 +220,10 @@ pub(crate) fn zoom(sbc: &mut SBC, params: Zoom) -> Handled {
         // point beneath the cursor. Re-trace after scaling and apply the
         // horizontal ground delta in the controller, where the engine owns the
         // camera projection and terrain height.
-        if let Some(current) = trace_ground(interface, screen)? {
+        if let Some(current) =
+            trace_ground(interface, screen[0], engine_screen_y(interface, screen[1]))
+                .map(|hit| [hit.x, hit.y, hit.z])
+        {
             let mut state = camera
                 .get_camera_state(false)
                 .map_err(|err| ControlError::failed(format!("get_camera_state: {err:?}")))?;
@@ -234,25 +246,21 @@ pub(crate) fn trace(sbc: &mut SBC, params: Trace) -> Handled {
             "camera.trace screen coordinates must be finite",
         ));
     }
-    let (hit_type, hit_id, position) = sbc
-        .interface()
-        .camera()
-        .trace_screen_ray(x, y, true, false, false, true, 0.0)
+    let interface = sbc.interface();
+    let trace = trace_editor_ground(interface, x, engine_screen_y(interface, y))
         .map_err(|err| ControlError::failed(format!("trace_screen_ray: {err:?}")))?;
     Ok(Reply::now(json!({
-        "hit_type": hit_type,
-        "hit_id": hit_id,
-        "position": [position.x, position.y, position.z],
+        "hit_type": trace.hit_type,
+        "hit_id": trace.hit_id,
+        "position": [trace.position.x, trace.position.y, trace.position.z],
     })))
 }
 
-fn trace_ground(
-    interface: &NativeInterfaceRef,
-    screen: [f32; 2],
-) -> Result<Option<[f32; 3]>, ControlError> {
-    let (hit_type, _, position) = interface
-        .camera()
-        .trace_screen_ray(screen[0], screen[1], true, false, false, true, 0.0)
-        .map_err(|err| ControlError::failed(format!("trace_screen_ray: {err:?}")))?;
-    Ok((hit_type == 3).then_some([position.x, position.y, position.z]))
+/// Control clients address the window the way a screenshot does: top-origin.
+/// The engine's screen space is bottom-origin, so convert on the way in.
+fn engine_screen_y(interface: &NativeInterfaceRef, y: f32) -> f32 {
+    match interface.display().get_view_geometry() {
+        Ok(geometry) => flip_screen_y(geometry.viewSizeY as f32, y),
+        Err(_) => y,
+    }
 }

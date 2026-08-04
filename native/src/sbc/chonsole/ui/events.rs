@@ -1,7 +1,7 @@
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::chonsole::commands::ChonsoleCore;
-use crate::sbc::keys::is_key;
+use crate::sbc::keys::{is_key, KeyMods};
 
 use super::view::ChonsoleView;
 
@@ -28,10 +28,8 @@ impl ChonsoleEvents {
         core: &ChonsoleCore,
         view: &mut ChonsoleView,
         key_code: i32,
-        scan_code: i32,
-        is_repeat: bool,
+        key_mods: KeyMods,
     ) -> Result<KeyOutcome, Error> {
-        let _ = (scan_code, is_repeat);
         self.modifiers.key_down(interface, key_code);
         if is_key(interface, key_code, "f10") {
             view.toggle(interface)?;
@@ -55,10 +53,10 @@ impl ChonsoleEvents {
         if is_key(interface, key_code, "enter") || is_key(interface, key_code, "numpad_enter") {
             return Ok(KeyOutcome::Execute(view.take_input()));
         }
-        if self.text_key(interface, core, view, key_code)? {
+        if self.text_key(interface, core, view, key_code, key_mods)? {
             return Ok(KeyOutcome::Handled);
         }
-        let mods = ModState::read(interface, self.modifiers);
+        let mods = ModState::read(key_mods, self.modifiers);
         if mods.ctrl && is_key(interface, key_code, "u") {
             self.reset_history_cursor();
             view.delete_to_start();
@@ -171,8 +169,9 @@ impl ChonsoleEvents {
         core: &ChonsoleCore,
         view: &mut ChonsoleView,
         key_code: i32,
+        key_mods: KeyMods,
     ) -> Result<bool, Error> {
-        if !view.visible() || !ModState::read(interface, self.modifiers).ctrl {
+        if !view.visible() || !ModState::read(key_mods, self.modifiers).ctrl {
             return Ok(false);
         }
         if is_key(interface, key_code, "a") {
@@ -272,14 +271,10 @@ struct ModState {
 }
 
 impl ModState {
-    fn read(interface: &NativeInterfaceRef, tracked: TrackedModifiers) -> Self {
-        let (_, ctrl, _, shift) = interface
-            .input()
-            .get_mod_key_state()
-            .unwrap_or((false, false, false, false));
+    fn read(mods: KeyMods, tracked: TrackedModifiers) -> Self {
         ModState {
-            shift: tracked.shift || shift,
-            ctrl: tracked.ctrl || ctrl,
+            shift: tracked.shift || mods.shift,
+            ctrl: tracked.ctrl || mods.ctrl,
         }
     }
 }

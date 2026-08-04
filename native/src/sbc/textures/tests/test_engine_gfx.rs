@@ -87,7 +87,16 @@ fn engine_gfx_shader_pass(ctx: &mut TestCtx) -> Result<(), String> {
 
     let frag = "void main(void) { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }";
     let (shader, _log_id) = gfx
-        .create_shader("", "", "", "", "", frag, "", false, 0, false, 0, false, 0)
+        .create_shader(
+            "",
+            "",
+            "",
+            "",
+            "",
+            frag,
+            "",
+            spring_native::GfxCreateShaderOptions::default(),
+        )
         .map_err(|e| format!("create_shader: {e:?}"))?;
     if shader == 0 {
         let log = gfx.get_shader_log().ok().flatten().unwrap_or_default();

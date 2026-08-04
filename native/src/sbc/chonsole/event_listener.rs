@@ -5,6 +5,7 @@ use spring_native::prelude::Error;
 use super::model::ChonsoleManager;
 use crate::sbc::command_system::model::Models;
 use crate::sbc::events::{Event, EventListener, EventListenerFactory, ListenerId};
+use crate::sbc::keys::KeyMods;
 
 inventory::submit! { EventListenerFactory { make: |_| Box::new(ChonsoleTextEvents) } }
 inventory::submit! { EventListenerFactory { make: |_| Box::new(ChonsoleEvents) } }
@@ -28,8 +29,9 @@ impl EventListener for ChonsoleTextEvents {
         key_code: i32,
         _scan_code: i32,
         _is_repeat: bool,
+        mods: KeyMods,
     ) -> Result<bool, Error> {
-        models.get::<ChonsoleManager>().text_key(key_code)
+        models.get::<ChonsoleManager>().text_key(key_code, mods)
     }
 }
 
@@ -68,10 +70,11 @@ impl EventListener for ChonsoleEvents {
         key_code: i32,
         scan_code: i32,
         is_repeat: bool,
+        mods: KeyMods,
     ) -> Result<bool, Error> {
         models
             .get::<ChonsoleManager>()
-            .key_press(key_code, scan_code, is_repeat)
+            .key_press(key_code, scan_code, is_repeat, mods)
     }
 
     fn key_release(
@@ -79,6 +82,7 @@ impl EventListener for ChonsoleEvents {
         models: &mut Models,
         key_code: i32,
         scan_code: i32,
+        _mods: KeyMods,
     ) -> Result<bool, Error> {
         models
             .get::<ChonsoleManager>()

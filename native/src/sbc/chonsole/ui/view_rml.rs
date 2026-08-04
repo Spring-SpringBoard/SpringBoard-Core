@@ -127,7 +127,7 @@ impl ChonsoleRml {
         rml.document_set_title(document, "Native Chonsole")?;
         rml.document_append_to_style_sheet(document, UI_STYLE)?;
         rml.element_set_inner_rml(document, UI_BODY)?;
-        rml.document_show(document, None, None)?;
+        rml.document_show(document, spring_native::RmlDocumentShowOptions::default())?;
         self.context = Some(context);
         self.document = Some(document);
         self.root = element_by_id(interface, document, "native-chonsole");
@@ -190,7 +190,7 @@ impl ChonsoleRml {
         };
         let rml = interface.rml_ui();
         if visible {
-            rml.document_show(document, None, None)?;
+            rml.document_show(document, spring_native::RmlDocumentShowOptions::default())?;
             if let Some(context) = self.context {
                 // Keep the engine/editor cursor stable over console controls.
                 let _ = rml.context_enable_mouse_cursor(context, false);

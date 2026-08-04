@@ -4,6 +4,7 @@ use super::events::{ChonsoleEvents, KeyOutcome};
 use super::view::ChonsoleView;
 use crate::sbc::chonsole::commands::ChonsoleCore;
 use crate::sbc::chonsole::framework::ChonsoleResponse;
+use crate::sbc::keys::KeyMods;
 
 #[derive(Default)]
 pub struct ChonsoleController {
@@ -54,16 +55,14 @@ impl ChonsoleController {
         key_code: i32,
         scan_code: i32,
         is_repeat: bool,
+        mods: KeyMods,
     ) -> Result<UiKeyOutcome, Error> {
+        let _ = (scan_code, is_repeat);
         Ok(
-            match self.events.key_press(
-                interface,
-                core,
-                &mut self.view,
-                key_code,
-                scan_code,
-                is_repeat,
-            )? {
+            match self
+                .events
+                .key_press(interface, core, &mut self.view, key_code, mods)?
+            {
                 KeyOutcome::Unhandled => UiKeyOutcome::Unhandled,
                 KeyOutcome::Handled => UiKeyOutcome::Handled,
                 KeyOutcome::Execute(input) => UiKeyOutcome::Execute(input),
@@ -75,9 +74,10 @@ impl ChonsoleController {
         interface: &NativeInterfaceRef,
         core: &ChonsoleCore,
         key_code: i32,
+        mods: KeyMods,
     ) -> Result<bool, Error> {
         self.events
-            .text_key(interface, core, &mut self.view, key_code)
+            .text_key(interface, core, &mut self.view, key_code, mods)
     }
     pub fn hide(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
         self.view.set_visible(interface, false)

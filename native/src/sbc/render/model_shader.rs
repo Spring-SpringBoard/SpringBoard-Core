@@ -81,7 +81,14 @@ impl ModelShader {
         let gfx = interface.gfx();
         let (shader, _) = gfx
             .create_shader(
-                "", &vertex, "", "", "", &fragment, "", false, 0, false, 0, false, 0,
+                "",
+                &vertex,
+                "",
+                "",
+                "",
+                &fragment,
+                "",
+                spring_native::GfxCreateShaderOptions::default(),
             )
             .ok()?;
         if shader == 0 {

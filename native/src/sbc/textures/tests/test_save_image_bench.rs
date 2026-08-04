@@ -162,9 +162,11 @@ fn save_once(
                 dimension,
                 dimension,
                 output_path,
-                true,
-                false,
-                false,
+                spring_native::GfxSaveImageOptions {
+                    alpha: true,
+                    yflip: false,
+                    grayscale16bit: false,
+                },
                 0,
             ) {
                 Ok(true) => {}

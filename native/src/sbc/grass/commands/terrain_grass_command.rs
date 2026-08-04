@@ -63,8 +63,10 @@ impl TerrainGrassCommand {
             move |x, z, delta| {
                 let synced = interface.synced_ctrl();
                 let terrain = synced.terrain();
-                if delta > 0.0 {
-                    let _ = terrain.add_grass(x, z);
+                let old = interface.terrain().get_grass(x, z).unwrap_or(0.0);
+                let target = (old + delta).round().clamp(0.0, u8::MAX as f32);
+                if target >= 1.0 {
+                    let _ = terrain.add_grass(x, z, target as u8);
                 } else {
                     let _ = terrain.remove_grass(x, z);
                 }

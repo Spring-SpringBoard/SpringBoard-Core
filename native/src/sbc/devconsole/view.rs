@@ -272,7 +272,7 @@ impl DevConsoleView {
         rml.document_set_title(doc, "Developer Console")?;
         rml.document_append_to_style_sheet(doc, UI_STYLE)?;
         rml.element_set_inner_rml(doc, UI_BODY)?;
-        rml.document_show(doc, None, None)?;
+        rml.document_show(doc, spring_native::RmlDocumentShowOptions::default())?;
 
         self.context = Some(ctx);
         self.document = Some(doc);

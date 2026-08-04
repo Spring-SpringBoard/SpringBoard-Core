@@ -12,7 +12,8 @@ use spring_native::prelude::NativeInterfaceRef;
 use crate::sbc::command_system::command::Command;
 use crate::sbc::states::brush_settings::BrushSettings;
 use crate::sbc::states::highlight::BrushPreview;
-use crate::sbc::states::state::{cursor, trace_ground, EditorState, StateContext};
+use crate::sbc::states::state::{EditorState, StateContext};
+use crate::sbc::states::trace::{cursor, trace_ground};
 
 const LEFT: i32 = 1;
 const RIGHT: i32 = 3;
@@ -109,7 +110,7 @@ pub(crate) struct MapEditingState {
     /// The last valid ground hit, retained only to keep a stationary stroke
     /// alive across a transient trace miss (for example after raising terrain
     /// into the camera). A moved cursor never paints at this stale position.
-    last_hit: Option<crate::sbc::states::state::GroundHit>,
+    last_hit: Option<crate::sbc::states::trace::GroundHit>,
     /// Screen position paired with `last_hit`, in the ray-trace convention.
     last_screen: Option<(f32, f32)>,
     last_apply: Option<Instant>,

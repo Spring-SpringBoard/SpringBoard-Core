@@ -11,6 +11,8 @@ use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
 use crate::sbc::command_system::SetMultipleCommandModeCommand;
 
+use super::trace::{trace_ground, trace_object, GroundHit, Trace};
+
 /// What a state may do to the world, and the envelopes it produced this tick.
 ///
 /// Carries the model registry, so a state can read the selection and object
@@ -76,75 +78,6 @@ impl<'a> StateContext<'a> {
     pub(crate) fn take_commands(&mut self) -> Vec<Box<dyn Command>> {
         std::mem::take(&mut self.commands)
     }
-}
-
-/// Where the cursor is pointing on the map, in world coordinates.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) struct GroundHit {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
-}
-
-/// The engine's `hitType`: 0 miss, 1 unit, 2 feature, 3 ground.
-const HIT_UNIT: i32 = 1;
-const HIT_FEATURE: i32 = 2;
-const HIT_GROUND: i32 = 3;
-
-/// What the cursor is over. Ports the several shapes `SB.TraceScreenRay` returns.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) enum Trace {
-    Sky,
-    Ground(GroundHit),
-    Unit { spring_id: i32, hit: GroundHit },
-    Feature { spring_id: i32, hit: GroundHit },
-}
-
-/// The full trace, for selecting whatever is under the cursor.
-pub(crate) fn trace_object(interface: &NativeInterfaceRef, x: f32, y: f32) -> Trace {
-    trace(interface, x, y)
-}
-
-/// The polled cursor, normalized to the mouse callback and ray-tracing space.
-///
-/// `get_mouse_state` exposes Lua's bottom-origin screen coordinate, whereas
-/// mouse callbacks and `trace_screen_ray` use a top-origin coordinate. Flip it
-/// here so held tools and press-driven tools point at the same map position.
-pub(crate) fn cursor(interface: &NativeInterfaceRef) -> Option<Cursor> {
-    let mouse = interface.input().get_mouse_state().ok()?;
-    let height = interface.display().get_view_geometry().ok()?.viewSizeY as f32;
-    Some(Cursor {
-        x: mouse.x,
-        y: height - 1.0 - mouse.y,
-        left: mouse.left,
-        right: mouse.right,
-    })
-}
-
-/// The cursor position, ready to trace with.
-#[derive(Debug, Clone, Copy)]
-pub(crate) struct Cursor {
-    pub x: f32,
-    pub y: f32,
-    pub left: bool,
-    pub right: bool,
-}
-
-/// Trace the cursor onto the ground. `None` when it points at the sky.
-///
-/// `only_coords` maps to the engine's `groundOnly`, so a unit standing under the
-/// cursor does not shadow the terrain: a brush paints the ground beneath it.
-/// `ignore_water` likewise reaches the sea floor rather than the water surface.
-pub(crate) fn trace_ground(interface: &NativeInterfaceRef, x: f32, y: f32) -> Option<GroundHit> {
-    let (hit_type, _, coords) = interface
-        .camera()
-        .trace_screen_ray(x, y, true, false, false, true, 0.0)
-        .ok()?;
-    (hit_type == HIT_GROUND).then_some(GroundHit {
-        x: coords.x,
-        y: coords.y,
-        z: coords.z,
-    })
 }
 
 #[allow(unused_variables)]
@@ -409,31 +342,4 @@ pub(crate) fn mod_state(interface: &NativeInterfaceRef) -> ModState {
         .get_mod_key_state()
         .unwrap_or((false, false, false, false));
     ModState { shift, ctrl }
-}
-
-/// Trace the cursor against units, features and the ground.
-fn trace(interface: &NativeInterfaceRef, x: f32, y: f32) -> Trace {
-    let Ok((hit_type, hit_id, coords)) = interface
-        .camera()
-        .trace_screen_ray(x, y, false, false, false, true, 0.0)
-    else {
-        return Trace::Sky;
-    };
-    let hit = GroundHit {
-        x: coords.x,
-        y: coords.y,
-        z: coords.z,
-    };
-    match hit_type {
-        HIT_UNIT => Trace::Unit {
-            spring_id: hit_id,
-            hit,
-        },
-        HIT_FEATURE => Trace::Feature {
-            spring_id: hit_id,
-            hit,
-        },
-        HIT_GROUND => Trace::Ground(hit),
-        _ => Trace::Sky,
-    }
 }

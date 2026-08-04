@@ -77,9 +77,11 @@ impl CommandExecutor {
                 width,
                 height,
                 &export.output,
-                true,
-                true,
-                export.grayscale16,
+                spring_native::GfxSaveImageOptions {
+                    alpha: true,
+                    yflip: true,
+                    grayscale16bit: export.grayscale16,
+                },
                 0x8CE0,
             );
         });

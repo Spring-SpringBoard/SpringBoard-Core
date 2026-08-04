@@ -3,7 +3,8 @@ use spring_native::prelude::NativeInterfaceRef;
 use crate::sbc::objects::{ObjectKind, Vec3};
 use crate::sbc::render::ModelShader;
 use crate::sbc::states::highlight::ObjectGhost;
-use crate::sbc::states::state::{trace_ground, EditorState, StateContext, Transition};
+use crate::sbc::states::state::{EditorState, StateContext, Transition};
+use crate::sbc::states::trace::trace_ground;
 
 use super::ghost::draw_ghosts;
 use super::shared::{grab_selection, set_pos, Grabbed};

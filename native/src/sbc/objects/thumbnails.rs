@@ -116,7 +116,11 @@ impl ThumbnailRenderer {
 
         // The state Lua's DrawIcons sets around the whole batch.
         let _ = gfx.push_matrix();
-        let _ = gfx.depth_test(true, true, GL_LEQUAL);
+        let _ = gfx.depth_test(spring_native::GfxDepthTestOptions {
+            enable: true,
+            set_func: true,
+            func: GL_LEQUAL,
+        });
         let _ = gfx.depth_mask(true);
 
         let team_id = self.team_id;
@@ -232,12 +236,28 @@ fn draw_model(
     match kind {
         ThumbKind::Unit => {
             let _ = gfx.unit_shape_textures(def_id, true);
-            let _ = gfx.unit_shape(def_id, team_id, true, false, true);
+            let _ = gfx.unit_shape(
+                def_id,
+                team_id,
+                spring_native::GfxObjectShapeOptions {
+                    raw_state: true,
+                    to_screen: false,
+                    opaque: true,
+                },
+            );
             let _ = gfx.unit_shape_textures(def_id, false);
         }
         ThumbKind::Feature => {
             let _ = gfx.feature_shape_textures(def_id, true);
-            let _ = gfx.feature_shape(def_id, team_id, true, false, true);
+            let _ = gfx.feature_shape(
+                def_id,
+                team_id,
+                spring_native::GfxObjectShapeOptions {
+                    raw_state: true,
+                    to_screen: false,
+                    opaque: true,
+                },
+            );
             let _ = gfx.feature_shape_textures(def_id, false);
         }
     }

@@ -109,6 +109,7 @@ class SessionMixin(RunState):
 
     def stop(self) -> None:
         self.event("teardown_start")
+        self.stop_clipboard_owner()
         self.close_control()
         if self.proc is None or self.proc.poll() is not None:
             self.close_process_logs()

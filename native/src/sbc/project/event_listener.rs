@@ -39,9 +39,11 @@ impl EventListener for ScreenshotEvents {
             width,
             geom.viewSizeY,
             &path.to_string_lossy(),
-            false,
-            true,
-            false,
+            spring_native::GfxSaveImageOptions {
+                alpha: false,
+                yflip: true,
+                grayscale16bit: false,
+            },
             0,
         );
         Ok(())
@@ -60,9 +62,11 @@ impl EventListener for ScreenshotEvents {
             geom.viewSizeX,
             geom.viewSizeY,
             &path.to_string_lossy(),
-            false,
-            true,
-            false,
+            spring_native::GfxSaveImageOptions {
+                alpha: false,
+                yflip: true,
+                grayscale16bit: false,
+            },
             0,
         );
         Ok(())

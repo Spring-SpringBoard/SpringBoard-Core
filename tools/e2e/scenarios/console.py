@@ -370,7 +370,9 @@ def developer_console(run_state: "RunState") -> None:
     run_state.assert_any_command("UndoCommand")
     run_state.click(*status_button_point(width, height, 1), delay=Delay.SETTLE)
     run_state.assert_any_command("RedoCommand")
-    run_state.click(*status_button_point(width, height, 2), delay=Delay.SETTLE)
+    # Clear is asynchronous: give the command manager one completed update
+    # before capturing the disabled-state of the three controls.
+    run_state.click(*status_button_point(width, height, 2), delay=Delay.READY)
     run_state.assert_any_command("ClearUndoRedoCommand")
     run_state.golden("status-bar", crop="status-commands")
 

@@ -13,6 +13,10 @@ from .utils.run_env import CASE_CROP, PANEL_TOLERANCE
 from .utils.screenshots import Screenshot, ScreenshotConversion
 from .utils.x11 import window_geometry
 
+# How far above the window's bottom edge a parked cursor sits. Inside the 92px
+# status strip the goldens ignore, clear of the engine's edge-scroll band.
+STATUS_PARK_INSET = 40
+
 
 class CaptureMixin(RunState):
     @override
@@ -36,11 +40,23 @@ class CaptureMixin(RunState):
         self.assert_no_rml_diagnostics()
         return png_path
 
-    def park_cursor(self) -> None:
-        """Move the cursor somewhere harmless before a capture: the engine draws
-        it, so wherever it rests becomes part of the image."""
+    def park_cursor(self, *, x: int | None = None, y: int | None = None) -> None:
+        """Move the cursor somewhere harmless before a capture.
+
+        The bottom few pixels are part of the engine's edge-scroll region. The
+        screenshot comparison ignores the 92px status strip, so park inside
+        that strip but well above its bottom edge: the cursor stays out of the
+        compared image without the camera scrolling south while it waits there.
+        """
         width, height = window_geometry(self.window)
-        run("xdotool", "mousemove", "--window", self.window, str(width // 2), str(height - 4))
+        # `EdgeMoveWidth` is a fraction of the view (0.003 -> ~4px at the
+        # harness window size), so a park a few pixels off the bottom edge
+        # scrolls the map. Keep the whole cursor inside the ignored strip
+        # instead. The x sits left of the `status-commands` crop, which only
+        # forgives its bottom 4 rows.
+        safe_x = width // 4 if x is None else x
+        safe_y = height - STATUS_PARK_INSET if y is None else y
+        run("xdotool", "mousemove", "--window", self.window, str(safe_x), str(safe_y))
         pause(Delay.FRAME)
 
     @override
@@ -68,13 +84,13 @@ class CaptureMixin(RunState):
         """
         if FAST:
             return self._skip_capture("golden", name)
+        if crop is CASE_CROP:
+            crop = self.case.crop
         if park:
             self.park_cursor()
         stem = f"{len(self.screenshots):02d}-{name}"
         bmp_path = self.screenshot_dir / f"{stem}.bmp"
         png_path = self.screenshot_dir / f"{stem}.png"
-        if crop is CASE_CROP:
-            crop = self.case.crop
         shot = Screenshot(name=name, bmp_path=bmp_path, png_path=png_path, crop=crop)
         capture_ms = self._capture_screenshot(shot)
         self.screenshots.append(shot)
@@ -82,7 +98,10 @@ class CaptureMixin(RunState):
         # Full-frame assertions own map/editor interactions, while the dedicated
         # status test crops to its stable controls. Never let FPS/RAM text make
         # an otherwise identical full-frame UI test flaky.
-        ignored_bottom = 92 if crop is None else 0
+        # The checked-in status reference was captured with the hardware cursor
+        # clipped by the bottom edge. Ignore only those few pixels; the command
+        # buttons above remain exact while the capture itself stays cursor-free.
+        ignored_bottom = 92 if crop is None else (4 if crop == "status-commands" else 0)
         # Terrain edits refresh the engine's cached shading texture. A broad
         # map-only RGB ramp can move by a few units; keep panel crops exact and
         # allow that renderer quantisation only for full-frame captures.

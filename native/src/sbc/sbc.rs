@@ -11,6 +11,7 @@ use crate::sbc::commands_api::{parse_json_command, CommandManager, Context};
 use crate::sbc::control::ControlServer;
 use crate::sbc::events::EventDispatcher;
 use crate::sbc::io::io_api::IoWorker;
+use crate::sbc::keys::KeyMods;
 
 const MAX_UNDO_SIZE: usize = 100;
 
@@ -59,7 +60,7 @@ impl NativeModule for SBC {
         Ok(())
     }
 
-    fn update(&mut self) -> Result<(), Error> {
+    fn update(&mut self, _delta_seconds: f32) -> Result<(), Error> {
         self.drain_io();
         // Incoming controls apply before the schedule; their deferred replies
         // resolve after it, once the requested update effects have landed.
@@ -75,11 +76,11 @@ impl NativeModule for SBC {
         Ok(())
     }
 
-    fn draw_screen(&mut self) -> Result<(), Error> {
+    fn draw_screen(&mut self, _view_size_x: i32, _view_size_y: i32) -> Result<(), Error> {
         self.events.draw_screen(&mut self.models)
     }
 
-    fn draw_screen_post(&mut self) -> Result<(), Error> {
+    fn draw_screen_post(&mut self, _view_size_x: i32, _view_size_y: i32) -> Result<(), Error> {
         self.events.draw_screen_post(&mut self.models)
     }
 
@@ -93,11 +94,25 @@ impl NativeModule for SBC {
         self.events.draw_world(&mut self.models)
     }
 
-    fn key_press(&mut self, key_code: i32, scan_code: i32, is_repeat: bool) -> Result<bool, Error> {
+    #[allow(clippy::too_many_arguments)]
+    fn key_press(
+        &mut self,
+        key_code: i32,
+        _alt: bool,
+        ctrl: bool,
+        _meta: bool,
+        shift: bool,
+        is_repeat: bool,
+        _label: &str,
+        _utf32_char: i32,
+        scan_code: i32,
+        _actions: &[KeyAction<'_>],
+    ) -> Result<bool, Error> {
         self.note_input();
-        let handled = self
-            .events
-            .key_press(&mut self.models, key_code, scan_code, is_repeat)?;
+        let mods = KeyMods { ctrl, shift };
+        let handled =
+            self.events
+                .key_press(&mut self.models, key_code, scan_code, is_repeat, mods)?;
         self.submit_pending_listener_commands();
         Ok(handled)
     }
@@ -111,10 +126,23 @@ impl NativeModule for SBC {
         self.events.console_line(&mut self.models, message, level)
     }
 
-    fn key_release(&mut self, key_code: i32, scan_code: i32) -> Result<bool, Error> {
+    #[allow(clippy::too_many_arguments)]
+    fn key_release(
+        &mut self,
+        key_code: i32,
+        _alt: bool,
+        ctrl: bool,
+        _meta: bool,
+        shift: bool,
+        _label: &str,
+        _utf32_char: i32,
+        scan_code: i32,
+        _actions: &[KeyAction<'_>],
+    ) -> Result<bool, Error> {
         self.note_input();
+        let mods = KeyMods { ctrl, shift };
         self.events
-            .key_release(&mut self.models, key_code, scan_code)
+            .key_release(&mut self.models, key_code, scan_code, mods)
     }
 
     fn text_input(&mut self, utf8: &str) -> Result<bool, Error> {

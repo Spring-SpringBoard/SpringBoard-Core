@@ -3,7 +3,8 @@ use log::{debug, error, info};
 use super::read::{map_size, GRASS_STEP};
 use crate::sbc::sbc::SBC;
 
-/// Writes a grass map (one `u8` per cell, `1` = grass) into the live engine.
+/// Writes a grass map (one `u8` per cell, non-zero = grass value) into the live
+/// engine.
 pub(crate) fn write(sbc: &mut SBC, bytes: &[u8]) {
     let Some((size_x, size_z)) = map_size(sbc.interface()) else {
         error!("write grass map: could not read map size");
@@ -31,8 +32,8 @@ pub(crate) fn write(sbc: &mut SBC, bytes: &[u8]) {
                 error!("write grass map: file ended before all cells were read");
                 return;
             };
-            if *value == 1 {
-                let _ = terrain.add_grass(x as f32, z as f32);
+            if *value != 0 {
+                let _ = terrain.add_grass(x as f32, z as f32, *value);
             } else {
                 let _ = terrain.remove_grass(x as f32, z as f32);
             }

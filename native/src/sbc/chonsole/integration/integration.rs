@@ -155,10 +155,12 @@ fn unitrules_lists_and_sets_selected_units(ctx: &mut TestCtx) -> Result<(), Stri
             },
             0,
             team,
-            false,
-            false,
-            -1,
-            -1,
+            spring_native::CreateUnitOptions {
+                build: false,
+                flatten_ground: false,
+                unit_id: -1,
+                builder_id: -1,
+            },
         )
         .map_err(|err| format!("create test unit: {err:?}"))?;
     interface

@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from typing import override
 
 from .state import RunState
-from .timing import TEXT_INTERVAL_MS, Delay, pause
+from .timing import TEXT_INTERVAL_MS, Delay, Timeout, pause
 from .utils.process import run
 from .utils.run_env import MODIFIER_NAMES, MODIFIERS
 from .utils.x11 import window_geometry_values
@@ -238,20 +238,22 @@ class InputMixin(RunState):
         steps: int = 12,
         step_delay: Delay = Delay.EVENT,
     ) -> None:
-        # Root-window drag for modal dialogs, stepped like drag().
+        # Modal dialogs sometimes need the real pointer rather than an SDL
+        # window-targeted click. Establish the start in client coordinates,
+        # though: borderless SDL windows can report a decorated X11 origin even
+        # when SDL delivers motion coordinates relative to the client. Adding
+        # that origin here would shift the press outside the intended control.
         self.event("drag_root", x1=x1, y1=y1, x2=x2, y2=y2, button=button, steps=steps)
-        root_x1, root_y1 = self._root_point(x1, y1)
-        root_x2, root_y2 = self._root_point(x2, y2)
-        run("xdotool", "mousemove", str(root_x1), str(root_y1))
+        run("xdotool", "mousemove", "--window", self.window, str(x1), str(y1))
         pause(Delay.CONTROL)
-        run("xdotool", "mousedown", str(button))
+        run("xdotool", "mousedown", "--window", self.window, str(button))
         pause(step_delay)
         for i in range(1, steps + 1):
-            xi = round(root_x1 + (root_x2 - root_x1) * i / steps)
-            yi = round(root_y1 + (root_y2 - root_y1) * i / steps)
-            run("xdotool", "mousemove", str(xi), str(yi))
+            xi = round(x1 + (x2 - x1) * i / steps)
+            yi = round(y1 + (y2 - y1) * i / steps)
+            run("xdotool", "mousemove", "--window", self.window, str(xi), str(yi))
             pause(step_delay)
-        run("xdotool", "mouseup", str(button))
+        run("xdotool", "mouseup", "--window", self.window, str(button))
         pause(Delay.CONTROL)
 
     @override
@@ -311,18 +313,38 @@ class InputMixin(RunState):
         """Put text on the clipboard, so a copy assertion cannot pass on what a
         previous run left there."""
         self.event("set_clipboard", text=text)
+        self.stop_clipboard_owner()
         env = {**os.environ, "SBC_E2E_CLIPBOARD": text}
-        subprocess.run(
+        # X11 text ownership is live: destroying the Tk process immediately
+        # after `clipboard_append` makes the selection disappear before the
+        # engine's next key event can request it. Keep one tiny owner alive and
+        # replace it on the next set; this works without xclip/xsel and makes
+        # the paste path deterministic.
+        self._clipboard_owner = subprocess.Popen(
             [
                 sys.executable,
                 "-c",
                 "import os,tkinter;r=tkinter.Tk();r.withdraw();r.clipboard_clear();"
-                "r.clipboard_append(os.environ['SBC_E2E_CLIPBOARD']);r.update();r.after(200,r.destroy);"
+                "r.clipboard_append(os.environ['SBC_E2E_CLIPBOARD']);r.update();r.after(60000,r.destroy);"
                 "r.mainloop()",
             ],
-            check=False,
             env=env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
+
+    def stop_clipboard_owner(self) -> None:
+        owner = getattr(self, "_clipboard_owner", None)
+        if owner is None:
+            return
+        if owner.poll() is None:
+            owner.terminate()
+            try:
+                owner.wait(timeout=Timeout.SHUTDOWN)
+            except subprocess.TimeoutExpired:
+                owner.kill()
+                owner.wait(timeout=Timeout.SHUTDOWN)
+        self._clipboard_owner = None
 
     @override
     def clipboard(self) -> str:

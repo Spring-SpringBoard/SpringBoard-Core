@@ -125,7 +125,7 @@ impl DevConsoleView {
         rml.document_set_title(document, "Editor status")?;
         rml.document_append_to_style_sheet(document, UI_STYLE)?;
         rml.element_set_inner_rml(document, STATUS_BODY)?;
-        rml.document_show(document, None, None)?;
+        rml.document_show(document, spring_native::RmlDocumentShowOptions::default())?;
         self.status_context = Some(context);
         self.status_document = Some(document);
         self.rendered_command_log = None;

@@ -6,6 +6,7 @@ use super::commands::{CatalogRefresher, ChonsoleCore, CommandExecutor, CommandRe
 use super::framework::{ChonsoleResponse, ChonsoleSuggestion, HistoryStore};
 use super::ui::{ChonsoleController, UiKeyOutcome};
 use crate::sbc::command_system::model::{Model, ModelFactory};
+use crate::sbc::keys::KeyMods;
 use crate::sbc::port_flags::{self, PortImpl};
 
 inventory::submit! { ModelFactory { make: |iface| Box::new(ChonsoleManager::new(iface)) } }
@@ -128,14 +129,19 @@ impl ChonsoleManager {
         key_code: i32,
         scan_code: i32,
         is_repeat: bool,
+        mods: KeyMods,
     ) -> Result<bool, Error> {
         if !self.enabled {
             return Ok(false);
         }
-        match self
-            .ui
-            .key_press(&self.interface, &self.core, key_code, scan_code, is_repeat)?
-        {
+        match self.ui.key_press(
+            &self.interface,
+            &self.core,
+            key_code,
+            scan_code,
+            is_repeat,
+            mods,
+        )? {
             UiKeyOutcome::Unhandled => Ok(false),
             UiKeyOutcome::Handled => Ok(true),
             UiKeyOutcome::Execute(input) => {
@@ -146,11 +152,12 @@ impl ChonsoleManager {
         }
     }
 
-    pub fn text_key(&mut self, key_code: i32) -> Result<bool, Error> {
+    pub fn text_key(&mut self, key_code: i32, mods: KeyMods) -> Result<bool, Error> {
         if !self.enabled {
             return Ok(false);
         }
-        self.ui.text_key(&self.interface, &self.core, key_code)
+        self.ui
+            .text_key(&self.interface, &self.core, key_code, mods)
     }
 
     pub fn key_release(&mut self, key_code: i32, scan_code: i32) -> Result<bool, Error> {
@@ -179,6 +186,7 @@ impl ChonsoleManager {
             return Ok(false);
         }
         let _ = (dx, dy, button);
+        let y = self.rml_y(y);
         self.ui.mouse_move(&self.interface, x, y)
     }
 
@@ -186,6 +194,7 @@ impl ChonsoleManager {
         if !self.enabled {
             return Ok(false);
         }
+        let y = self.rml_y(y);
         self.ui.mouse_press(&self.interface, x, y, button)
     }
 
@@ -193,6 +202,7 @@ impl ChonsoleManager {
         if !self.enabled {
             return Ok(());
         }
+        let y = self.rml_y(y);
         self.ui.mouse_release(&self.interface, x, y, button)
     }
 
@@ -201,6 +211,15 @@ impl ChonsoleManager {
             return Ok(false);
         }
         self.ui.mouse_wheel(&self.interface, up, value)
+    }
+
+    /// Mouse callbacks report the engine's bottom-origin y; the view hit tests
+    /// against RmlUi's top-origin layout.
+    fn rml_y(&self, y: i32) -> i32 {
+        match self.interface.display().get_view_geometry() {
+            Ok(geometry) => geometry.viewSizeY - 1 - y,
+            Err(_) => y,
+        }
     }
 
     fn persist_history_change(&self, previous_history: &[String]) {

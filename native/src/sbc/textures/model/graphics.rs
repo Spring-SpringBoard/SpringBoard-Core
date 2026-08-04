@@ -146,7 +146,19 @@ pub fn save_texture_png(
     let gfx = interface.gfx();
     let mut err = None;
     gfx.render_to_texture(texture, || {
-        match gfx.save_image(0, 0, width, height, path_s, true, false, false, 0) {
+        match gfx.save_image(
+            0,
+            0,
+            width,
+            height,
+            path_s,
+            spring_native::GfxSaveImageOptions {
+                alpha: true,
+                yflip: false,
+                grayscale16bit: false,
+            },
+            0,
+        ) {
             Ok(true) => {}
             Ok(false) => err = Some(format!("save_image returned false for {}", path.display())),
             Err(e) => err = Some(format!("save_image {}: {e:?}", path.display())),

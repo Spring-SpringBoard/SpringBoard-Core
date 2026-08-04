@@ -9,7 +9,10 @@ use std::time::Instant;
 
 use crate::sbc::objects::{AddObjectCommand, ObjectKind, ObjectManager, RemoveObjectCommand};
 use crate::sbc::render::ModelShader;
-use crate::sbc::states::state::{cursor, EditorState, GroundHit, StateContext, Transition};
+use crate::sbc::states::state::{EditorState, StateContext, Transition};
+use crate::sbc::states::trace::{
+    cursor, trace_ground_at_mouse, trace_ground_with_water, GroundHit,
+};
 
 mod brush;
 
@@ -278,24 +281,6 @@ fn ground(ctx: &StateContext, x: f32, z: f32) -> Option<(f32, f32, f32)> {
     Some((x, y, z))
 }
 
-/// AddObjectState in Lua calls `Spring.TraceScreenRay(mx, my, true)` directly,
-/// rather than SpringBoard's helper that forces `ignoreWater = true`.
-fn trace_object_ground(
-    interface: &spring_native::prelude::NativeInterfaceRef,
-    x: f32,
-    y: f32,
-) -> Option<GroundHit> {
-    let (hit_type, _, coords) = interface
-        .camera()
-        .trace_screen_ray(x, y, true, false, false, false, 0.0)
-        .ok()?;
-    (hit_type == 3).then_some(GroundHit {
-        x: coords.x,
-        y: coords.y,
-        z: coords.z,
-    })
-}
-
 impl EditorState for AddObjectState {
     fn name(&self) -> &'static str {
         match self.kind {
@@ -314,7 +299,7 @@ impl EditorState for AddObjectState {
         if button != LEFT && !(button == RIGHT && self.config.brush) {
             return false;
         }
-        let Some(hit) = trace_object_ground(ctx.interface, x as f32, y as f32) else {
+        let Some(hit) = trace_ground_with_water(ctx.interface, x as f32, y as f32) else {
             return true;
         };
         if button == RIGHT {
@@ -363,7 +348,7 @@ impl EditorState for AddObjectState {
         if !self.can_apply() {
             return;
         }
-        if let Some(hit) = trace_object_ground(ctx.interface, mouse.x, mouse.y) {
+        if let Some(hit) = trace_ground_at_mouse(ctx.interface) {
             if self.erasing {
                 self.erase(ctx, hit.x, hit.z);
             } else {
@@ -375,10 +360,7 @@ impl EditorState for AddObjectState {
     /// A ghost at the cursor: the object model in set mode, and the scatter
     /// reach in brush mode.
     fn draw_world(&mut self, interface: &spring_native::prelude::NativeInterfaceRef) {
-        let Some(mouse) = cursor(interface) else {
-            return;
-        };
-        let Some(hit) = trace_object_ground(interface, mouse.x, mouse.y) else {
+        let Some(hit) = trace_ground_at_mouse(interface) else {
             return;
         };
         // The brush also shows its reach, since the scatter does not fill it.

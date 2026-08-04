@@ -34,7 +34,11 @@ pub(crate) fn draw_selected_features(
         return;
     }
     let gfx = interface.gfx();
-    let _ = gfx.depth_test(false, false, 0);
+    let _ = gfx.depth_test(spring_native::GfxDepthTestOptions {
+        enable: false,
+        set_func: false,
+        func: 0,
+    });
     let _ = gfx.line_width(2.0);
     let _ = gfx.color(0.0, 1.0, 0.0, 1.0);
 
@@ -99,7 +103,11 @@ impl BrushPreview {
         let _ = gfx.blend_func(GL_SRC_ALPHA, GL_ONE);
         let _ = gfx.color(0.0, 1.0, 1.0, 0.5);
         let _ = gfx.depth_mask(false);
-        let _ = gfx.depth_test(false, false, 0);
+        let _ = gfx.depth_test(spring_native::GfxDepthTestOptions {
+            enable: false,
+            set_func: false,
+            func: 0,
+        });
         let _ = gfx.culling(false);
 
         let half = size * 0.5;
@@ -141,12 +149,7 @@ impl BrushPreview {
                     "",
                     BRUSH_FRAGMENT,
                     "",
-                    false,
-                    0,
-                    false,
-                    0,
-                    false,
-                    0,
+                    spring_native::GfxCreateShaderOptions::default(),
                 )
                 .ok()?;
             if id == 0 {
@@ -178,7 +181,11 @@ pub(crate) fn draw_cursor_ring(
     rgba: (f32, f32, f32, f32),
 ) {
     let gfx = interface.gfx();
-    let _ = gfx.depth_test(true, false, GL_LEQUAL);
+    let _ = gfx.depth_test(spring_native::GfxDepthTestOptions {
+        enable: true,
+        set_func: false,
+        func: GL_LEQUAL,
+    });
     let _ = gfx.line_width(2.0);
     let _ = gfx.color(rgba.0, rgba.1, rgba.2, rgba.3);
 
@@ -221,7 +228,11 @@ pub(crate) fn draw_object_ghost(
     } = ghost;
 
     let gfx = interface.gfx();
-    let _ = gfx.depth_test(true, true, GL_LEQUAL);
+    let _ = gfx.depth_test(spring_native::GfxDepthTestOptions {
+        enable: true,
+        set_func: true,
+        func: GL_LEQUAL,
+    });
     let _ = gfx.depth_mask(true);
     let _ = gfx.blending(true);
     let _ = gfx.matrix_mode(GL_MODELVIEW);
@@ -237,12 +248,28 @@ pub(crate) fn draw_object_ghost(
     match kind {
         ObjectKind::Unit => {
             let _ = gfx.unit_shape_textures(def_id, true);
-            let _ = gfx.unit_shape(def_id, team_id, true, false, true);
+            let _ = gfx.unit_shape(
+                def_id,
+                team_id,
+                spring_native::GfxObjectShapeOptions {
+                    raw_state: true,
+                    to_screen: false,
+                    opaque: true,
+                },
+            );
             let _ = gfx.unit_shape_textures(def_id, false);
         }
         ObjectKind::Feature => {
             let _ = gfx.feature_shape_textures(def_id, true);
-            let _ = gfx.feature_shape(def_id, team_id, true, false, true);
+            let _ = gfx.feature_shape(
+                def_id,
+                team_id,
+                spring_native::GfxObjectShapeOptions {
+                    raw_state: true,
+                    to_screen: false,
+                    opaque: true,
+                },
+            );
             let _ = gfx.feature_shape_textures(def_id, false);
         }
         ObjectKind::Area => {}
@@ -287,5 +314,9 @@ fn reset(interface: &NativeInterfaceRef) {
     let gfx = interface.gfx();
     let _ = gfx.color(1.0, 1.0, 1.0, 1.0);
     let _ = gfx.line_width(1.0);
-    let _ = gfx.depth_test(true, false, 0);
+    let _ = gfx.depth_test(spring_native::GfxDepthTestOptions {
+        enable: true,
+        set_func: false,
+        func: 0,
+    });
 }

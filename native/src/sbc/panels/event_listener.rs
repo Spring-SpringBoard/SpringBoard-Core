@@ -6,6 +6,7 @@ use super::manager::PanelManager;
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
 use crate::sbc::events::{Event, EventListener, EventListenerFactory, ListenerId};
+use crate::sbc::keys::KeyMods;
 
 inventory::submit! { EventListenerFactory { make: |_| Box::new(PanelEvents) } }
 
@@ -44,11 +45,20 @@ impl EventListener for PanelEvents {
         key: i32,
         scan: i32,
         repeat: bool,
+        mods: KeyMods,
     ) -> Result<bool, Error> {
-        models.get::<PanelManager>().key_press(key, scan, repeat)
+        models
+            .get::<PanelManager>()
+            .key_press(key, scan, repeat, mods)
     }
 
-    fn key_release(&mut self, models: &mut Models, key: i32, scan: i32) -> Result<bool, Error> {
+    fn key_release(
+        &mut self,
+        models: &mut Models,
+        key: i32,
+        scan: i32,
+        _mods: KeyMods,
+    ) -> Result<bool, Error> {
         models.get::<PanelManager>().key_release(key, scan)
     }
 

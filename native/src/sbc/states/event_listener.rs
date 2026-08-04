@@ -6,6 +6,7 @@ use super::manager::StateManager;
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
 use crate::sbc::events::{Event, EventListener, EventListenerFactory, ListenerId};
+use crate::sbc::keys::KeyMods;
 
 inventory::submit! { EventListenerFactory { make: |_| Box::new(StateEvents) } }
 
@@ -52,6 +53,7 @@ impl EventListener for StateEvents {
         key: i32,
         _scan: i32,
         _repeat: bool,
+        _mods: KeyMods,
     ) -> Result<bool, Error> {
         models.with::<StateManager, _>(|states, models| states.key_press(models, key))
     }

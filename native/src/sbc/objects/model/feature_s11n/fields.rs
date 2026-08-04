@@ -216,13 +216,15 @@ impl TypedField<FeatureModel> for BlockingField {
     fn set(s: &mut FeatureModel, id: i32, b: &Blocking) {
         let _ = s.interface.synced_ctrl().feature().set_feature_blocking(
             id,
-            b.is_blocking,
-            b.is_solid_object_collidable,
-            b.is_projectile_collidable,
-            b.is_ray_segment_collidable,
-            b.crushable,
-            b.block_enemy_pushing,
-            b.block_height_changes,
+            spring_native::SetFeatureBlockingOptions {
+                blocking: b.is_blocking,
+                solid_objects: b.is_solid_object_collidable,
+                projectiles: b.is_projectile_collidable,
+                quad_map_rays: b.is_ray_segment_collidable,
+                crushable: b.crushable,
+                block_enemy_pushing: b.block_enemy_pushing,
+                block_height_changes: b.block_height_changes,
+            },
         );
     }
 }

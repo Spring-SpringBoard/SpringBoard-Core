@@ -78,7 +78,7 @@ impl NumericDragOverlay {
         self.set_pixels(&self.progress_height, (height - 4.0).max(0.0));
         let rml = interface.rml_ui();
         if let Some(document) = self.document {
-            rml.document_show(document, None, None)?;
+            rml.document_show(document, spring_native::RmlDocumentShowOptions::default())?;
         }
         if let Some(context) = self.context {
             rml.context_pull_to_front(context)?;

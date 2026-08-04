@@ -176,7 +176,7 @@ impl PanelView {
         rml.document_set_title(doc, "SpringBoard")?;
         rml.document_append_to_style_sheet(doc, UI_STYLE)?;
         rml.element_set_inner_rml(doc, UI_BODY)?;
-        rml.document_show(doc, None, None)?;
+        rml.document_show(doc, spring_native::RmlDocumentShowOptions::default())?;
         // RmlUi must receive mouse events, but it must not replace the editor
         // cursor while hovering a button (its `pointer` alias used to select
         // Spring's animated Move command cursor).

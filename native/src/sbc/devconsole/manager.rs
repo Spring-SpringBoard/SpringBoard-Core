@@ -13,7 +13,7 @@ use crate::sbc::devconsole::log::Severity;
 use crate::sbc::devconsole::session::ConsoleSession;
 use crate::sbc::devconsole::status::StatusPresenter;
 use crate::sbc::devconsole::view::{DevConsoleView, HistoryCommand, StatusAction, ToggleState};
-use crate::sbc::keys::is_key;
+use crate::sbc::keys::{is_key, KeyMods};
 use crate::sbc::objects::SelectionManager;
 use crate::sbc::port_flags::{self, UiImpl};
 
@@ -28,6 +28,9 @@ inventory::submit! {
 pub(crate) struct DevConsoleManager {
     interface: NativeInterfaceRef,
     enabled: bool,
+    /// Some synthetic input paths clear SDL's modifier state before the next
+    /// key press. Keep the press/release pair as the authoritative fallback.
+    ctrl_pressed: bool,
     view: DevConsoleView,
     console: ConsoleSession,
     problems_only: bool,
@@ -80,6 +83,7 @@ impl DevConsoleManager {
         DevConsoleManager {
             interface,
             enabled,
+            ctrl_pressed: false,
             view,
             console: ConsoleSession::new(&interface),
             problems_only: false,
@@ -188,8 +192,9 @@ impl DevConsoleManager {
     /// whose toolbar binds both to Copy and Select All and would swallow them.
     /// The console owns Ctrl+C whenever it has a selection, and Ctrl+A while the
     /// pointer is over it.
-    pub fn text_key(&mut self, key_code: i32) -> Result<bool, Error> {
-        if !self.enabled || !self.view.is_ready() || !self.view.visible() || !self.ctrl_held() {
+    pub fn text_key(&mut self, key_code: i32, mods: KeyMods) -> Result<bool, Error> {
+        self.note_key_press(key_code);
+        if !self.enabled || !self.view.is_ready() || !self.view.visible() || !self.ctrl_held(mods) {
             return Ok(false);
         }
         if is_key(&self.interface, key_code, "c") && self.view.selected_range().is_some() {
@@ -205,7 +210,8 @@ impl DevConsoleManager {
         Ok(false)
     }
 
-    pub fn key_press(&mut self, key_code: i32) -> Result<bool, Error> {
+    pub fn key_press(&mut self, key_code: i32, mods: KeyMods) -> Result<bool, Error> {
+        self.note_key_press(key_code);
         if !self.enabled || !self.view.is_ready() {
             return Ok(false);
         }
@@ -218,7 +224,7 @@ impl DevConsoleManager {
         if !self.view.visible() {
             return Ok(false);
         }
-        let ctrl = self.ctrl_held();
+        let ctrl = self.ctrl_held(mods);
         if ctrl && is_key(&self.interface, key_code, "a") {
             let count = self.console.rendered_count(self.problems_only);
             self.view.select_all(count);
@@ -228,6 +234,13 @@ impl DevConsoleManager {
         if ctrl && is_key(&self.interface, key_code, "c") {
             self.copy_selection();
             return Ok(true);
+        }
+        Ok(false)
+    }
+
+    pub fn key_release(&mut self, key_code: i32) -> Result<bool, Error> {
+        if is_key(&self.interface, key_code, "ctrl") {
+            self.ctrl_pressed = false;
         }
         Ok(false)
     }
@@ -263,11 +276,14 @@ impl DevConsoleManager {
         self.console.backfill(&self.interface);
     }
 
-    fn ctrl_held(&self) -> bool {
-        self.interface
-            .input()
-            .get_mod_key_state()
-            .is_ok_and(|(_, ctrl, _, _)| ctrl)
+    fn ctrl_held(&self, mods: KeyMods) -> bool {
+        self.ctrl_pressed || mods.ctrl
+    }
+
+    fn note_key_press(&mut self, key_code: i32) {
+        if is_key(&self.interface, key_code, "ctrl") {
+            self.ctrl_pressed = true;
+        }
     }
 
     fn copy_selection(&self) {

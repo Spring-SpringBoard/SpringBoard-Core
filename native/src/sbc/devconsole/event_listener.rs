@@ -6,6 +6,7 @@ use super::manager::DevConsoleManager;
 use crate::sbc::command_system::command::{Command, CommandId};
 use crate::sbc::command_system::model::Models;
 use crate::sbc::events::{Event, EventListener, EventListenerFactory, ListenerId};
+use crate::sbc::keys::KeyMods;
 
 inventory::submit! { EventListenerFactory { make: |_| Box::new(DevConsoleTextEvents) } }
 inventory::submit! { EventListenerFactory { make: |_| Box::new(DevConsoleEvents) } }
@@ -27,8 +28,9 @@ impl EventListener for DevConsoleTextEvents {
         key: i32,
         _scan: i32,
         _repeat: bool,
+        mods: KeyMods,
     ) -> Result<bool, Error> {
-        models.get::<DevConsoleManager>().text_key(key)
+        models.get::<DevConsoleManager>().text_key(key, mods)
     }
 }
 
@@ -43,6 +45,7 @@ impl EventListener for DevConsoleEvents {
         matches!(
             event,
             Event::KeyPress
+                | Event::KeyRelease
                 | Event::ConsoleLine
                 | Event::CommandRecorded
                 | Event::CommandHistoryChanged
@@ -59,8 +62,19 @@ impl EventListener for DevConsoleEvents {
         key: i32,
         _scan: i32,
         _repeat: bool,
+        mods: KeyMods,
     ) -> Result<bool, Error> {
-        models.get::<DevConsoleManager>().key_press(key)
+        models.get::<DevConsoleManager>().key_press(key, mods)
+    }
+
+    fn key_release(
+        &mut self,
+        models: &mut Models,
+        key: i32,
+        _scan: i32,
+        _mods: KeyMods,
+    ) -> Result<bool, Error> {
+        models.get::<DevConsoleManager>().key_release(key)
     }
 
     fn console_line(
