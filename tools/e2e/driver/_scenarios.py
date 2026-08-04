@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 from e2e.scenarios import console as console
 from e2e.scenarios import gallery as gallery
 from e2e.scenarios import misc as misc
+from e2e.scenarios import mouse as _mouse  # noqa: F401
 from e2e.scenarios import shell as shell
 from e2e.scenarios import visual_sweep as visual_sweep
 from e2e.scenarios import workflows as _workflows  # noqa: F401
