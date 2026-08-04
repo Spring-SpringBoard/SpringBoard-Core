@@ -12,10 +12,6 @@ impl MapBrush for Metal {
     fn name(&self) -> &'static str {
         "metal"
     }
-    fn initial_delay(&self) -> f32 {
-        0.0
-    }
-
     fn prepare(
         &self,
         brush: &BrushSettings,

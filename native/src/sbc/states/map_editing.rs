@@ -54,10 +54,6 @@ impl BrushButton {
 pub(crate) trait MapBrush: Sync {
     fn name(&self) -> &'static str;
 
-    fn initial_delay(&self) -> f32 {
-        0.3
-    }
-
     /// Whether the current domain settings can produce a command.
     fn is_ready(&self, _brush: &BrushSettings) -> bool {
         true
@@ -114,7 +110,6 @@ pub(crate) struct MapEditingState {
     /// Screen position paired with `last_hit`, in the ray-trace convention.
     last_screen: Option<(f32, f32)>,
     last_apply: Option<Instant>,
-    initial_delay_left: f32,
     preview: BrushPreview,
 }
 
@@ -128,7 +123,6 @@ impl MapEditingState {
             last_hit: None,
             last_screen: None,
             last_apply: None,
-            initial_delay_left: tool.initial_delay(),
             preview: BrushPreview::new(),
         }
     }
@@ -155,10 +149,8 @@ impl MapEditingState {
             self.last_apply = Some(now);
             return true;
         };
-        let delay = self.apply_delay().max(self.initial_delay_left);
-        if now.duration_since(last).as_secs_f32() >= delay {
+        if now.duration_since(last).as_secs_f32() >= self.apply_delay() {
             self.last_apply = Some(now);
-            self.initial_delay_left = 0.0;
             return true;
         }
         false
@@ -168,7 +160,6 @@ impl MapEditingState {
         if self.painting {
             return;
         }
-        self.initial_delay_left = self.tool.initial_delay();
         ctx.set_multiple_command_mode(true);
         self.painting = true;
     }

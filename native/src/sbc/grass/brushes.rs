@@ -12,10 +12,6 @@ impl MapBrush for Grass {
     fn name(&self) -> &'static str {
         "grass"
     }
-    fn initial_delay(&self) -> f32 {
-        0.0
-    }
-
     fn prepare(
         &self,
         brush: &BrushSettings,
