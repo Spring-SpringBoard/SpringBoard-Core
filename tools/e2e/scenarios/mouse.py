@@ -1,26 +1,17 @@
-"""Physical-mouse coverage for the panel and for the screen-to-world contract.
+"""Physical-mouse coverage for the screen-to-world contract.
 
 Most scenarios reach the editors through the typed control channel, which never
-touches the engine's mouse callins. These two do the opposite: every input here
-is a real X11 event, and the assertions read the resulting state back through
-the control channel. They carry no goldens, so they stay cheap enough to run on
-every suite.
+touches the engine's mouse callins at all. This one does the opposite: the input
+is real X11, and the result is read back through the control channel. It carries
+no golden, so a vertical flip is reported as two coordinates rather than as a
+picture full of moved trees.
 """
 
 from typing import TYPE_CHECKING
 
 from e2e.driver.timing import Delay
 from e2e.scenarios.helpers.camera import zoom_map
-from e2e.scenarios.helpers.geometry import (
-    MAP,
-    OBJECTS,
-    TAB_X,
-    TAB_Y,
-    editor_point,
-    panel_left,
-    panel_point,
-    window_size,
-)
+from e2e.scenarios.helpers.geometry import OBJECTS, panel_point, window_size
 from e2e.scenarios.helpers.objects import arm_tree as _arm_tree
 from e2e.scenarios.helpers.objects import open_object_editor as _open
 from e2e.scenarios.helpers.registry import scenario
@@ -30,61 +21,9 @@ if TYPE_CHECKING:
     from e2e.driver.state import RunState
 
 # A click and the ray query for the same pixel describe the same spot. The
-# budget covers the brush's own rounding, not a different point on the map: a
-# mirrored y lands hundreds of units away even near the middle of the view.
+# budget covers the placement's own rounding, not a different point on the map:
+# a mirrored y lands hundreds of units away even near the middle of the view.
 TRACE_TOLERANCE = 40.0
-
-
-@scenario()
-def mouse_ui(run_state: "RunState") -> None:
-    """The panel, driven only by the pointer.
-
-    Tab, editor button, field click, typed commit and a numeric drag are all
-    real X11 input, and the editor model is read back to prove each one landed
-    on the control it aimed at. Without this, every editor is reachable in tests
-    only through the control channel, which no user has.
-
-    Note what this cannot cover: RmlUi consumes a press over the panel document
-    inside the engine, so those clicks never reach the native mouse callin at
-    all. The panel's own hit test therefore sees map presses only, and this
-    scenario proves the user-facing path rather than that hit test.
-    """
-    run_state.focus()
-    left = panel_left(run_state)
-    run_state.click(left + TAB_X["map"], TAB_Y, delay=Delay.FRAME)
-    run_state.click(*editor_point(left, "map", "terrain"), delay=Delay.READY)
-
-    terrain = run_state.control.editor("heightmapEditor")
-    run_state.fill_text(
-        *panel_point(left, MAP["terrain_size"]),
-        "140",
-        click_delay=Delay.FRAME,
-        commit_delay=Delay.SETTLE,
-    )
-    typed = terrain.get("size")
-    assert typed == 140.0, f"typing into the Size field gave {typed!r}, want 140.0"
-
-    # A numeric drag pins the pointer and warps it back, so the motion has to be
-    # relative. The direction is what matters: the exact value depends on which
-    # tick the release meets.
-    run_state.press(*panel_point(left, MAP["terrain_size"]))
-    run_state.move_relative(60)
-    run_state.release(*panel_point(left, MAP["terrain_size"]), delay=Delay.SETTLE)
-    dragged = terrain.get("size")
-    assert isinstance(dragged, float), f"Size is {dragged!r}, want a number"
-    assert dragged > typed, f"dragging right did not raise Size: {typed} -> {dragged}"
-
-    # A press beside the panel belongs to the map, not to the control that was
-    # last touched. This is the ownership half of the hit test.
-    run_state.fill_text(
-        *panel_point(left, MAP["terrain_rotation"]),
-        "15",
-        click_delay=Delay.FRAME,
-        commit_delay=Delay.SETTLE,
-    )
-    rotation = terrain.get("rotation")
-    assert rotation == 15.0, f"the second field took {rotation!r}, want 15.0"
-    assert terrain.get("size") == dragged, "editing Rotation moved Size"
 
 
 @scenario()
@@ -93,8 +32,15 @@ def mouse_coordinates(run_state: "RunState") -> None:
 
     The engine reports mouse callbacks in its own bottom-origin screen space,
     while control clients address the window top-origin like a screenshot. Both
-    paths are asked about the same two pixels here, so a future flip on either
-    side fails immediately -- and says so, rather than moving a golden's trees.
+    paths are asked about the same two pixels here, so a flip on either side
+    fails immediately and names the two positions it compared.
+
+    This is deliberately the only mouse scenario. The panel and the consoles do
+    their hit testing inside RmlUi, which the engine feeds directly: a press
+    over either never reaches the native callin, and their ownership checks are
+    reached through a pointer-capture state that a scripted click cannot steer.
+    A UI-side mouse test therefore passes whatever the coordinate space is,
+    while this one cannot.
     """
     run_state.focus()
     left = _open(run_state, "features")
