@@ -1,3 +1,4 @@
+import json
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -7,7 +8,15 @@ import typer
 
 from .driver.cases import TARGETS, Case, select_cases, target_cases
 from .driver.utils.paths import ARTIFACT_ROOT, create_suite_artifact_dir
-from .fixtures.golden import GOLDEN_ROOT, STATUS_APPROVED, approve_review, load_review
+from .fixtures.golden import (
+    GOLDEN_ROOT,
+    STATUS_APPROVED,
+    approve_review,
+    differing_pixels,
+    golden_path,
+    load_review,
+    write_diff,
+)
 from .runner import E2ERun
 from .suite_report import artifact_paths, default_report_path, write_report
 
@@ -119,6 +128,63 @@ def goldens_status() -> None:
                 typer.echo(f"    ai-reviewed  {shot}")
     if pending:
         typer.echo(f"\n{pending} image(s) awaiting approval.")
+
+
+@app.command("goldens-diff")
+def goldens_diff(
+    case: Annotated[str, typer.Argument(help="Golden case directory.")],
+    run: Annotated[Path | None, typer.Option(help="Run directory; default is the latest for the case.")] = None,
+    out: Annotated[Path | None, typer.Option(help="Where to write the overlays.")] = None,
+) -> None:
+    """Show where a case's captures differ from its goldens, as magenta overlays.
+
+    Reports every shot, including the ones whose difference stays inside their
+    tolerance -- those are invisible in a run, and they are exactly what you want
+    to see before deciding whether a golden is stale.
+    """
+    run_dir = run or _latest_run_dir(case)
+    if run_dir is None:
+        raise typer.BadParameter(f"no run artifacts for {case}; run `just test-e2e {case}` first")
+    checks = _golden_checks(run_dir)
+    if not checks:
+        raise typer.BadParameter(f"{run_dir} recorded no goldens")
+    destination = out or run_dir / "golden-diffs"
+    destination.mkdir(parents=True, exist_ok=True)
+    if any("ignored_bottom" not in check for check in checks.values()):
+        typer.echo(
+            f"warning: {run_dir.name} predates recorded golden metadata, so the "
+            "ignored status strip and each shot's tolerance are unknown here; "
+            "counts include regions the run itself does not read. Re-run the case."
+        )
+    for name, check in sorted(checks.items()):
+        actual = Path(check["path"])
+        golden = golden_path(case, name)
+        if not actual.is_file() or not golden.is_file():
+            typer.echo(f"{name:32} missing capture or golden")
+            continue
+        ignored_bottom = int(check.get("ignored_bottom", 0))
+        channel_tolerance = int(check.get("channel_tolerance", 1))
+        tolerance = int(check.get("tolerance", 0))
+        differing = differing_pixels(
+            golden,
+            actual,
+            channel_tolerance=channel_tolerance,
+            ignored_bottom=ignored_bottom,
+        )
+        if not differing:
+            typer.echo(f"{name:32} identical")
+            continue
+        target = destination / f"{name}.diff.png"
+        write_diff(
+            golden,
+            actual,
+            target,
+            channel_tolerance=channel_tolerance,
+            ignored_bottom=ignored_bottom,
+        )
+        verdict = "over tolerance" if differing > tolerance else f"within tolerance {tolerance}"
+        typer.echo(f"{name:32} {differing:>8} px  {verdict:<22} {target}")
+    typer.echo(f"\ndiffs: {destination}")
 
 
 @app.command("approve-goldens")
@@ -256,3 +322,28 @@ def _case_batches(cases: list[Case], reuse_sessions: bool) -> Iterator[list[Case
 
 def _batch_key(case: Case) -> tuple[tuple[tuple[str, str], ...], tuple[tuple[str, str], ...]]:
     return tuple(sorted(case.flags.items())), tuple(sorted(case.env.items()))
+
+
+def _latest_run_dir(case: str) -> Path | None:
+    """The newest artifact directory holding this case, standalone or in a suite."""
+    if not ARTIFACT_ROOT.is_dir():
+        return None
+    candidates = [path for path in ARTIFACT_ROOT.glob(f"*-{case}") if path.is_dir()]
+    candidates += [path / case for path in ARTIFACT_ROOT.glob("*-suite") if (path / case).is_dir()]
+    return max(candidates, key=lambda path: path.stat().st_mtime, default=None)
+
+
+def _golden_checks(run_dir: Path) -> dict[str, dict[str, object]]:
+    """The `golden` events of a run, newest entry per shot."""
+    events = run_dir / "events.jsonl"
+    if not events.is_file():
+        return {}
+    checks: dict[str, dict[str, object]] = {}
+    for line in events.read_text().splitlines():
+        try:
+            event = cast("dict[str, object]", json.loads(line))
+        except json.JSONDecodeError:
+            continue
+        if event.get("kind") == "golden" and isinstance(event.get("name"), str):
+            checks[cast("str", event["name"])] = event
+    return checks

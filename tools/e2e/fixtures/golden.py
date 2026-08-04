@@ -28,6 +28,10 @@ GOLDEN_ROOT = Path(__file__).resolve().parent / "goldens"
 STATUS_AI = "ai-reviewed"
 STATUS_APPROVED = "approved"
 
+# Magenta: the UI theme has no such colour, so a marked pixel cannot be mistaken
+# for one of its own.
+DIFF_COLOR = (255, 0, 255)
+
 
 class ReviewEntry(TypedDict):
     status: str
@@ -115,9 +119,38 @@ def differing_pixels(
         return _count_pixels_over(difference, channel_tolerance)
 
 
-def write_diff(golden: Path, actual: Path, out: Path) -> None:
+def write_diff(
+    golden: Path,
+    actual: Path,
+    out: Path,
+    *,
+    channel_tolerance: int = 1,
+    ignored_bottom: int = 0,
+) -> None:
+    """Paint the changed pixels magenta over a dimmed copy of the capture.
+
+    A raw absolute difference is nearly black wherever the change is subtle,
+    which is most of the interesting ones. Locating the change matters more than
+    measuring it here, so the base image stays recognisable and every pixel the
+    comparison counts is made the one colour nothing in the UI uses.
+
+    Rows inside `ignored_bottom` are dimmed further and never marked: they carry
+    live telemetry that no check reads.
+    """
     with Image.open(golden) as expected, Image.open(actual) as observed:
-        ImageChops.difference(expected.convert("RGBA"), observed.convert("RGBA")).save(out)
+        base = observed.convert("RGB")
+        difference = ImageChops.difference(expected.convert("RGBA"), base.convert("RGBA"))
+        changed = _over_tolerance_mask(difference, channel_tolerance)
+        if ignored_bottom:
+            keep = max(0, base.height - ignored_bottom)
+            changed.paste(0, (0, keep, base.width, base.height))
+        canvas = Image.blend(base, Image.new("RGB", base.size, (0, 0, 0)), 0.65)
+        if ignored_bottom:
+            keep = max(0, base.height - ignored_bottom)
+            strip = canvas.crop((0, keep, base.width, base.height))
+            canvas.paste(Image.blend(strip, Image.new("RGB", strip.size, (0, 0, 0)), 0.6), (0, keep))
+        canvas.paste(Image.new("RGB", base.size, DIFF_COLOR), mask=changed)
+        canvas.save(out)
 
 
 def compare(
@@ -182,6 +215,11 @@ def review_path(case_name: str) -> Path:
     return GOLDEN_ROOT / case_name / "review.json"
 
 
+def _over_tolerance_mask(image: Image.Image, threshold: int) -> Image.Image:
+    """A 1-bit mask of the pixels `_count_pixels_over` counts."""
+    return _channel_maximum(image).point(lambda value: 255 if value > threshold else 0).convert("1")
+
+
 def _count_pixels_over(image: Image.Image, threshold: int) -> int:
     """Count pixels whose largest channel exceeds ``threshold``.
 
@@ -190,8 +228,12 @@ def _count_pixels_over(image: Image.Image, threshold: int) -> int:
     `max(channel) > threshold` predicate while making large golden comparisons
     cheap enough to keep the suite's visual coverage.
     """
+    return sum(_channel_maximum(image).histogram()[threshold + 1 :])
+
+
+def _channel_maximum(image: Image.Image) -> Image.Image:
     channels = image.split()
     maximum = channels[0]
     for channel in channels[1:]:
         maximum = ImageChops.lighter(maximum, channel)
-    return sum(maximum.histogram()[threshold + 1 :])
+    return maximum

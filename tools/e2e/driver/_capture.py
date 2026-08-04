@@ -195,7 +195,9 @@ class CaptureMixin(RunState):
                 status=status,
                 path=str(check.path),
                 capture_ms=check.capture_ms,
+                tolerance=check.tolerance,
                 channel_tolerance=check.channel_tolerance,
+                ignored_bottom=check.ignored_bottom,
                 conversion_ms=conversion.elapsed_ms,
                 compare_ms=int((monotonic() - started) * 1000),
             )

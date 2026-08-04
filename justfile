@@ -165,6 +165,12 @@ e2e-report *args:
 goldens-status:
     @PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e goldens-status
 
+# Where a case's last captures differ from its goldens, marked in magenta.
+# Reports the within-tolerance differences a passing run never shows.
+[group('test')]
+goldens-diff case *args:
+    @PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e goldens-diff "{{case}}" {{args}}
+
 # Approve a case's reference images (the human OK): `just goldens-approve rotation`.
 # Optionally name individual shots. Only a human runs this.
 [group('test')]
