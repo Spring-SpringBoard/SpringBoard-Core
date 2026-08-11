@@ -49,6 +49,10 @@ impl ChonsoleView {
     }
 
     pub(super) fn update(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
+        // Re-enable text input if a reload reset SDL's global state.
+        if self.visible && self.rml.has_document() {
+            let _ = interface.unsynced_ctrl().sdlstart_text_input();
+        }
         self.rml.update(interface)?;
         if self.suggestion_events_dirty {
             self.rml.bind_suggestion_events(

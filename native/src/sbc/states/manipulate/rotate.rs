@@ -4,7 +4,7 @@ use crate::sbc::objects::SetObjectParamCommand;
 use crate::sbc::render::ModelShader;
 use crate::sbc::states::highlight::ObjectGhost;
 use crate::sbc::states::state::{EditorState, StateContext, Transition};
-use crate::sbc::states::trace::trace_ground;
+use crate::sbc::states::trace::trace_ground_from_callback;
 
 use super::ghost::draw_ghosts;
 use super::shared::{grab_selection, set_pos_dir, Grabbed};
@@ -66,7 +66,7 @@ impl RotateObjectState {
 
     /// The cursor angle about the selection centre.
     fn cursor_angle(&self, ctx: &mut StateContext, x: i32, y: i32) -> Option<f32> {
-        let hit = trace_ground(ctx.interface, x as f32, y as f32)?;
+        let hit = trace_ground_from_callback(ctx.interface, x, y)?;
         Some((hit.x - self.centre.0).atan2(hit.z - self.centre.1))
     }
 }

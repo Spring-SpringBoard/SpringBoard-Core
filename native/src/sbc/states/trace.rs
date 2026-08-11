@@ -119,10 +119,43 @@ pub(crate) fn trace_object(interface: &NativeInterfaceRef, x: f32, y: f32) -> Tr
     }
 }
 
-/// Convert between the engine's bottom-origin screen space and the top-origin
-/// space RmlUi lays out in.
-pub(crate) fn flip_screen_y(view_height: f32, y: f32) -> f32 {
+/// Convert a top-origin y to the engine's bottom-origin y.
+pub(crate) fn top_to_engine_y(view_height: f32, y: f32) -> f32 {
     view_height - 1.0 - y
+}
+
+/// Convert control coordinates to engine coordinates.
+pub(crate) fn control_screen_point(interface: &NativeInterfaceRef, x: f32, y: f32) -> ScreenPoint {
+    let Ok(geometry) = interface.display().get_view_geometry() else {
+        return ScreenPoint { x, y };
+    };
+    ScreenPoint {
+        x,
+        y: top_to_engine_y(geometry.viewSizeY as f32, y),
+    }
+}
+
+fn callback_screen_point(x: i32, y: i32) -> ScreenPoint {
+    ScreenPoint {
+        x: x as f32,
+        y: y as f32,
+    }
+}
+
+/// Convert callback y to RmlUi's top-origin space.
+pub(crate) fn rml_y_from_callback(interface: &NativeInterfaceRef, y: i32) -> i32 {
+    match interface.display().get_view_geometry() {
+        Ok(geometry) => geometry.viewSizeY - 1 - y,
+        Err(_) => y,
+    }
+}
+
+/// Convert polled mouse y to RmlUi's continuous coordinate.
+pub(crate) fn rml_y_from_mouse(interface: &NativeInterfaceRef, y: f32) -> f32 {
+    match interface.display().get_view_geometry() {
+        Ok(geometry) => geometry.viewSizeY as f32 - y,
+        Err(_) => y,
+    }
 }
 
 /// Order the two corners of a drag into an engine query rectangle. Both corners
@@ -253,6 +286,52 @@ pub(crate) fn trace_ground(interface: &NativeInterfaceRef, x: f32, y: f32) -> Op
     trace_ground_result(interface, x, y, true).ok().flatten()
 }
 
+/// Trace a top-origin control point.
+pub(crate) fn trace_ground_from_control(
+    interface: &NativeInterfaceRef,
+    x: f32,
+    y: f32,
+) -> Option<GroundHit> {
+    let point = control_screen_point(interface, x, y);
+    trace_ground(interface, point.x, point.y)
+}
+
+/// Trace a top-origin control point with editor options.
+pub(crate) fn trace_editor_ground_from_control(
+    interface: &NativeInterfaceRef,
+    x: f32,
+    y: f32,
+) -> Result<ScreenTrace, Error> {
+    let point = control_screen_point(interface, x, y);
+    trace_editor_ground(interface, point.x, point.y)
+}
+
+/// Trace a callback point with normal editor ground options.
+pub(crate) fn trace_ground_from_callback(
+    interface: &NativeInterfaceRef,
+    x: i32,
+    y: i32,
+) -> Option<GroundHit> {
+    let point = callback_screen_point(x, y);
+    trace_ground(interface, point.x, point.y)
+}
+
+/// Trace a callback point while including water.
+pub(crate) fn trace_ground_with_water_from_callback(
+    interface: &NativeInterfaceRef,
+    x: i32,
+    y: i32,
+) -> Option<GroundHit> {
+    let point = callback_screen_point(x, y);
+    trace_ground_with_water(interface, point.x, point.y)
+}
+
+/// Trace objects at a callback point.
+pub(crate) fn trace_object_from_callback(interface: &NativeInterfaceRef, x: i32, y: i32) -> Trace {
+    let point = callback_screen_point(x, y);
+    trace_object(interface, point.x, point.y)
+}
+
 /// Trace the current mouse position using Lua's direct
 /// `Spring.TraceScreenRay(mx, my, true)` defaults, including water.
 pub(crate) fn trace_ground_at_mouse(interface: &NativeInterfaceRef) -> Option<GroundHit> {
@@ -284,13 +363,16 @@ pub(crate) fn trace_ground_with_water(
 
 #[cfg(test)]
 mod tests {
-    use super::flip_screen_y;
+    use super::top_to_engine_y;
 
     #[test]
     fn screen_y_flip_is_symmetric_at_the_view_bounds() {
-        assert_eq!(flip_screen_y(1_000.0, 0.0), 999.0);
-        assert_eq!(flip_screen_y(1_000.0, 999.0), 0.0);
-        assert_eq!(flip_screen_y(1_000.0, flip_screen_y(1_000.0, 123.0)), 123.0);
+        assert_eq!(top_to_engine_y(1_000.0, 0.0), 999.0);
+        assert_eq!(top_to_engine_y(1_000.0, 999.0), 0.0);
+        assert_eq!(
+            top_to_engine_y(1_000.0, top_to_engine_y(1_000.0, 123.0)),
+            123.0
+        );
     }
 
     #[test]

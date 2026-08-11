@@ -9,6 +9,7 @@ use spring_native::{
 };
 
 use crate::sbc::rml::{self, element_by_id};
+use crate::sbc::states::trace::rml_y_from_mouse;
 
 use crate::sbc::chonsole::framework::{ChonsoleLine, ChonsoleLineKind, TextInput};
 const UI_CONTEXT: &str = "sbc_native_chonsole";
@@ -190,6 +191,8 @@ impl ChonsoleRml {
         };
         let rml = interface.rml_ui();
         if visible {
+            // RmlUi text input requires SDL text input to be enabled.
+            let _ = interface.unsynced_ctrl().sdlstart_text_input();
             rml.document_show(document, spring_native::RmlDocumentShowOptions::default())?;
             if let Some(context) = self.context {
                 // Keep the engine/editor cursor stable over console controls.
@@ -197,6 +200,7 @@ impl ChonsoleRml {
                 let _ = rml.context_pull_document_to_front(context, document);
             }
         } else {
+            let _ = interface.unsynced_ctrl().sdlstop_text_input();
             rml.document_hide(document)?;
             self.mouse_captured = false;
             if let Some(context) = self.context {
@@ -429,7 +433,7 @@ impl ChonsoleRml {
         // shared panel input layer does.
         let mouse = interface.input().get_mouse_state()?;
         let x = mouse.x as i32;
-        let y = mouse.y as i32;
+        let y = rml_y_from_mouse(interface, mouse.y) as i32;
         self.mouse_position = Some((x, y));
         let rml = interface.rml_ui();
         if !rml.element_is_point_within_element(suggestions, x as f32, y as f32)? {

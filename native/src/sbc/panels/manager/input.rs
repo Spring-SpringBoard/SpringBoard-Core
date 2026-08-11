@@ -5,6 +5,7 @@ use spring_native::prelude::Error;
 use super::PanelManager;
 use crate::sbc::keys::KeyMods;
 use crate::sbc::panels::field_target::ActiveFieldEditor;
+use crate::sbc::states::trace::rml_y_from_callback;
 
 impl PanelManager {
     pub fn key_press(
@@ -67,7 +68,7 @@ impl PanelManager {
         if !self.enabled {
             return Ok(false);
         }
-        let y = self.rml_y(y);
+        let y = rml_y_from_callback(&self.interface, y);
         self.input.mouse_move(&self.interface, &self.view, x, y)
     }
 
@@ -75,7 +76,7 @@ impl PanelManager {
         if !self.enabled {
             return Ok(false);
         }
-        let y = self.rml_y(y);
+        let y = rml_y_from_callback(&self.interface, y);
         // This must happen before the hit test below. A right-click on the map
         // is outside the panel, but it still interrupts an active numeric drag
         // owned by the panel.
@@ -84,7 +85,8 @@ impl PanelManager {
         }
         let modal_open =
             self.modals.any_open() || self.slot.editor().is_some_and(|ed| ed.has_open_modal());
-        if !self.view.contains(&self.interface, x, y) && !modal_open {
+        let inside = self.view.contains(&self.interface, x, y);
+        if !inside && !modal_open {
             return Ok(false);
         }
         self.input
@@ -95,7 +97,7 @@ impl PanelManager {
         if !self.enabled {
             return Ok(());
         }
-        let y = self.rml_y(y);
+        let y = rml_y_from_callback(&self.interface, y);
         self.input
             .mouse_release(&self.interface, &self.view, x, y, button)
     }
@@ -106,14 +108,5 @@ impl PanelManager {
         }
         self.input
             .mouse_wheel(&self.interface, &self.view, up, value)
-    }
-
-    /// Mouse callbacks report the engine's bottom-origin y; every hit test
-    /// above is against RmlUi's top-origin layout.
-    fn rml_y(&self, y: i32) -> i32 {
-        match self.interface.display().get_view_geometry() {
-            Ok(geometry) => geometry.viewSizeY - 1 - y,
-            Err(_) => y,
-        }
     }
 }

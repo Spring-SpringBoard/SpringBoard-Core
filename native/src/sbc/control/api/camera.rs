@@ -3,10 +3,8 @@
 use serde::Deserialize;
 use serde_json::json;
 
-use spring_native::prelude::NativeInterfaceRef;
-
 use crate::sbc::sbc::SBC;
-use crate::sbc::states::trace::{flip_screen_y, trace_editor_ground, trace_ground};
+use crate::sbc::states::trace::{trace_editor_ground_from_control, trace_ground_from_control};
 
 use super::super::{ControlError, Handled, Reply};
 
@@ -189,8 +187,7 @@ pub(crate) fn zoom(sbc: &mut SBC, params: Zoom) -> Handled {
                 "camera.zoom screen coordinates must be finite",
             ));
         }
-        trace_ground(interface, screen[0], engine_screen_y(interface, screen[1]))
-            .map(|hit| [hit.x, hit.y, hit.z])
+        trace_ground_from_control(interface, screen[0], screen[1]).map(|hit| [hit.x, hit.y, hit.z])
     } else {
         None
     };
@@ -220,9 +217,8 @@ pub(crate) fn zoom(sbc: &mut SBC, params: Zoom) -> Handled {
         // point beneath the cursor. Re-trace after scaling and apply the
         // horizontal ground delta in the controller, where the engine owns the
         // camera projection and terrain height.
-        if let Some(current) =
-            trace_ground(interface, screen[0], engine_screen_y(interface, screen[1]))
-                .map(|hit| [hit.x, hit.y, hit.z])
+        if let Some(current) = trace_ground_from_control(interface, screen[0], screen[1])
+            .map(|hit| [hit.x, hit.y, hit.z])
         {
             let mut state = camera
                 .get_camera_state(false)
@@ -247,20 +243,11 @@ pub(crate) fn trace(sbc: &mut SBC, params: Trace) -> Handled {
         ));
     }
     let interface = sbc.interface();
-    let trace = trace_editor_ground(interface, x, engine_screen_y(interface, y))
+    let trace = trace_editor_ground_from_control(interface, x, y)
         .map_err(|err| ControlError::failed(format!("trace_screen_ray: {err:?}")))?;
     Ok(Reply::now(json!({
         "hit_type": trace.hit_type,
         "hit_id": trace.hit_id,
         "position": [trace.position.x, trace.position.y, trace.position.z],
     })))
-}
-
-/// Control clients address the window the way a screenshot does: top-origin.
-/// The engine's screen space is bottom-origin, so convert on the way in.
-fn engine_screen_y(interface: &NativeInterfaceRef, y: f32) -> f32 {
-    match interface.display().get_view_geometry() {
-        Ok(geometry) => flip_screen_y(geometry.viewSizeY as f32, y),
-        Err(_) => y,
-    }
 }

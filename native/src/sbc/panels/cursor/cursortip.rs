@@ -11,7 +11,7 @@ use spring_native::{
     RmlDataTextRows, RmlDataVariable, RmlPixels, RmlTextRow,
 };
 
-use crate::sbc::states::trace::flip_screen_y;
+use crate::sbc::states::trace::rml_y_from_mouse;
 
 /// Pick radius in pixels around the cursor, as Lua uses.
 const PICK_RADIUS: f32 = 16.0;
@@ -48,9 +48,6 @@ impl CursorTip {
         let Ok(mouse) = interface.input().get_mouse_state() else {
             return Ok(());
         };
-        let Ok(geometry) = interface.display().get_view_geometry() else {
-            return Ok(());
-        };
         // Nothing while a button is down (a drag is in progress) or over the UI.
         let hit = if mouse.left || mouse.right || over_panel {
             None
@@ -82,7 +79,7 @@ impl CursorTip {
         }
         bindings.left.set(RmlPixels(mouse.x + OFFSET_X as f32))?;
         bindings.top.set(RmlPixels(
-            flip_screen_y(geometry.viewSizeY as f32, mouse.y) + OFFSET_Y as f32,
+            rml_y_from_mouse(interface, mouse.y) + OFFSET_Y as f32,
         ))?;
         bindings.hidden.set(false)?;
         Ok(())
@@ -219,7 +216,7 @@ fn describe_feature(interface: &NativeInterfaceRef, feature_id: i32) -> Option<H
 #[cfg(test)]
 mod tests {
     use super::pick_rectangle;
-    use crate::sbc::states::trace::flip_screen_y;
+    use crate::sbc::states::trace::top_to_engine_y;
 
     #[test]
     fn object_pick_keeps_the_mouse_bottom_origin_y() {
@@ -228,7 +225,7 @@ mod tests {
 
     #[test]
     fn only_rml_positioning_flips_bottom_origin_mouse_y() {
-        assert_eq!(flip_screen_y(1_000.0, 100.0), 899.0);
-        assert_eq!(flip_screen_y(1_000.0, 899.0), 100.0);
+        assert_eq!(top_to_engine_y(1_000.0, 100.0), 899.0);
+        assert_eq!(top_to_engine_y(1_000.0, 899.0), 100.0);
     }
 }

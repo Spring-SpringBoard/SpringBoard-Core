@@ -11,7 +11,7 @@ use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::model::Models;
 use crate::sbc::command_system::SetMultipleCommandModeCommand;
 
-use super::trace::{trace_ground, trace_object, GroundHit, Trace};
+use super::trace::{trace_ground_from_callback, trace_object_from_callback, GroundHit, Trace};
 
 /// What a state may do to the world, and the envelopes it produced this tick.
 ///
@@ -183,7 +183,7 @@ impl EditorState for DefaultState {
             return false;
         }
 
-        let trace = trace_object(ctx.interface, x as f32, y as f32);
+        let trace = trace_object_from_callback(ctx.interface, x, y);
         let Some((kind, model_id, _hit)) = Self::resolve_hit(ctx, trace) else {
             // A press on empty ground arms a box-select: a drag from here selects
             // what it covers, a release without a drag clears the selection.
@@ -209,7 +209,7 @@ impl EditorState for DefaultState {
             .get::<ObjectManager>()
             .object_pos(kind, model_id)
             .map(|pos| {
-                trace_ground(ctx.interface, x as f32, y as f32)
+                trace_ground_from_callback(ctx.interface, x, y)
                     .map(|ground| (pos.x - ground.x, pos.z - ground.z))
                     .unwrap_or((0.0, 0.0))
             })

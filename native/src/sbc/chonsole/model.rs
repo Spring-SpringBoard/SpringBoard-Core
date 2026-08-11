@@ -8,6 +8,7 @@ use super::ui::{ChonsoleController, UiKeyOutcome};
 use crate::sbc::command_system::model::{Model, ModelFactory};
 use crate::sbc::keys::KeyMods;
 use crate::sbc::port_flags::{self, PortImpl};
+use crate::sbc::states::trace::rml_y_from_callback;
 
 inventory::submit! { ModelFactory { make: |iface| Box::new(ChonsoleManager::new(iface)) } }
 
@@ -186,7 +187,7 @@ impl ChonsoleManager {
             return Ok(false);
         }
         let _ = (dx, dy, button);
-        let y = self.rml_y(y);
+        let y = rml_y_from_callback(&self.interface, y);
         self.ui.mouse_move(&self.interface, x, y)
     }
 
@@ -194,7 +195,7 @@ impl ChonsoleManager {
         if !self.enabled {
             return Ok(false);
         }
-        let y = self.rml_y(y);
+        let y = rml_y_from_callback(&self.interface, y);
         self.ui.mouse_press(&self.interface, x, y, button)
     }
 
@@ -202,7 +203,7 @@ impl ChonsoleManager {
         if !self.enabled {
             return Ok(());
         }
-        let y = self.rml_y(y);
+        let y = rml_y_from_callback(&self.interface, y);
         self.ui.mouse_release(&self.interface, x, y, button)
     }
 
@@ -211,15 +212,6 @@ impl ChonsoleManager {
             return Ok(false);
         }
         self.ui.mouse_wheel(&self.interface, up, value)
-    }
-
-    /// Mouse callbacks report the engine's bottom-origin y; the view hit tests
-    /// against RmlUi's top-origin layout.
-    fn rml_y(&self, y: i32) -> i32 {
-        match self.interface.display().get_view_geometry() {
-            Ok(geometry) => geometry.viewSizeY - 1 - y,
-            Err(_) => y,
-        }
     }
 
     fn persist_history_change(&self, previous_history: &[String]) {

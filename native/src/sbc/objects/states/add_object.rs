@@ -11,7 +11,7 @@ use crate::sbc::objects::{AddObjectCommand, ObjectKind, ObjectManager, RemoveObj
 use crate::sbc::render::ModelShader;
 use crate::sbc::states::state::{EditorState, StateContext, Transition};
 use crate::sbc::states::trace::{
-    cursor, trace_ground_at_mouse, trace_ground_with_water, GroundHit,
+    cursor, trace_ground_at_mouse, trace_ground_with_water_from_callback, GroundHit,
 };
 
 mod brush;
@@ -299,7 +299,7 @@ impl EditorState for AddObjectState {
         if button != LEFT && !(button == RIGHT && self.config.brush) {
             return false;
         }
-        let Some(hit) = trace_ground_with_water(ctx.interface, x as f32, y as f32) else {
+        let Some(hit) = trace_ground_with_water_from_callback(ctx.interface, x, y) else {
             return true;
         };
         if button == RIGHT {

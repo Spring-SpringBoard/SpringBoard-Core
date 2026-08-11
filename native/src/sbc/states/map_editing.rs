@@ -13,7 +13,7 @@ use crate::sbc::command_system::command::Command;
 use crate::sbc::states::brush_settings::BrushSettings;
 use crate::sbc::states::highlight::BrushPreview;
 use crate::sbc::states::state::{EditorState, StateContext};
-use crate::sbc::states::trace::{cursor, trace_ground};
+use crate::sbc::states::trace::{cursor, trace_ground, trace_ground_from_callback};
 
 const LEFT: i32 = 1;
 const RIGHT: i32 = 3;
@@ -237,7 +237,7 @@ impl EditorState for MapEditingState {
         if button != LEFT && button != RIGHT {
             return false;
         }
-        let Some(hit) = trace_ground(ctx.interface, x as f32, y as f32) else {
+        let Some(hit) = trace_ground_from_callback(ctx.interface, x, y) else {
             log::warn!(
                 "{} brush cannot paint: cursor did not hit the ground",
                 self.tool.name()

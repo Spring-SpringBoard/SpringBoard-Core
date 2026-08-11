@@ -6,7 +6,7 @@ use spring_native::prelude::NativeInterfaceRef;
 
 use crate::sbc::devconsole::metrics::SystemMetrics;
 use crate::sbc::objects::SelectionManager;
-use crate::sbc::states::{cursor, trace_ground};
+use crate::sbc::states::trace::trace_ground_at_mouse;
 
 pub(super) struct StatusPresenter {
     last_metrics_refresh: Option<Instant>,
@@ -87,8 +87,7 @@ impl StatusPresenter {
 }
 
 fn status_position(interface: &NativeInterfaceRef, selection: &SelectionManager) -> String {
-    let ground = cursor(interface)
-        .and_then(|mouse| trace_ground(interface, mouse.x, mouse.y))
+    let ground = trace_ground_at_mouse(interface)
         .map(|hit| format!("X: {:.0}, Y: {:.0}, Z: {:.0}", hit.x, hit.y, hit.z))
         .unwrap_or_else(|| "Off-screen".to_string());
     match selection.count() {

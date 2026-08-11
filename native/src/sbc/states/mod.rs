@@ -16,4 +16,3 @@ pub(crate) use crate::sbc::objects::PlacementConfig;
 pub(crate) use brush_settings::{ApplyDir, BrushSettings};
 pub(crate) use manager::{StateManager, StateRequest};
 pub(crate) use map_editing::{BrushButton, BrushStamp, MapBrush};
-pub(crate) use trace::{cursor, trace_ground};

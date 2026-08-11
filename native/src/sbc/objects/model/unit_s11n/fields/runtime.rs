@@ -7,7 +7,7 @@ use crate::sbc::objects::model::field_descriptor::{
     FieldRange, FieldValueType, ObjectFieldDescriptor,
 };
 use crate::sbc::objects::model::object_data::{
-    Armored, HarvestStorage, RuleValue, UnitCommand, UnitFuel, UnitResources, UnitStates,
+    Armored, HarvestStorage, RuleValue, UnitCommand, UnitResources, UnitStates,
 };
 
 use super::super::commands::{read_commands, write_commands};
@@ -198,28 +198,6 @@ impl TypedField<UnitModel> for Neutral {
     }
 }
 inventory::submit! { FieldEntry::of::<Neutral>() }
-
-struct Fuel;
-impl TypedField<UnitModel> for Fuel {
-    type Value = UnitFuel;
-    const DESCRIPTOR: ObjectFieldDescriptor = ObjectFieldDescriptor {
-        name: "fuel",
-        value_type: FieldValueType::Object("UnitFuel"),
-        range: Some(FieldRange::at_least(0.0)),
-        description: "Current and maximum fuel.",
-    };
-    fn get(s: &UnitModel, id: i32) -> Option<UnitFuel> {
-        let fuel = s.interface.units_info().get_unit_fuel(id).ok()?;
-        Some(UnitFuel {
-            fuel: fuel.fuel,
-            max_fuel: fuel.maxFuel,
-        })
-    }
-    fn set(s: &mut UnitModel, _id: i32, _fuel: &UnitFuel) {
-        let _ = s.interface.synced_ctrl().unit().set_unit_fuel();
-    }
-}
-inventory::submit! { FieldEntry::of::<Fuel>() }
 
 struct MoveCtrl;
 impl TypedField<UnitModel> for MoveCtrl {

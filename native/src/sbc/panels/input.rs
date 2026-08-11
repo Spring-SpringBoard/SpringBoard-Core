@@ -244,7 +244,8 @@ impl PanelInput {
             return Ok(false);
         };
         let mouse = interface.input().get_mouse_state()?;
-        if !view.contains(interface, mouse.x as i32, mouse.y as i32) {
+        let mouse_y = crate::sbc::states::trace::rml_y_from_mouse(interface, mouse.y);
+        if !view.contains(interface, mouse.x as i32, mouse_y as i32) {
             return Ok(false);
         }
         let delta = if up { value } else { -value };

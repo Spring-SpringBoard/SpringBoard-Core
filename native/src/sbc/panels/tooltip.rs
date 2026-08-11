@@ -9,6 +9,8 @@ use spring_native::{
     RmlDataModel, RmlDataStatusRows, RmlDataVariable, RmlPixels, RmlStatusRow,
 };
 
+use crate::sbc::states::trace::rml_y_from_mouse;
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct TooltipStatus {
     pub(crate) label: String,
@@ -95,8 +97,7 @@ impl PanelTooltip {
 
     fn show(&self, interface: &NativeInterfaceRef, content: &TooltipContent) -> Result<(), Error> {
         let mouse = interface.input().get_mouse_state()?;
-        let geom = interface.display().get_view_geometry()?;
-        let y = geom.viewSizeY as f32 - mouse.y;
+        let y = rml_y_from_mouse(interface, mouse.y);
         self.title.set(content.title.clone())?;
         self.has_statuses.set(!content.statuses.is_empty())?;
         self.statuses.set(

@@ -273,7 +273,10 @@ def object_actions(run_state: "RunState") -> None:
     target = (cx + 240, cy + 110)
     zoom_map(run_state, point=(cx, cy))
     run_state.click(*source, delay=Delay.READY)
+    # Wait for the native object mirror before tracing the new feature.
+    run_state.control.wait_for_update()
     run_state.key("Escape", delay=Delay.SETTLE)
+    run_state.control.wait_for_update()
     run_state.click(*source, delay=Delay.DIALOG)
 
     # Copy does not mutate the map; Paste at a different ground point must add

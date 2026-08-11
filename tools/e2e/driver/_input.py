@@ -15,10 +15,8 @@ from .utils.x11 import window_geometry_values
 class InputMixin(RunState):
     """Synthesised keyboard and mouse input, plus the X clipboard.
 
-    Everything here drives the engine window through `xdotool`. The recurring
-    subtlety is that `xdotool --window` delivers an event with the modifier
-    state cleared, so any chord (Ctrl-drag, Shift-wheel) has to go through the
-    focused root window instead; the affected methods say so where it matters.
+    Window-targeted events provide deterministic coordinates; held modifiers
+    use the focused root window.
     """
 
     @override
@@ -42,16 +40,9 @@ class InputMixin(RunState):
         self.require_window()
         self.event("key", key=name)
         if "+" in name:
-            # `xdotool key --window <win> ctrl+c` delivers the `c` press with the
-            # modifier already cleared, so the engine reports ctrl=false. Send the
-            # chord to the focused window instead, holding the modifiers down.
             self.focus()
-            *modifiers, base = name.split("+")
-            for modifier in modifiers:
-                run("xdotool", "keydown", modifier)
-            run("xdotool", "key", base)
-            for modifier in reversed(modifiers):
-                run("xdotool", "keyup", modifier)
+            # Give X time to attach modifier state to the base key event.
+            run("xdotool", "key", "--window", self.window, "--delay", "10", name)
         else:
             run("xdotool", "key", "--window", self.window, name)
         pause(delay)
@@ -59,12 +50,7 @@ class InputMixin(RunState):
     @contextmanager
     @override
     def modifier(self, name: str) -> Generator[None]:
-        """Hold a modifier down across other input, for a chord like Ctrl-drag.
-
-        Sent to the focused window rather than with `--window`: as with `key`,
-        `xdotool --window` delivers the event with the modifier already cleared,
-        and the engine then reports the modifier as up.
-        """
+        """Hold a modifier across pointer input."""
         self.focus()
         self.event("modifier_down", modifier=name)
         run("xdotool", "keydown", name)
@@ -80,7 +66,8 @@ class InputMixin(RunState):
         normalized = tuple(MODIFIER_NAMES.get(mod, mod) for mod in modifiers)
         chord = "+".join((*normalized, name))
         self.event("key_chord", chord=chord)
-        run("xdotool", "key", "--window", self.window, chord)
+        self.focus()
+        run("xdotool", "key", "--window", self.window, "--delay", "10", chord)
         pause(delay)
 
     @override
@@ -206,12 +193,7 @@ class InputMixin(RunState):
 
     @override
     def wheel_root(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: Delay = Delay.FRAME) -> None:
-        """Scroll the wheel with the real pointer, so a held modifier applies.
-
-        `xdotool click --window` synthesises the event with the modifier state
-        cleared -- the engine then reports shift as up -- so a Shift+wheel chord
-        has to go through the root window, as `key` does for the same reason.
-        """
+        """Scroll with the real pointer so held modifiers apply."""
         self.event("wheel_root", x=x, y=y, clicks=clicks, up=up)
         button = "4" if up else "5"
         root_x, root_y = self._root_point(x, y)
@@ -332,6 +314,8 @@ class InputMixin(RunState):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
+        # Give Tk time to claim the selection.
+        pause(Delay.CONTROL)
 
     def stop_clipboard_owner(self) -> None:
         owner = getattr(self, "_clipboard_owner", None)

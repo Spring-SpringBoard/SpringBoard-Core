@@ -86,6 +86,7 @@ impl StringField {
 
     fn show_edit(&mut self, interface: &NativeInterfaceRef) {
         self.editing = true;
+        let _ = interface.unsynced_ctrl().sdlstart_text_input();
         let _ = self.sync_input_value();
         if let Some(editing) = &self.editing_value {
             let _ = editing.set(true);
@@ -98,8 +99,12 @@ impl StringField {
         }
     }
 
-    fn show_display(&mut self, _interface: &NativeInterfaceRef) {
+    fn show_display(&mut self, interface: &NativeInterfaceRef) {
+        let was_editing = self.editing;
         self.editing = false;
+        if was_editing {
+            let _ = interface.unsynced_ctrl().sdlstop_text_input();
+        }
         let _ = self.sync_display_value();
         if let Some(editing) = &self.editing_value {
             let _ = editing.set(false);

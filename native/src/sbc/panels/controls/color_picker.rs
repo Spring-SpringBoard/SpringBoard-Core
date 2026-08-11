@@ -174,10 +174,10 @@ impl ColorPicker {
         };
 
         // Engine mouse coordinates are bottom-origin; RmlUi rects are not.
-        let Ok(geom) = interface.display().get_view_geometry() else {
-            return false;
-        };
-        let (mx, my) = (mouse.x, geom.viewSizeY as f32 - mouse.y);
+        let (mx, my) = (
+            mouse.x,
+            crate::sbc::states::trace::rml_y_from_mouse(interface, mouse.y),
+        );
 
         let id = match self.grab {
             Grab::Sv => "color-map",

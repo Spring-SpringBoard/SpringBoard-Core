@@ -146,21 +146,28 @@ def _settings_text() -> str:
     user's monitors being off), leaving the developer setting untouched on disk.
     """
     settings_text = (DEV_DIR / "springsettings.cfg").read_text()
-    window_pos_x = os.environ.get("SBC_WINDOW_POS_X")
-    if not window_pos_x:
+    position_overrides = {
+        "WindowPosX": os.environ.get("SBC_WINDOW_POS_X"),
+        "WindowPosY": os.environ.get("SBC_WINDOW_POS_Y"),
+    }
+    position_overrides = {key: value for key, value in position_overrides.items() if value}
+    if not position_overrides:
         return settings_text
-    try:
-        int(window_pos_x)
-    except ValueError as err:
-        raise RuntimeError("SBC_WINDOW_POS_X must be an integer") from err
+    for key, value in position_overrides.items():
+        try:
+            int(value)
+        except ValueError as err:
+            env_name = "SBC_WINDOW_POS_X" if key == "WindowPosX" else "SBC_WINDOW_POS_Y"
+            raise RuntimeError(f"{env_name} must be an integer") from err
     settings_lines = settings_text.splitlines(keepends=True)
-    for index, line in enumerate(settings_lines):
-        if line.startswith("WindowPosX ="):
-            newline = "\n" if line.endswith("\n") else ""
-            settings_lines[index] = f"WindowPosX = {window_pos_x}{newline}"
-            break
-    else:
-        settings_lines.append(f"WindowPosX = {window_pos_x}\n")
+    for key, value in position_overrides.items():
+        for index, line in enumerate(settings_lines):
+            if line.startswith(f"{key} ="):
+                newline = "\n" if line.endswith("\n") else ""
+                settings_lines[index] = f"{key} = {value}{newline}"
+                break
+        else:
+            settings_lines.append(f"{key} = {value}\n")
     return "".join(settings_lines)
 
 
