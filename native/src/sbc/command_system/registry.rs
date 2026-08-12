@@ -1,3 +1,4 @@
+use std::any::TypeId;
 use std::collections::HashMap;
 use std::sync::OnceLock;
 
@@ -8,25 +9,19 @@ use super::command::{Command, CommandId};
 
 pub type ParsedCommand = (Box<dyn Command>, CommandId);
 
-/// Resolve a payload into a command, or `None` if no handler is registered —
-/// during the port, unhandled classes still run in Lua, so that's expected.
 pub fn parse_json_command(
     value: serde_json::Value,
 ) -> Result<Option<ParsedCommand>, CommandParseError> {
-    // Native history/resource tracking is keyed by Lua's command id; direct
-    // native routes must provide the same field.
     let cmd_id = serde_json::from_value::<CommandIdPeek>(value.clone()).map_err(|source| {
         CommandParseError {
             class: "<unknown>".to_string(),
             source,
         }
     })?;
+
     Ok(parse_command(value)?.map(|cmd| (cmd, cmd_id.cmd_id)))
 }
 
-/// Resolve a payload into a command by `className`, ignoring `__cmd_id`. Used for
-/// top-level commands (via [`parse_json_command`]) and for the inner commands a
-/// `CompoundCommand` groups.
 pub(crate) fn parse_command(
     value: serde_json::Value,
 ) -> Result<Option<Box<dyn Command>>, CommandParseError> {
@@ -53,22 +48,20 @@ pub struct CommandParseError {
     source: serde_json::Error,
 }
 
-// --- Registration: each command file submits one of these via the macros below.
-
-/// One command's link-time registration, collected by `inventory` and keyed by
-/// its Lua `className`.
 pub struct CommandRegistration {
     pub class_name: &'static str,
     pub handler: HandlerFn,
+    pub type_id_fn: fn() -> TypeId,
 }
 
-/// Turns a command's JSON payload into the command, keyed in the registry by
-/// `className`.
 pub type HandlerFn = fn(serde_json::Value) -> Result<Option<Box<dyn Command>>, CommandParseError>;
 
 inventory::collect!(CommandRegistration);
 
-/// Register a `Deserialize` command: deserializes its payload, then runs it.
+pub fn class_name_of(command: &dyn Command) -> Option<&'static str> {
+    type_id_map().get(&command.type_id()).copied()
+}
+
 macro_rules! register_command {
     ($ty:ty, $class_name:literal) => {
         inventory::submit! {
@@ -79,6 +72,7 @@ macro_rules! register_command {
                         $crate::sbc::command_system::registry::from_value($class_name, value)?;
                     Ok(Some(Box::new(cmd)))
                 },
+                type_id_fn: std::any::TypeId::of::<$ty>,
             }
         }
     };
@@ -86,14 +80,10 @@ macro_rules! register_command {
 
 pub(crate) use register_command;
 
-/// Deserialize a payload, tagging failures with the class name. Used by the
-/// `register_command!`-generated handlers.
 pub fn from_value<T: serde::de::DeserializeOwned>(
     class_name: &'static str,
     mut value: serde_json::Value,
 ) -> Result<T, CommandParseError> {
-    // Strip wire-only fields before deserializing so command structs do not
-    // model them. Empty maps become null so unit structs can deserialize.
     if let serde_json::Value::Object(map) = &mut value {
         map.remove("className");
         map.remove("__cmd_id");
@@ -122,7 +112,17 @@ fn registry() -> &'static HashMap<&'static str, HandlerFn> {
     })
 }
 
-/// Peeks only the `className` out of a payload, to pick the handler.
+fn type_id_map() -> &'static HashMap<TypeId, &'static str> {
+    static CELL: OnceLock<HashMap<TypeId, &'static str>> = OnceLock::new();
+    CELL.get_or_init(|| {
+        let mut map = HashMap::new();
+        for reg in inventory::iter::<CommandRegistration> {
+            map.insert((reg.type_id_fn)(), reg.class_name);
+        }
+        map
+    })
+}
+
 #[derive(Deserialize)]
 struct ClassPeek {
     #[serde(rename = "className")]
@@ -138,12 +138,6 @@ struct CommandIdPeek {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn registered_class_names() -> Vec<&'static str> {
-        let mut names: Vec<_> = registry().keys().copied().collect();
-        names.sort_unstable();
-        names
-    }
 
     #[test]
     fn class_peek_extracts_class_name() {
@@ -163,19 +157,6 @@ mod tests {
     }
 
     #[test]
-    fn registry_has_no_duplicate_class_names() {
-        let names = registered_class_names();
-        let mut sorted = names.clone();
-        sorted.sort_unstable();
-        sorted.dedup();
-        assert_eq!(
-            names.len(),
-            sorted.len(),
-            "duplicate class names registered: {names:?}"
-        );
-    }
-
-    #[test]
     fn registry_lookup_unknown_class_returns_none() {
         assert!(registry().get("DefinitelyNotARealCommand").is_none());
     }
@@ -186,9 +167,6 @@ mod tests {
         let value: serde_json::Value = serde_json::from_str(raw).unwrap();
         let peeked: ClassPeek = serde_json::from_value(value).unwrap();
         assert_eq!(peeked.class_name, "UndoCommand");
-        assert!(
-            registry().contains_key(peeked.class_name.as_str()),
-            "UndoCommand must be registered via inventory::submit!",
-        );
+        assert!(registry().contains_key(peeked.class_name.as_str()));
     }
 }

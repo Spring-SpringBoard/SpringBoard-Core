@@ -1,20 +1,13 @@
 use super::context::Context;
 use super::registry::{parse_command, CommandParseError, CommandRegistration};
 
-/// Stable id for one command history entry.
-///
-/// Lua assigns `__cmd_id` before sending commands to Rust. Resource-owning
-/// systems can use this id to associate external state with the command history
-/// entry and release it when history evicts or clears that entry.
 pub type CommandId = u64;
 
-/// Folds a stream's commands into the single one that lands on the undo stack.
 pub type Merger = fn(Vec<Box<dyn Command>>) -> Box<dyn Command>;
 
-pub trait Command {
+pub trait Command: 'static {
     fn execute(&mut self, ctx: &mut Context);
 
-    /// Only called when `undoable()`.
     fn unexecute(&mut self, ctx: &mut Context) {
         let _ = ctx;
     }
@@ -23,12 +16,16 @@ pub trait Command {
         true
     }
 
-    /// The function that folds a stream led by this command into one. Returned
-    /// as a plain `fn` (capturing nothing) so the caller can drop its borrow of
-    /// the first command before handing over the owned group. Defaults to a
-    /// [`CompoundCommand`]; override to fold more cheaply.
     fn merger(&self) -> Merger {
         |group| Box::new(CompoundCommand { commands: group })
+    }
+
+    fn type_id(&self) -> std::any::TypeId {
+        std::any::TypeId::of::<Self>()
+    }
+
+    fn serialize_log(&self) -> serde_json::Value {
+        serde_json::Value::Null
     }
 }
 
@@ -50,16 +47,11 @@ impl Command for CompoundCommand {
     }
 }
 
-// The editor batches object/terrain edits into a `CompoundCommand` (placement,
-// multi-select, drag streams). Parse each inner command by its `className` and
-// accept the batch only when every command has a native handler, preserving
-// all-or-nothing execution instead of silently dropping unknown entries.
-// TODO: Candidate for removal once commands are fully native; this transitional
-// parsing path re-walks the batch and is not the shape we want long-term.
 inventory::submit! {
     CommandRegistration {
         class_name: "CompoundCommand",
         handler: parse_compound_command,
+        type_id_fn: std::any::TypeId::of::<CompoundCommand>,
     }
 }
 

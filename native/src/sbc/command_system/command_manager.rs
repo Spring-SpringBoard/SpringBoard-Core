@@ -1,5 +1,3 @@
-//! Synced-side command execution + undo/redo stacks.
-
 use log::warn;
 
 use super::command::{Command, CommandId};
@@ -10,6 +8,7 @@ use super::streaming_commands::StreamingCommands;
 pub struct CommandManager {
     history: CommandHistory,
     stream: StreamingCommands,
+    next_command_id: CommandId,
 }
 
 impl CommandManager {
@@ -17,7 +16,18 @@ impl CommandManager {
         CommandManager {
             history: CommandHistory::new(max_history_size),
             stream: StreamingCommands::default(),
+            next_command_id: 1_000_000,
         }
+    }
+
+    pub fn allocate_command_id(&mut self) -> CommandId {
+        let id = self.next_command_id;
+        self.next_command_id += 1;
+        id
+    }
+
+    pub(crate) fn history_command_ids(&self) -> (Vec<CommandId>, Vec<CommandId>) {
+        self.history.command_ids()
     }
 
     pub fn execute(
@@ -54,8 +64,6 @@ impl CommandManager {
                     self.stream.start();
                     Vec::new()
                 } else if let Some(stopped) = self.stream.stop() {
-                    // Tell resource trackers which per-command state now
-                    // belongs to the single merged history entry.
                     let mut events = vec![HistoryEvent::Merged {
                         cmd_id: stopped.entry.id,
                         source_cmd_ids: stopped.source_cmd_ids,

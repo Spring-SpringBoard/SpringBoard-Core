@@ -373,3 +373,11 @@ utility and not on the whole project slice. While there, move some files out of
 (`lua_writer`, `model_codec`, `map_info`, `project_info`, `spring_archive`,
 `archive`/`archive_assets`) are a grab-bag; group/rename them so each reads as
 what it does.
+
+## 16. Simplify/decouple command part from SBC & reconsider event simplification
+
+SBC encapsulating all objects, doing event dispatch and now also doing fairly intricate command stuff.
+The command part is particularly low level and doesn't belong here imo.
+
+I wonder if events could also be simplified or just done better, so we don't have to register ALL events & dispatch them manually.
+Some sort of codegen could help.

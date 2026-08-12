@@ -43,6 +43,22 @@ impl Models {
             .expect("model not registered")
     }
 
+    pub fn with<T: Model, R>(&mut self, f: impl FnOnce(&mut T, &mut Models) -> R) -> R {
+        let mut boxed = self
+            .map
+            .remove(&TypeId::of::<T>())
+            .expect("model not registered");
+        let result = {
+            let model = boxed
+                .as_any_mut()
+                .downcast_mut::<T>()
+                .expect("model registered under the wrong type");
+            f(model, self)
+        };
+        self.map.insert(TypeId::of::<T>(), boxed);
+        result
+    }
+
     pub fn on_history_events(&mut self, events: &[HistoryEvent]) {
         for model in self.map.values_mut() {
             model.on_history_events(events);
