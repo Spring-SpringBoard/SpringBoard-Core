@@ -21,8 +21,8 @@ pub(crate) fn write(sbc: &mut SBC, bytes: &[u8]) {
                 error!("write grass map: file ended before all cells were read");
                 return;
             };
-            if *value == 1 {
-                let _ = terrain.add_grass(x as f32, z as f32);
+            if *value != 0 {
+                let _ = terrain.add_grass(x as f32, z as f32, *value);
             } else {
                 let _ = terrain.remove_grass(x as f32, z as f32);
             }

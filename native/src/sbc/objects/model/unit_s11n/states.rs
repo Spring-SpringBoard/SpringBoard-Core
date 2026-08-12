@@ -3,7 +3,10 @@ use spring_native::prelude::{constants, NativeInterfaceRef};
 use crate::sbc::objects::model::object_data::UnitStates;
 
 pub(super) fn read_states(interface: &NativeInterfaceRef, spring_id: i32) -> Option<UnitStates> {
-    let s = interface.units_info().get_unit_states(spring_id).ok()?;
+    let s = interface
+        .units_info()
+        .get_unit_states(spring_id, spring_native::UnitStatesOptions::default())
+        .ok()?;
     Some(UnitStates {
         fire_state: Some(s.fireState),
         move_state: Some(s.moveState),

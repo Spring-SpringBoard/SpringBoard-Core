@@ -8,7 +8,7 @@ use crate::sbc::objects::model::field_descriptor::{
 };
 use crate::sbc::objects::model::object_data::{
     Armored, Blocking, Collision, HarvestStorage, MidAimPos, RadiusHeight, RuleValue, UnitCommand,
-    UnitFuel, UnitResources, UnitStates, Vec3,
+    UnitResources, UnitStates, Vec3,
 };
 
 use super::commands::{read_commands, write_commands};
@@ -44,7 +44,7 @@ impl TypedField<UnitModel> for Pos {
         Some(
             s.interface
                 .units_info()
-                .get_unit_position(id, false, false)
+                .get_unit_position(id, spring_native::GetUnitPositionOptions::default())
                 .ok()?
                 .into(),
         )
@@ -160,9 +160,30 @@ impl TypedField<UnitModel> for MidAim {
     };
     fn get(s: &UnitModel, id: i32) -> Option<MidAimPos> {
         let info = s.interface.units_info();
-        let pos: Vec3 = info.get_unit_position(id, false, false).ok()?.into();
-        let mid: Vec3 = info.get_unit_position(id, true, false).ok()?.into();
-        let aim: Vec3 = info.get_unit_position(id, false, true).ok()?.into();
+        let pos: Vec3 = info
+            .get_unit_position(id, spring_native::GetUnitPositionOptions::default())
+            .ok()?
+            .into();
+        let mid: Vec3 = info
+            .get_unit_position(
+                id,
+                spring_native::GetUnitPositionOptions {
+                    mid_pos: true,
+                    ..Default::default()
+                },
+            )
+            .ok()?
+            .into();
+        let aim: Vec3 = info
+            .get_unit_position(
+                id,
+                spring_native::GetUnitPositionOptions {
+                    aim_pos: true,
+                    ..Default::default()
+                },
+            )
+            .ok()?
+            .into();
         Some(MidAimPos {
             mid: Vec3 {
                 x: mid.x - pos.x,
@@ -238,13 +259,15 @@ impl TypedField<UnitModel> for BlockingField {
     fn set(s: &mut UnitModel, id: i32, b: &Blocking) {
         let _ = s.interface.synced_ctrl().unit().set_unit_blocking(
             id,
-            b.is_blocking,
-            b.is_solid_object_collidable,
-            b.is_projectile_collidable,
-            b.is_ray_segment_collidable,
-            b.crushable,
-            b.block_enemy_pushing,
-            b.block_height_changes,
+            spring_native::SetUnitBlockingOptions {
+                blocking: b.is_blocking,
+                solid_objects: b.is_solid_object_collidable,
+                projectiles: b.is_projectile_collidable,
+                quad_map_rays: b.is_ray_segment_collidable,
+                crushable: b.crushable,
+                block_enemy_pushing: b.block_enemy_pushing,
+                block_height_changes: b.block_height_changes,
+            },
         );
     }
 }
@@ -548,30 +571,6 @@ impl TypedField<UnitModel> for Neutral {
     }
 }
 inventory::submit! { FieldEntry::of::<Neutral>() }
-
-struct Fuel;
-impl TypedField<UnitModel> for Fuel {
-    type Value = UnitFuel;
-    const DESCRIPTOR: ObjectFieldDescriptor = ObjectFieldDescriptor {
-        name: "fuel",
-        value_type: FieldValueType::Object("UnitFuel"),
-        range: Some(FieldRange::at_least(0.0)),
-        description: "Current and maximum fuel.",
-    };
-    fn get(s: &UnitModel, id: i32) -> Option<UnitFuel> {
-        let fuel = s.interface.units_info().get_unit_fuel(id).ok()?;
-        Some(UnitFuel {
-            fuel: fuel.fuel,
-            max_fuel: fuel.maxFuel,
-        })
-    }
-    fn set(s: &mut UnitModel, _id: i32, _fuel: &UnitFuel) {
-        // Lua's Spring.SetUnitFuel is a no-op stub in this engine; native is the
-        // same. Call it anyway so the modeled field has matching behavior.
-        let _ = s.interface.synced_ctrl().unit().set_unit_fuel();
-    }
-}
-inventory::submit! { FieldEntry::of::<Fuel>() }
 
 struct MoveCtrl;
 impl TypedField<UnitModel> for MoveCtrl {

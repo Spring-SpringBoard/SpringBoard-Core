@@ -13,8 +13,10 @@ use crate::sbc::textures::model::graphics;
 fn engine_gfx_render_readback(ctx: &mut TestCtx) -> Result<(), String> {
     let gfx = ctx.sbc.interface().gfx();
 
-    let mut params: sys::GfxTextureParams = unsafe { std::mem::zeroed() };
-    params.fbo = true;
+    let params = sys::GfxTextureParams {
+        fbo: true,
+        ..Default::default()
+    };
     let name = gfx
         .create_texture(4, 4, 1, params)
         .map_err(|e| format!("create_texture: {e:?}"))?
@@ -85,15 +87,26 @@ fn engine_gfx_shader_pass(ctx: &mut TestCtx) -> Result<(), String> {
 
     let frag = "void main(void) { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }";
     let (shader, _log_id) = gfx
-        .create_shader("", "", "", "", "", frag, "", false, 0, false, 0, false, 0)
+        .create_shader(
+            "",
+            "",
+            "",
+            "",
+            "",
+            frag,
+            "",
+            spring_native::GfxCreateShaderOptions::default(),
+        )
         .map_err(|e| format!("create_shader: {e:?}"))?;
     if shader == 0 {
         let log = gfx.get_shader_log().ok().flatten().unwrap_or_default();
         return Err(format!("shader failed to compile: {log}"));
     }
 
-    let mut params: sys::GfxTextureParams = unsafe { std::mem::zeroed() };
-    params.fbo = true;
+    let params = sys::GfxTextureParams {
+        fbo: true,
+        ..Default::default()
+    };
     let tex = gfx
         .create_texture(4, 4, 1, params)
         .map_err(|e| format!("create_texture: {e:?}"))?

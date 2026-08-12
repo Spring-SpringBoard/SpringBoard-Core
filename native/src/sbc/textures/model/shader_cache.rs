@@ -79,7 +79,16 @@ impl ShaderCache {
 
         let gfx = interface.gfx();
         let (shader, _log) =
-            match gfx.create_shader("", "", "", "", "", &frag, "", false, 0, false, 0, false, 0) {
+            match gfx.create_shader(
+                "",
+                "",
+                "",
+                "",
+                "",
+                &frag,
+                "",
+                spring_native::GfxCreateShaderOptions::default(),
+            ) {
                 Ok(s) => s,
                 Err(err) => {
                     log::error!("shader_cache: create_shader({path}) failed: {err:?}");

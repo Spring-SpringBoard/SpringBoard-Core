@@ -55,7 +55,18 @@ impl UnitModel {
             .interface
             .synced_ctrl()
             .unit()
-            .create_unit(unit_def, pos.into(), 0, team, false, false, -1, -1)
+            .create_unit(
+                unit_def,
+                pos.into(),
+                0,
+                team,
+                spring_native::CreateUnitOptions {
+                    build: false,
+                    flatten_ground: false,
+                    unit_id: -1,
+                    builder_id: -1,
+                },
+            )
             .ok()?;
         if spring_id < 0 {
             return None;
@@ -189,7 +200,13 @@ impl ObjectHandler for UnitModel {
             .interface
             .synced_ctrl()
             .unit()
-            .destroy_unit(spring_id, false, true, -1, false);
+            .destroy_unit(
+                spring_id,
+                spring_native::DestroyUnitOptions {
+                    reclaimed: true,
+                    ..Default::default()
+                },
+            );
         self.ids.unregister(spring_id);
         self.events.push(ObjectEvent::Removed {
             kind: ObjectKind::Unit,

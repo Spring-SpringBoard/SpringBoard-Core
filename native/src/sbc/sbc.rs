@@ -46,7 +46,7 @@ impl NativeModule for SBC {
         Ok(())
     }
 
-    fn update(&mut self) -> Result<(), Error> {
+    fn update(&mut self, _delta_seconds: f32) -> Result<(), Error> {
         self.drain_io();
         if !self.tests_ran {
             self.tests_ran = crate::sbc::tests::tests_api::run_if_requested(self);
