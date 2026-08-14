@@ -2,6 +2,7 @@ use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::panels::controls::grid::{list_assets, GridItem};
 use crate::sbc::panels::editor_base::group_rml;
+use crate::sbc::panels::rows::StatusRow;
 use crate::sbc::panels::runtime::Item;
 
 use super::model::SettingsField::*;
@@ -32,7 +33,7 @@ impl SettingsModel {
     pub(super) fn shading_markup(&self) -> String {
         r#"<div id="shading-texture-actions">
             <div data-for="shading : shading_statuses" data-if="shading.visible" class="field-row">
-                <button class="field-composite-button shading-texture-button">
+                <button class="field-composite-button shading-texture-button" data-event-click="open_shading(it_index)">
                     <span>{{ shading.label }}</span>
                     <span data-class-shading-enabled="shading.positive" data-class-shading-disabled="!shading.positive">
                         <span data-if="shading.positive">enabled</span>
@@ -78,7 +79,7 @@ impl SettingsModel {
         if let Some(rows) = &self.shading_statuses {
             let statuses = SHADING_TOGGLES
                 .iter()
-                .map(|(field, _, caption)| spring_native::RmlStatusRow {
+                .map(|(field, _, caption)| StatusRow {
                     label: (*caption).to_owned(),
                     positive: self.shading_enabled.get(*field).copied().unwrap_or(false),
                 })

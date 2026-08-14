@@ -239,7 +239,6 @@ impl PanelManager {
                     .render(self.view.notification_rows())?;
             }
         }
-        self.view.update(&self.interface)?;
         Ok(())
     }
 
@@ -381,11 +380,6 @@ impl PanelManager {
                 if let Some(ed) = target.get_mut() {
                     ed.drag_end_field(&field, &self.interface);
                 }
-                // A numeric drag owns a data-bound class on the main panel as
-                // well as the separate overlay. Reconcile it now, before the
-                // next rendered frame: otherwise an interrupted gesture can
-                // leave the button painted as active until a later panel edit.
-                self.view.update(&self.interface)?;
                 let commands = self
                     .session
                     .commit_drag(&field, target.get_mut(), &self.interface);

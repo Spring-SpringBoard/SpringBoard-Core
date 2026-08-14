@@ -44,7 +44,7 @@ pub(super) fn layout(model: &ObjectDefsModel) -> Vec<Item<ObjectField>> {
 impl ObjectDefsModel {
     pub(super) fn mode_buttons_rml(&self) -> String {
         r#"<div id="objectdef-mode-actions" class="brush-actions">
-            <button data-for="action : objectdef_mode_actions" data-if="action.visible" class="brush-action" data-class-pressed="action.pressed" data-class-disabled="action.disabled">
+            <button data-for="action : objectdef_mode_actions" data-if="action.visible" class="brush-action" data-class-pressed="action.pressed" data-class-disabled="action.disabled" data-event-click="select_mode(it_index)">
                 <img data-attr-src="action.icon" class="brush-action-icon"/>
                 <span class="brush-action-label">{{ action.label }}</span>
             </button>

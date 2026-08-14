@@ -87,7 +87,7 @@ impl Behavior for TextureBehavior {
         model
             .actions
             .set_enabled("DNTS", !model.dnts_available.is_empty());
-        model.actions.bind(interface, document)?;
+        model.actions.set_engine(interface);
         if let Some(cancel) = element_by_id(interface, document, "texture-material-cancel") {
             let events = model.material_picker_events.clone();
             interface

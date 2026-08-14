@@ -8,7 +8,8 @@ use super::{
     StatusMetricBindings, STATUS_BODY, STATUS_CONTEXT, UI_STYLE,
 };
 use crate::sbc::devconsole::status::{MetricTone, StatusMetric};
-use spring_native::RmlTextRow;
+use crate::sbc::panels::rows::TextRow;
+use crate::sbc::rml::rows::Rows;
 
 impl DevConsoleView {
     pub(crate) fn render_status(
@@ -51,10 +52,9 @@ impl DevConsoleView {
                     .rev()
                     .take(12)
                     .rev()
-                    .map(|command| RmlTextRow {
+                    .map(|command| TextRow {
                         text: command.caption.clone(),
                         muted: command.undone,
-                        visible: true,
                     })
                     .collect::<Vec<_>>();
                 history.set(&rows)?;
@@ -86,9 +86,6 @@ impl DevConsoleView {
         if !created {
             return Ok(());
         }
-        let geometry = interface.display().get_view_geometry()?;
-        let _ = rml.context_set_dimensions(context, geometry.viewSizeX, geometry.viewSizeY);
-
         let data_model = rml.create_data_model(context, "editor_status")?;
         self.status_position = Some(data_model.bind("position", String::new())?);
         self.status_version = Some(data_model.bind("version", String::new())?);
@@ -110,7 +107,7 @@ impl DevConsoleView {
             Some(data_model.bind("redo_disabled", true)?),
             Some(data_model.bind("clear_history_disabled", true)?),
         ];
-        self.status_history = Some(data_model.bind_text_rows("command_history")?);
+        self.status_history = Some(Rows::<TextRow>::bind(&data_model, "command_history")?);
 
         let (document, created) = rml.context_create_document(context, "body")?;
         if !created {

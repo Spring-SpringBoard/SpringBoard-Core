@@ -245,8 +245,8 @@ impl<B: Behavior> Editor for Runtime<B> {
         self.engine = Some(*interface);
         self.rebuild = false;
         let tooltip_host = self.tooltip.clone();
-        if let Some(actions) = self.actions.as_mut() {
-            actions.bind(interface, document)?;
+        if let Some(actions) = self.actions.as_ref() {
+            actions.set_engine(interface);
         }
         self.behavior.mount(&mut self.model, interface, document)?;
         for entry in self.model.fields_mut() {

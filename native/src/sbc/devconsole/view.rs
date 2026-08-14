@@ -5,11 +5,13 @@ use std::rc::Rc;
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataLogRows, RmlDataTextRows, RmlDataVariable, RmlLogRow, RmlLogSeverity,
+    RmlDataVariable, RmlFieldType, RmlValueRef,
 };
 
 use crate::sbc::devconsole::actions::Action;
-use crate::sbc::devconsole::log::LogLine;
+use crate::sbc::devconsole::log::{LogLine, Severity};
+use crate::sbc::panels::rows::TextRow;
+use crate::sbc::rml::rows::{Row, Rows};
 use crate::sbc::rml::{self, element_by_id};
 
 mod status;
@@ -17,6 +19,30 @@ mod text;
 mod toolbar;
 
 use text::clamp_line;
+
+struct LogRow {
+    text: String,
+    severity: Severity,
+    selected: bool,
+}
+
+impl Row for LogRow {
+    const FIELDS: &'static [(&'static str, RmlFieldType)] = &[
+        ("text", RmlFieldType::String),
+        ("info", RmlFieldType::Bool),
+        ("warning", RmlFieldType::Bool),
+        ("error", RmlFieldType::Bool),
+        ("selected", RmlFieldType::Bool),
+    ];
+
+    fn values<'a>(&'a self, out: &mut Vec<RmlValueRef<'a>>) {
+        out.push(RmlValueRef::String(&self.text));
+        out.push(RmlValueRef::Bool(self.severity == Severity::Info));
+        out.push(RmlValueRef::Bool(self.severity == Severity::Warning));
+        out.push(RmlValueRef::Bool(self.severity == Severity::Error));
+        out.push(RmlValueRef::Bool(self.selected));
+    }
+}
 
 /// A single console line longer than this is truncated before rendering. RmlUi
 /// fails to instance a text element past a certain size; an oversized engine
@@ -99,12 +125,10 @@ pub(crate) struct DevConsoleView {
     status_version: Option<RmlDataVariable<'static, String>>,
     status_metrics: Option<StatusMetricBindings>,
     status_action_disabled: [Option<RmlDataVariable<'static, bool>>; 3],
-    status_history: Option<RmlDataTextRows<'static>>,
+    status_history: Option<Rows<TextRow>>,
     error_count: Option<RmlDataVariable<'static, String>>,
     line_count: Option<RmlDataVariable<'static, String>>,
-    log_rows: Option<RmlDataLogRows<'static>>,
-    log_row_listeners_bound: usize,
-    log_row_count: usize,
+    log_rows: Option<Rows<LogRow>>,
     /// Last history rendered into the command list. Metrics refresh regularly,
     /// but rebuilding this scroll container each frame would steal its scroll
     /// position from someone reading older edits.
@@ -163,8 +187,6 @@ impl Default for DevConsoleView {
             error_count: None,
             line_count: None,
             log_rows: None,
-            log_row_listeners_bound: 0,
-            log_row_count: 0,
             rendered_command_log: None,
             hidden: None,
             toolbar_pressed: [None; 10],
@@ -248,13 +270,18 @@ impl DevConsoleView {
         if !ok {
             return Ok(false);
         }
-        let geom = interface.display().get_view_geometry()?;
-        let _ = rml.context_set_dimensions(ctx, geom.viewSizeX, geom.viewSizeY);
-
         let data_model = rml.create_data_model(ctx, "dev_console")?;
         self.error_count = Some(data_model.bind("error_count", String::new())?);
         self.line_count = Some(data_model.bind("line_count", String::new())?);
-        self.log_rows = Some(data_model.bind_log_rows("log_lines")?);
+        self.log_rows = Some(Rows::<LogRow>::bind(&data_model, "log_lines")?);
+        let queue = self.selection_events.clone();
+        Rows::<LogRow>::on_row(&data_model, "select_from", move |index, _| {
+            queue.borrow_mut().push(SelectionEvent::Start(index));
+        })?;
+        let queue = self.selection_events.clone();
+        Rows::<LogRow>::on_row(&data_model, "extend_to", move |index, _| {
+            queue.borrow_mut().push(SelectionEvent::Extend(index));
+        })?;
         self.hidden = Some(data_model.bind("hidden", !self.visible)?);
         for (index, action) in Action::ALL.iter().copied().enumerate() {
             self.toolbar_pressed[index] = Some(data_model.bind(action.pressed_binding(), false)?);
@@ -313,13 +340,9 @@ impl DevConsoleView {
         let mut count = 0usize;
         for (index, line) in lines.enumerate() {
             count = index + 1;
-            rows.push(RmlLogRow {
+            rows.push(LogRow {
                 text: clamp_line(&line.text).into_owned(),
-                severity: match line.severity {
-                    crate::sbc::devconsole::log::Severity::Info => RmlLogSeverity::Info,
-                    crate::sbc::devconsole::log::Severity::Warning => RmlLogSeverity::Warning,
-                    crate::sbc::devconsole::log::Severity::Error => RmlLogSeverity::Error,
-                },
+                severity: line.severity,
                 selected: self.selection.contains(index),
             });
         }
@@ -330,7 +353,6 @@ impl DevConsoleView {
         }
         if let Some(log_rows) = &self.log_rows {
             log_rows.set(&rows)?;
-            self.log_row_count = rows.len();
         }
         if scroll_to_bottom {
             let _ = interface.rml_ui().element_set_scroll_top(log, 1_000_000);
@@ -396,27 +418,6 @@ impl DevConsoleView {
         Ok(())
     }
 
-    pub(crate) fn update(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        if let Some(ctx) = self.context {
-            let geom = interface.display().get_view_geometry()?;
-            let _ = interface
-                .rml_ui()
-                .context_set_dimensions(ctx, geom.viewSizeX, geom.viewSizeY);
-            interface.rml_ui().context_update(ctx)?;
-            self.sync_log_rows(interface)?;
-        }
-        if let Some(context) = self.status_context {
-            let geometry = interface.display().get_view_geometry()?;
-            let _ = interface.rml_ui().context_set_dimensions(
-                context,
-                geometry.viewSizeX,
-                geometry.viewSizeY,
-            );
-            interface.rml_ui().context_update(context)?;
-        }
-        Ok(())
-    }
-
     /// Drop the handles without touching them: the engine already freed them.
     pub(crate) fn forget(&mut self) {
         self.context = None;
@@ -433,8 +434,6 @@ impl DevConsoleView {
         self.log_rows = None;
         self.hidden = None;
         self.toolbar_pressed = [None; 10];
-        self.log_row_listeners_bound = 0;
-        self.log_row_count = 0;
         self.rendered_command_log = None;
         self.log = None;
         self.actions.borrow_mut().clear();
@@ -463,8 +462,6 @@ impl DevConsoleView {
         self.log_rows = None;
         self.hidden = None;
         self.toolbar_pressed = [None; 10];
-        self.log_row_listeners_bound = 0;
-        self.log_row_count = 0;
         if let Some(doc) = self.document.take() {
             let _ = rml.document_close(doc);
         }
@@ -485,31 +482,5 @@ impl DevConsoleView {
                 queue.borrow_mut().push(SelectionEvent::End);
             })
             .map(|_| ())
-    }
-
-    fn sync_log_rows(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        let Some(log) = self.log else {
-            return Ok(());
-        };
-        let rml = interface.rml_ui();
-        let mut bound = self.log_row_listeners_bound;
-        while bound < self.log_row_count {
-            let index = bound;
-            let (line, exists) = rml.element_get_child(log, index as i32)?;
-            if !exists {
-                break;
-            }
-            let queue = self.selection_events.clone();
-            rml.element_add_event_listener(line, "mousedown", false, move || {
-                queue.borrow_mut().push(SelectionEvent::Start(index))
-            })?;
-            let queue = self.selection_events.clone();
-            rml.element_add_event_listener(line, "mouseover", false, move || {
-                queue.borrow_mut().push(SelectionEvent::Extend(index))
-            })?;
-            bound += 1;
-        }
-        self.log_row_listeners_bound = bound;
-        Ok(())
     }
 }

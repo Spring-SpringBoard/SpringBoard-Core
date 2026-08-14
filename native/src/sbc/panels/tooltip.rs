@@ -6,9 +6,11 @@
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataModel, RmlDataStatusRows, RmlDataVariable, RmlPixels, RmlStatusRow,
+    RmlDataModel, RmlDataVariable, RmlPixels,
 };
 
+use crate::sbc::panels::rows::StatusRow;
+use crate::sbc::rml::rows::Rows;
 use crate::sbc::states::trace::rml_y_from_mouse;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -46,7 +48,7 @@ pub(crate) struct PanelTooltip {
     title: RmlDataVariable<'static, String>,
     hidden: RmlDataVariable<'static, bool>,
     has_statuses: RmlDataVariable<'static, bool>,
-    statuses: RmlDataStatusRows<'static>,
+    statuses: Rows<StatusRow>,
     left: RmlDataVariable<'static, RmlPixels>,
     top: RmlDataVariable<'static, RmlPixels>,
 }
@@ -60,7 +62,7 @@ impl PanelTooltip {
             title: model.bind("title", String::new())?,
             hidden: model.bind("hidden", true)?,
             has_statuses: model.bind("has_statuses", false)?,
-            statuses: model.bind_status_rows("statuses")?,
+            statuses: Rows::<StatusRow>::bind(model, "statuses")?,
             left: model.bind("left", RmlPixels(0.0))?,
             top: model.bind("top", RmlPixels(0.0))?,
         })
@@ -95,7 +97,11 @@ impl PanelTooltip {
         Ok(())
     }
 
-    fn show(&self, interface: &NativeInterfaceRef, content: &TooltipContent) -> Result<(), Error> {
+    pub(crate) fn show(
+        &self,
+        interface: &NativeInterfaceRef,
+        content: &TooltipContent,
+    ) -> Result<(), Error> {
         let mouse = interface.input().get_mouse_state()?;
         let y = rml_y_from_mouse(interface, mouse.y);
         self.title.set(content.title.clone())?;
@@ -104,7 +110,7 @@ impl PanelTooltip {
             &content
                 .statuses
                 .iter()
-                .map(|status| RmlStatusRow {
+                .map(|status| StatusRow {
                     label: status.label.clone(),
                     positive: status.positive,
                 })
@@ -116,7 +122,7 @@ impl PanelTooltip {
         Ok(())
     }
 
-    fn hide(&self) -> Result<(), Error> {
+    pub(crate) fn hide(&self) -> Result<(), Error> {
         self.hidden.set(true)
     }
 }

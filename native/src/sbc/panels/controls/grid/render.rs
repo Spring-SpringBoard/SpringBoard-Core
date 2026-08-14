@@ -2,11 +2,48 @@
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlGridRow, RmlPixels,
+    RmlFieldType, RmlPixels, RmlValueRef,
 };
 
-use super::{GridItem, GridView, FILLERS};
+use super::{GridView, FILLERS};
 use crate::sbc::panels::field::element_by_id;
+use crate::sbc::rml::rows::{Row, Rows};
+
+pub(crate) struct GridRow {
+    pub label: String,
+    pub image: String,
+    pub cell_size: RmlPixels,
+    pub has_image: bool,
+    pub native_image: bool,
+    pub selected: bool,
+    pub folder: bool,
+    /// A layout-only trailing cell absorbing flex slack.
+    pub filler: bool,
+}
+
+impl Row for GridRow {
+    const FIELDS: &'static [(&'static str, RmlFieldType)] = &[
+        ("label", RmlFieldType::String),
+        ("image", RmlFieldType::String),
+        ("cell_size", RmlFieldType::Pixels),
+        ("has_image", RmlFieldType::Bool),
+        ("native_image", RmlFieldType::Bool),
+        ("selected", RmlFieldType::Bool),
+        ("folder", RmlFieldType::Bool),
+        ("filler", RmlFieldType::Bool),
+    ];
+
+    fn values<'a>(&'a self, out: &mut Vec<RmlValueRef<'a>>) {
+        out.push(RmlValueRef::String(&self.label));
+        out.push(RmlValueRef::String(&self.image));
+        out.push(RmlValueRef::Pixels(self.cell_size));
+        out.push(RmlValueRef::Bool(self.has_image));
+        out.push(RmlValueRef::Bool(self.native_image));
+        out.push(RmlValueRef::Bool(self.selected));
+        out.push(RmlValueRef::Bool(self.folder));
+        out.push(RmlValueRef::Bool(self.filler));
+    }
+}
 
 impl GridView {
     pub(super) fn model_name(&self) -> String {
@@ -36,12 +73,11 @@ impl GridView {
         self.ensure_rows(interface, document, context, container)?;
         self.render_navigation(interface, document)?;
 
-        let items_changed = self.items_dirty;
-        if items_changed {
+        if self.items_dirty {
             let rows = self
                 .items
                 .iter()
-                .map(|item| RmlGridRow {
+                .map(|item| GridRow {
                     label: item.caption.clone(),
                     image: item.image.clone().unwrap_or_default(),
                     cell_size: RmlPixels(self.item_size as f32),
@@ -54,7 +90,7 @@ impl GridView {
                     folder: item.is_directory,
                     filler: false,
                 })
-                .chain((0..FILLERS).map(|_| RmlGridRow {
+                .chain((0..FILLERS).map(|_| GridRow {
                     label: String::new(),
                     image: String::new(),
                     cell_size: RmlPixels(self.item_size as f32),
@@ -68,18 +104,19 @@ impl GridView {
             if let Some(rows_model) = &self.rows {
                 rows_model.set(&rows)?;
             }
-            // `data-for` materialises on update. Grid rows have per-cell
-            // interactions, so bind only after those real elements exist.
-            let _ = rml.context_update(context)?;
+            *self.cell_tooltips.borrow_mut() = self
+                .items
+                .iter()
+                .map(|item| {
+                    item.tooltip_content.clone().or_else(|| {
+                        item.tooltip
+                            .as_deref()
+                            .map(crate::sbc::panels::tooltip::TooltipContent::text)
+                    })
+                })
+                .collect();
         }
 
-        for (index, item) in self.items.iter().enumerate() {
-            let (cell, exists) = rml.element_get_child(container, index as i32)?;
-            if !exists {
-                continue;
-            }
-            self.sync_item(interface, document, cell, item, items_changed)?;
-        }
         self.items_dirty = false;
         Ok(())
     }
@@ -95,7 +132,30 @@ impl GridView {
             let model = interface
                 .rml_ui()
                 .create_data_model(context, &self.model_name())?;
-            self.rows = Some(model.bind_grid_rows("items")?);
+            self.rows = Some(Rows::<GridRow>::bind(&model, "items")?);
+
+            let queue = self.clicks.clone();
+            Rows::<GridRow>::on_row(&model, "select", move |index, _| {
+                queue.borrow_mut().push(index);
+            })?;
+            let tooltips = self.cell_tooltips.clone();
+            let host = self.tooltip.clone();
+            let iface = *interface;
+            Rows::<GridRow>::on_row(&model, "show_tooltip", move |index, _| {
+                let Some(host) = host.borrow().clone() else {
+                    return;
+                };
+                if let Some(Some(content)) = tooltips.borrow().get(index) {
+                    let _ = host.show(&iface, content);
+                }
+            })?;
+            let host = self.tooltip.clone();
+            Rows::<GridRow>::on_row(&model, "hide_tooltip", move |_, _| {
+                if let Some(host) = host.borrow().as_ref() {
+                    let _ = host.hide();
+                }
+            })?;
+
             self.model_context = Some(context);
             self.bound_document = Some(document);
             self.items_dirty = true;
@@ -143,41 +203,10 @@ impl GridView {
         Ok(())
     }
 
-    fn sync_item(
-        &self,
-        interface: &NativeInterfaceRef,
-        _document: u64,
-        cell: u64,
-        item: &GridItem,
-        bind_interactions: bool,
-    ) -> Result<(), Error> {
-        if bind_interactions {
-            if let Some(host) = &self.tooltip {
-                if let Some(tooltip) = &item.tooltip_content {
-                    host.bind_to(interface, cell, tooltip.clone())?;
-                } else if let Some(tooltip) = &item.tooltip {
-                    host.bind_to(
-                        interface,
-                        cell,
-                        crate::sbc::panels::tooltip::TooltipContent::text(tooltip),
-                    )?;
-                }
-            }
-            let queue = self.clicks.clone();
-            let item_id = item.id.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(cell, "click", false, move || {
-                    queue.borrow_mut().push(item_id.clone());
-                })?;
-        }
-        Ok(())
-    }
-
     fn scaffold_rml(&self) -> String {
         format!(
             concat!(
-                r#"<div data-model="{model}" data-for="item : items" data-if="item.visible" class="grid-item" data-class-grid-filler="item.filler" data-class-selected="item.selected" data-class-folder="item.folder" data-style-flex-basis="item.cell_size">"#,
+                r#"<div data-model="{model}" data-for="item : items" data-if="item.visible" class="grid-item" data-class-grid-filler="item.filler" data-class-selected="item.selected" data-class-folder="item.folder" data-style-flex-basis="item.cell_size" data-event-click="select(it_index)" data-event-mouseover="show_tooltip(it_index)" data-event-mouseout="hide_tooltip(it_index)">"#,
                 r#"<div class="grid-item-image" data-style-height="item.cell_size"><img data-if="item.has_image &amp;&amp; !item.native_image" data-attr-src="item.image"/><texture data-if="item.has_image &amp;&amp; item.native_image" data-attr-src="item.image"/></div>"#,
                 r#"<div class="grid-item-label">{{{{ item.label }}}}</div></div>"#,
             ),

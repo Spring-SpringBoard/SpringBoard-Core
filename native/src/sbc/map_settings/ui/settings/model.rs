@@ -6,7 +6,10 @@ use crate::sbc::panels::controls::grid::GridView;
 use crate::sbc::panels::field::FieldValue;
 use crate::sbc::panels::fields::{AssetField, BooleanField, NumericField};
 use crate::sbc::panels::runtime::{EditorModel, FieldMut, FieldRef, TableEntry, TableModel};
-use spring_native::{prelude::Error, RmlDataModel, RmlDataStatusRows, RmlDataVariable};
+use spring_native::{prelude::Error, RmlDataModel, RmlDataVariable};
+
+use crate::sbc::panels::rows::StatusRow;
+use crate::sbc::rml::rows::Rows;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum SettingsField {
@@ -73,7 +76,7 @@ pub(crate) struct SettingsModel {
     pub(super) shading_enabled: BTreeMap<String, bool>,
     pub(super) dialog: Option<String>,
     pub(super) shading_source: Option<ShadingSource>,
-    pub(super) shading_statuses: Option<RmlDataStatusRows<'static>>,
+    pub(super) shading_statuses: Option<Rows<StatusRow>>,
     pub(super) shading_dialog_title: Option<RmlDataVariable<'static, String>>,
     pub(super) shading_dialog_open: Option<RmlDataVariable<'static, bool>>,
     pub(super) shading_source_select_visible: Option<RmlDataVariable<'static, bool>>,
@@ -183,7 +186,15 @@ impl EditorModel for SettingsModel {
     }
 
     fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
-        self.shading_statuses = Some(model.bind_status_rows("shading_statuses")?);
+        self.shading_statuses = Some(Rows::<StatusRow>::bind(model, "shading_statuses")?);
+        let events = self.shading_events.clone();
+        Rows::<StatusRow>::on_row(model, "open_shading", move |index, _| {
+            if let Some((_, shading, _)) = SHADING_TOGGLES.get(index) {
+                events
+                    .borrow_mut()
+                    .push(ShadingEvent::Open((*shading).to_string()));
+            }
+        })?;
         self.shading_dialog_title = Some(model.bind("shading_dialog_title", String::new())?);
         self.shading_dialog_open = Some(model.bind("shading_dialog_open", false)?);
         self.shading_source_select_visible =

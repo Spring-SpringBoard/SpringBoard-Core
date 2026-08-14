@@ -12,7 +12,7 @@ use std::rc::Rc;
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataOptionRows, RmlDataVariable, RmlOptionRow,
+    RmlDataVariable,
 };
 
 use crate::sbc::actions::{FileAcceptFn, FileDialogConfig, FileDialogResult};
@@ -23,7 +23,9 @@ use crate::sbc::panels::editor::Editor;
 use crate::sbc::panels::field::{element_by_id, ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{ChoiceField, StringField};
 use crate::sbc::panels::modal::{Modal, ModalEvent};
+use crate::sbc::panels::rows::OptionRow;
 use crate::sbc::panels::tooltip::PanelTooltip;
+use crate::sbc::rml::rows::Rows;
 
 inventory::submit! {
     crate::sbc::panels::modal::ModalRegistration {
@@ -52,7 +54,7 @@ pub(crate) struct FileDialog {
     hidden: Option<RmlDataVariable<'static, bool>>,
     show_name_input: Option<RmlDataVariable<'static, bool>>,
     show_file_type: Option<RmlDataVariable<'static, bool>>,
-    file_type_options: Option<RmlDataOptionRows<'static>>,
+    file_type_options: Option<Rows<OptionRow>>,
     /// The callback the open dialog runs against its accepted result, set by the
     /// toolbar action that opened it.
     pending_accept: Option<FileAcceptFn>,
@@ -270,7 +272,7 @@ impl FileDialog {
     fn write_file_type_options(&mut self, file_types: &[String]) -> Result<(), Error> {
         let options = file_types
             .iter()
-            .map(|file_type| RmlOptionRow {
+            .map(|file_type| OptionRow {
                 value: file_type.clone(),
                 label: file_type.clone(),
             })
@@ -389,7 +391,7 @@ impl Modal for FileDialog {
         self.hidden = Some(data_model.bind("hidden", true)?);
         self.show_name_input = Some(data_model.bind("show_name_input", false)?);
         self.show_file_type = Some(data_model.bind("show_file_type", false)?);
-        self.file_type_options = Some(data_model.bind_option_rows("types")?);
+        self.file_type_options = Some(Rows::<OptionRow>::bind(&data_model, "types")?);
         self.form.prepare_data_model(&data_model)?;
         self.grid.prepare_data_model(&data_model)?;
         Ok(())

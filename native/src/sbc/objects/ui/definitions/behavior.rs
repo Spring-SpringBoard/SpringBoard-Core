@@ -10,7 +10,7 @@ use crate::sbc::rml::element_by_id;
 use crate::sbc::states::StateRequest;
 
 use super::layout;
-use super::model::{DefKind, ObjectDefsModel, ObjectField, PlaceMode};
+use super::model::{DefKind, ObjectDefsModel, ObjectField};
 
 pub(crate) struct ObjectDefsBehavior;
 
@@ -85,20 +85,6 @@ impl Behavior for ObjectDefsBehavior {
                         revert: false,
                     });
                 })?;
-        }
-
-        for (index, mode) in [(0, PlaceMode::Set), (1, PlaceMode::Brush)] {
-            if let Some(button) = mode_button(interface, document, index) {
-                let queue = model.mode_clicks.clone();
-                interface.rml_ui().element_add_event_listener(
-                    button,
-                    "click",
-                    false,
-                    move || {
-                        queue.borrow_mut().push(mode);
-                    },
-                )?;
-            }
         }
 
         // Binding follows a rebuild, and a rebuild is a *new* grid container --
@@ -182,12 +168,6 @@ impl Behavior for ObjectDefsBehavior {
     fn draw(&mut self, model: &mut ObjectDefsModel, interface: &NativeInterfaceRef) {
         model.thumbnails.draw(interface);
     }
-}
-
-fn mode_button(interface: &NativeInterfaceRef, document: u64, index: i32) -> Option<u64> {
-    let host = element_by_id(interface, document, "objectdef-mode-actions")?;
-    let (button, exists) = interface.rml_ui().element_get_child(host, index).ok()?;
-    exists.then_some(button)
 }
 
 fn tick_widgets(

@@ -8,9 +8,11 @@
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataTextRows, RmlDataVariable, RmlPixels, RmlTextRow,
+    RmlDataVariable, RmlPixels,
 };
 
+use crate::sbc::panels::rows::TextRow;
+use crate::sbc::rml::rows::Rows;
 use crate::sbc::states::trace::rml_y_from_mouse;
 
 /// Pick radius in pixels around the cursor, as Lua uses.
@@ -29,7 +31,7 @@ pub(crate) struct CursorTip {
 /// these once with its context; the picker only writes values through them.
 pub(crate) struct CursorTipBindings<'a> {
     pub(crate) title: &'a RmlDataVariable<'static, String>,
-    pub(crate) rows: &'a RmlDataTextRows<'static>,
+    pub(crate) rows: &'a Rows<TextRow>,
     pub(crate) hidden: &'a RmlDataVariable<'static, bool>,
     pub(crate) left: &'a RmlDataVariable<'static, RmlPixels>,
     pub(crate) top: &'a RmlDataVariable<'static, RmlPixels>,
@@ -68,11 +70,7 @@ impl CursorTip {
                 &hit.rows
                     .iter()
                     .cloned()
-                    .map(|text| RmlTextRow {
-                        text,
-                        muted: false,
-                        visible: true,
-                    })
+                    .map(|text| TextRow { text, muted: false })
                     .collect::<Vec<_>>(),
             )?;
             self.shown = Some(hit.key);

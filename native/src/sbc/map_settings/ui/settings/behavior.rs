@@ -138,18 +138,6 @@ impl Behavior for SettingsBehavior {
         _changes: &ChangeQueue,
         _interactions: &InteractionQueue,
     ) -> Result<(), Error> {
-        for (index, (_, shading, _)) in SHADING_TOGGLES.iter().enumerate() {
-            let Some(button) = shading_button(interface, document, index as i32) else {
-                continue;
-            };
-            let events = model.shading_events.clone();
-            let name = (*shading).to_string();
-            interface
-                .rml_ui()
-                .element_add_event_listener(button, "click", false, move || {
-                    events.borrow_mut().push(ShadingEvent::Open(name.clone()));
-                })?;
-        }
         for (id, event) in [
             ("shading-new", ShadingEvent::ShowNew),
             ("shading-existing", ShadingEvent::Existing),
@@ -269,16 +257,6 @@ impl Behavior for SettingsBehavior {
     fn modal_open(&self, model: &SettingsModel) -> bool {
         model.dialog.is_some()
     }
-}
-
-fn shading_button(interface: &NativeInterfaceRef, document: u64, index: i32) -> Option<u64> {
-    let host = element_by_id(interface, document, "shading-texture-actions")?;
-    let (row, row_exists) = interface.rml_ui().element_get_child(host, index).ok()?;
-    if !row_exists {
-        return None;
-    }
-    let (button, button_exists) = interface.rml_ui().element_get_child(row, 0).ok()?;
-    button_exists.then_some(button)
 }
 
 fn dialog_dimension(model: &SettingsModel, id: SettingsField) -> i32 {

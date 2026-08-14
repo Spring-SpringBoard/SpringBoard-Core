@@ -3,18 +3,21 @@ use std::rc::Rc;
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataNotificationRows, RmlDataTextRows, RmlDataVariable, RmlPixels,
+    RmlDataVariable, RmlPixels,
 };
 
 use crate::sbc::actions::Action;
+use crate::sbc::notifications::manager::NotificationRow;
 use crate::sbc::panels::action_bar::ActionBar;
 use crate::sbc::panels::cursor::cursortip::CursorTipBindings;
 use crate::sbc::panels::editor_buttons::EditorButtons;
 use crate::sbc::panels::field::element_by_id;
 use crate::sbc::panels::registry::Tab;
+use crate::sbc::panels::rows::TextRow;
 use crate::sbc::panels::tab_bar::TabBar;
 use crate::sbc::panels::tooltip::PanelTooltip;
 use crate::sbc::rml;
+use crate::sbc::rml::rows::Rows;
 
 const UI_CONTEXT: &str = "sbc_native_ui";
 const UI_BODY: &str = include_str!("ui.rml");
@@ -56,10 +59,10 @@ pub(crate) struct PanelView {
     content: Option<u64>,
     project_status_caption: Option<RmlDataVariable<'static, String>>,
     project_open_disabled: Option<RmlDataVariable<'static, bool>>,
-    notification_rows: Option<RmlDataNotificationRows<'static>>,
+    notification_rows: Option<Rows<NotificationRow>>,
     tooltip: Option<PanelTooltip>,
     cursor_tip_title: Option<RmlDataVariable<'static, String>>,
-    cursor_tip_rows: Option<RmlDataTextRows<'static>>,
+    cursor_tip_rows: Option<Rows<TextRow>>,
     cursor_tip_hidden: Option<RmlDataVariable<'static, bool>>,
     cursor_tip_left: Option<RmlDataVariable<'static, RmlPixels>>,
     cursor_tip_top: Option<RmlDataVariable<'static, RmlPixels>>,
@@ -140,9 +143,6 @@ impl PanelView {
         if !ok {
             return Ok(false);
         }
-        let geom = interface.display().get_view_geometry()?;
-        let _ = rml.context_set_dimensions(ctx, geom.viewSizeX, geom.viewSizeY);
-
         // The panel shell is parsed after this native model exists, so its
         // status caption stays a typed RmlUi field instead of reconstructed
         // markup on every project-state change.
@@ -150,12 +150,12 @@ impl PanelView {
         self.project_status_caption =
             Some(data_model.bind("project_status_caption", String::new())?);
         self.project_open_disabled = Some(data_model.bind("project_open_disabled", true)?);
-        self.notification_rows = Some(data_model.bind_notification_rows("notifications")?);
+        self.notification_rows = Some(Rows::<NotificationRow>::bind(&data_model, "notifications")?);
         let tooltip_model = rml.create_data_model(ctx, "panel_tooltip")?;
         self.tooltip = Some(PanelTooltip::bind(&tooltip_model)?);
         let cursor_tip_model = rml.create_data_model(ctx, "cursor_tip")?;
         self.cursor_tip_title = Some(cursor_tip_model.bind("title", String::new())?);
-        self.cursor_tip_rows = Some(cursor_tip_model.bind_text_rows("rows")?);
+        self.cursor_tip_rows = Some(Rows::<TextRow>::bind(&cursor_tip_model, "rows")?);
         self.cursor_tip_hidden = Some(cursor_tip_model.bind("hidden", true)?);
         self.cursor_tip_left = Some(cursor_tip_model.bind("left", RmlPixels(0.0))?);
         self.cursor_tip_top = Some(cursor_tip_model.bind("top", RmlPixels(0.0))?);
@@ -208,7 +208,7 @@ impl PanelView {
         self.project_open_disabled.as_ref()
     }
 
-    pub(crate) fn notification_rows(&self) -> Option<&RmlDataNotificationRows<'static>> {
+    pub(crate) fn notification_rows(&self) -> Option<&Rows<NotificationRow>> {
         self.notification_rows.as_ref()
     }
 
@@ -283,17 +283,6 @@ impl PanelView {
     }
 
     // ── Lifecycle ──────────────────────────────────────────────────
-
-    pub(crate) fn update(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        if let Some(ctx) = self.context {
-            let geom = interface.display().get_view_geometry()?;
-            let _ = interface
-                .rml_ui()
-                .context_set_dimensions(ctx, geom.viewSizeX, geom.viewSizeY);
-            interface.rml_ui().context_update(ctx)?;
-        }
-        Ok(())
-    }
 
     /// The engine renders every RmlUi context in RmlGui::RenderFrame, between
     /// BeginFrame and PresentFrame. Calling context_render here would submit

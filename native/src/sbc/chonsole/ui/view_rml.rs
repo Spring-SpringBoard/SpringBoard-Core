@@ -5,9 +5,11 @@ use std::rc::Rc;
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlChoiceRow, RmlDataChoiceRows, RmlDataTextRows, RmlDataVariable, RmlTextRow,
+    RmlDataVariable,
 };
 
+use crate::sbc::panels::rows::{ChoiceRow, TextRow};
+use crate::sbc::rml::rows::Rows;
 use crate::sbc::rml::{self, element_by_id};
 use crate::sbc::states::trace::rml_y_from_mouse;
 
@@ -33,8 +35,8 @@ pub(super) struct ChonsoleRml {
     root: Option<u64>,
     lines: Option<u64>,
     suggestions: Option<u64>,
-    line_rows: Option<RmlDataTextRows<'static>>,
-    suggestion_rows: Option<RmlDataChoiceRows<'static>>,
+    line_rows: Option<Rows<TextRow>>,
+    suggestion_rows: Option<Rows<ChoiceRow>>,
     suggestions_hidden: Option<RmlDataVariable<'static, bool>>,
     detail_command: Option<RmlDataVariable<'static, String>>,
     detail_text: Option<RmlDataVariable<'static, String>>,
@@ -107,11 +109,9 @@ impl ChonsoleRml {
         if !created {
             return Ok(false);
         }
-        let geometry = interface.display().get_view_geometry()?;
-        let _ = rml.context_set_dimensions(context, geometry.viewSizeX, geometry.viewSizeY);
         let data_model = rml.create_data_model(context, MODEL_NAME)?;
-        self.line_rows = Some(data_model.bind_text_rows("lines")?);
-        self.suggestion_rows = Some(data_model.bind_choice_rows("suggestions")?);
+        self.line_rows = Some(Rows::<TextRow>::bind(&data_model, "lines")?);
+        self.suggestion_rows = Some(Rows::<ChoiceRow>::bind(&data_model, "suggestions")?);
         self.suggestions_hidden = Some(data_model.bind("suggestions_hidden", true)?);
         self.detail_command = Some(data_model.bind("detail_command", String::new())?);
         self.detail_text = Some(data_model.bind("detail_text", String::new())?);
@@ -138,13 +138,10 @@ impl ChonsoleRml {
     }
 
     pub(super) fn update(&mut self, interface: &NativeInterfaceRef) -> Result<(), Error> {
-        let Some(context) = self.context else {
+        if self.context.is_none() {
             return Ok(());
-        };
-        let geometry = interface.display().get_view_geometry()?;
+        }
         let rml = interface.rml_ui();
-        let _ = rml.context_set_dimensions(context, geometry.viewSizeX, geometry.viewSizeY);
-        rml.context_update(context)?;
         if self.pending_lines_scroll {
             if let Some(lines) = self.lines {
                 let _ = rml.element_set_scroll_top(lines, 1_000_000);
@@ -214,7 +211,7 @@ impl ChonsoleRml {
         &mut self,
         input: &TextInput,
         output: &[ChonsoleLine],
-        suggestions: &[RmlChoiceRow],
+        suggestions: &[ChoiceRow],
         details: Option<(&str, &str)>,
         suggestion_scroll_top: Option<i32>,
     ) -> Result<(), Error> {
@@ -223,10 +220,9 @@ impl ChonsoleRml {
         }
         let lines = output
             .iter()
-            .map(|line| RmlTextRow {
+            .map(|line| TextRow {
                 text: line.text.clone(),
                 muted: line.kind == ChonsoleLineKind::Input,
-                visible: true,
             })
             .collect::<Vec<_>>();
         self.line_rows

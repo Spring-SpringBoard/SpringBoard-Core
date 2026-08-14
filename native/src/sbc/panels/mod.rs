@@ -20,6 +20,7 @@ pub(crate) mod modal;
 mod modal_stack;
 mod numeric_drag_overlay;
 pub(crate) mod registry;
+pub(crate) mod rows;
 pub(crate) mod runtime;
 mod tab_bar;
 pub(crate) mod tooltip;

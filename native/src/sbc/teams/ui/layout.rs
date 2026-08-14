@@ -6,7 +6,7 @@ use super::model::{TeamField, TeamsModel};
 pub(super) const TEAM_LIST_RML: &str = concat!(
     r#"<div class="brush-actions"><button id="teams-add" class="brush-action"><img class="brush-action-image" src="LuaUI/images/scenedit/team-add.png"/><span class="brush-action-label">Add</span></button></div>"#,
     r#"<div class="team-list-header">Teams</div>"#,
-    r#"<div id="teams-list"><div data-for="team : teams" data-if="team.visible" class="team-row"><div class="team-swatch" data-style-background-color="team.colour"></div><span class="team-name">{{ team.label }}</span><button class="team-edit" data-if="team.actions_enabled"><span>Edit</span></button><button class="team-remove" title="Remove team" data-if="team.actions_enabled"><img src="LuaUI/images/scenedit/cancel.png"/></button></div></div>"#,
+    r#"<div id="teams-list"><div data-for="team : teams" data-if="team.visible" class="team-row"><div class="team-swatch" data-style-background-color="team.colour"></div><span class="team-name">{{ team.label }}</span><button class="team-edit" data-if="team.actions_enabled" data-event-click="edit_team(it_index)"><span>Edit</span></button><button class="team-remove" title="Remove team" data-if="team.actions_enabled" data-event-click="remove_team(it_index)"><img src="LuaUI/images/scenedit/cancel.png"/></button></div></div>"#,
 );
 
 impl TeamsModel {

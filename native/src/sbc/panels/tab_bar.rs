@@ -1,9 +1,9 @@
 //! The top-level panel tab strip's native data-model projection.
 
-use spring_native::{
-    prelude::{Error, NativeInterfaceRef},
-    RmlChoiceRow, RmlDataChoiceRows,
-};
+use spring_native::prelude::{Error, NativeInterfaceRef};
+
+use crate::sbc::panels::rows::ChoiceRow;
+use crate::sbc::rml::rows::Rows;
 
 use super::{
     field::element_by_id,
@@ -19,7 +19,7 @@ const TEMPLATE: &str = include_str!("tab_bar.rml");
 /// was enabled before the registry first initialized.
 #[derive(Default)]
 pub(crate) struct TabBar {
-    rows: Option<RmlDataChoiceRows<'static>>,
+    rows: Option<Rows<ChoiceRow>>,
     document: Option<u64>,
     tabs: Vec<Tab>,
     current: Option<Tab>,
@@ -52,21 +52,17 @@ impl TabBar {
         if self.document != Some(document) {
             self.forget();
             let model = rml.create_data_model(context, MODEL_NAME)?;
-            let rows = model.bind_choice_rows("tabs")?;
+            let rows = Rows::<ChoiceRow>::bind(&model, "tabs")?;
             self.tabs = Tab::all();
+            let tabs = self.tabs.clone();
+            let queue = events.clone();
+            Rows::<ChoiceRow>::on_row(&model, "select", move |index, _| {
+                if let Some(tab) = tabs.get(index) {
+                    queue.borrow_mut().push(ShellEvent::Tab(*tab));
+                }
+            })?;
             rml.element_set_inner_rml(host, TEMPLATE)?;
             rows.set(&self.rows_for(current))?;
-            rml.context_update(context)?;
-            for (index, tab) in self.tabs.iter().copied().enumerate() {
-                let (button, exists) = rml.element_get_child(host, index as i32)?;
-                if !exists {
-                    continue;
-                }
-                let queue = events.clone();
-                rml.element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(ShellEvent::Tab(tab));
-                })?;
-            }
             self.rows = Some(rows);
             self.document = Some(document);
             self.current = Some(current);
@@ -82,10 +78,10 @@ impl TabBar {
         Ok(())
     }
 
-    fn rows_for(&self, current: Tab) -> Vec<RmlChoiceRow> {
+    fn rows_for(&self, current: Tab) -> Vec<ChoiceRow> {
         self.tabs
             .iter()
-            .map(|tab| RmlChoiceRow {
+            .map(|tab| ChoiceRow {
                 label: tab.as_str().to_owned(),
                 detail: String::new(),
                 selected: *tab == current,

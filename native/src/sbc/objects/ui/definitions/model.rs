@@ -4,17 +4,19 @@ use std::rc::Rc;
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataIconRows, RmlDataModel, RmlIconRow,
+    RmlDataModel,
 };
 
 use crate::sbc::command_system::model::Models;
 use crate::sbc::objects::thumbnails::ThumbnailRenderer;
 use crate::sbc::objects::ui::filters::{DefTraits, FEATURE_TYPES, TERRAINS, UNIT_TYPES};
 use crate::sbc::panels::controls::grid::{GridItem, GridView};
+use crate::sbc::panels::rows::IconRow;
 use crate::sbc::panels::runtime::{
     Brush, DynChoice, DynChoiceDef, EditorModel, FieldMut, FieldRef, Num, NumDef, StrChoice,
     StrChoiceDef,
 };
+use crate::sbc::rml::rows::Rows;
 use crate::sbc::states::PlacementConfig;
 use crate::sbc::teams::TeamManager;
 
@@ -31,6 +33,9 @@ pub(super) enum PlaceMode {
     Set,
     Brush,
 }
+
+/// Row order of the mode strip: `select_mode` resolves a clicked row through it.
+const MODE_ORDER: [PlaceMode; 2] = [PlaceMode::Set, PlaceMode::Brush];
 
 /// Cell size for the def grid. The thumbnails are rendered at 128px, so this is
 /// still a downscale.
@@ -205,7 +210,7 @@ pub(crate) struct ObjectDefsModel {
     /// Renders each def's model into a texture for its grid cell.
     pub(super) thumbnails: ThumbnailRenderer,
     /// Fixed placement-mode controls materialised through typed icon rows.
-    mode_actions: Option<RmlDataIconRows<'static>>,
+    mode_actions: Option<Rows<IconRow>>,
 }
 
 impl ObjectDefsModel {
@@ -337,23 +342,28 @@ impl ObjectDefsModel {
         self.grid.render(interface, document)
     }
 
-    fn mode_action_rows(&self) -> [RmlIconRow; 2] {
-        [
-            RmlIconRow {
-                label: "Add".to_owned(),
-                icon: "LuaUI/images/scenedit/object-set-add.png".to_owned(),
-                tooltip: "Add objects".to_owned(),
-                pressed: self.placing && self.mode == PlaceMode::Set,
+    fn mode_action_rows(&self) -> [IconRow; 2] {
+        MODE_ORDER.map(|mode| {
+            let (label, icon, tooltip) = match mode {
+                PlaceMode::Set => (
+                    "Add",
+                    "LuaUI/images/scenedit/object-set-add.png",
+                    "Add objects",
+                ),
+                PlaceMode::Brush => (
+                    "Brush",
+                    "LuaUI/images/scenedit/object-brush-add.png",
+                    "Brush objects",
+                ),
+            };
+            IconRow {
+                label: label.to_owned(),
+                icon: icon.to_owned(),
+                tooltip: tooltip.to_owned(),
+                pressed: self.placing && self.mode == mode,
                 disabled: false,
-            },
-            RmlIconRow {
-                label: "Brush".to_owned(),
-                icon: "LuaUI/images/scenedit/object-brush-add.png".to_owned(),
-                tooltip: "Brush objects".to_owned(),
-                pressed: self.placing && self.mode == PlaceMode::Brush,
-                disabled: false,
-            },
-        ]
+            }
+        })
     }
 }
 
@@ -395,9 +405,15 @@ impl EditorModel for ObjectDefsModel {
     }
 
     fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
-        let rows = model.bind_icon_rows("objectdef_mode_actions")?;
+        let rows = Rows::<IconRow>::bind(model, "objectdef_mode_actions")?;
         rows.set(&self.mode_action_rows())?;
         self.mode_actions = Some(rows);
+        let clicks = self.mode_clicks.clone();
+        Rows::<IconRow>::on_row(model, "select_mode", move |index, _| {
+            if let Some(mode) = MODE_ORDER.get(index) {
+                clicks.borrow_mut().push(*mode);
+            }
+        })?;
         Ok(())
     }
 

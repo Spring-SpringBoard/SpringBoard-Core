@@ -1,6 +1,6 @@
 //! Completion state and RmlUi rendering for Chonsole command suggestions.
 
-use spring_native::RmlChoiceRow;
+use crate::sbc::panels::rows::ChoiceRow;
 
 use crate::sbc::chonsole::commands::ChonsoleCore;
 use crate::sbc::chonsole::framework::{ChonsoleSuggestion, TextInput};
@@ -109,11 +109,11 @@ impl SuggestionView {
     }
 
     /// Typed presentation rows for RmlUi's static completion scaffold.
-    pub(super) fn rml_rows(&self, hovered: Option<usize>) -> Vec<RmlChoiceRow> {
+    pub(super) fn rml_rows(&self, hovered: Option<usize>) -> Vec<ChoiceRow> {
         self.entries
             .iter()
             .enumerate()
-            .map(|(index, suggestion)| RmlChoiceRow {
+            .map(|(index, suggestion)| ChoiceRow {
                 label: truncate_chars(&suggestion.command, COMMAND_COLUMN_CHARS),
                 detail: truncate_chars(&suggestion.description, MAX_DESCRIPTION_CHARS),
                 selected: self.selected == Some(index),

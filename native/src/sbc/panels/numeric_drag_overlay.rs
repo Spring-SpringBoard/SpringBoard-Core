@@ -82,7 +82,6 @@ impl NumericDragOverlay {
         }
         if let Some(context) = self.context {
             rml.context_pull_to_front(context)?;
-            rml.context_update(context)?;
         }
         Ok(())
     }
@@ -142,8 +141,6 @@ impl NumericDragOverlay {
         if !created {
             return Ok(());
         }
-        let geometry = interface.display().get_view_geometry()?;
-        rml.context_set_dimensions(context, geometry.viewSizeX, geometry.viewSizeY)?;
         let _ = rml.context_enable_mouse_cursor(context, false);
         let model = rml.create_data_model(context, MODEL)?;
         self.bind(&model)?;

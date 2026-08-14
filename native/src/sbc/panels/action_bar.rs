@@ -1,9 +1,9 @@
 //! The project and clipboard toolbar's native data-model projection.
 
-use spring_native::{
-    prelude::{Error, NativeInterfaceRef},
-    RmlDataIconRows, RmlIconRow,
-};
+use spring_native::prelude::{Error, NativeInterfaceRef};
+
+use crate::sbc::panels::rows::IconRow;
+use crate::sbc::rml::rows::Rows;
 
 use super::{
     field::element_by_id,
@@ -20,7 +20,7 @@ const TEMPLATE: &str = include_str!("action_bar.rml");
 /// its RML stays local to the component rather than inflating the panel shell.
 #[derive(Default)]
 pub(crate) struct ActionBar {
-    rows: Option<RmlDataIconRows<'static>>,
+    rows: Option<Rows<IconRow>>,
     document: Option<u64>,
 }
 
@@ -39,9 +39,6 @@ impl ActionBar {
         tooltip: &PanelTooltip,
         events: &ShellQueue,
     ) -> Result<(), Error> {
-        if self.document == Some(document) {
-            return Ok(());
-        }
         let Some(host) = element_by_id(interface, document, HOST_ID) else {
             return Ok(());
         };
@@ -50,9 +47,31 @@ impl ActionBar {
         if !exists {
             return Ok(());
         }
+        if self.document == Some(document) {
+            return Ok(());
+        }
 
         let model = rml.create_data_model(context, MODEL_NAME)?;
-        let rows = model.bind_icon_rows("actions")?;
+        let rows = Rows::<IconRow>::bind(&model, "actions")?;
+
+        let queue = events.clone();
+        Rows::<IconRow>::on_row(&model, "select", move |index, _| {
+            if let Some(action) = Action::TOOLBAR.get(index) {
+                queue.borrow_mut().push(ShellEvent::Action(*action));
+            }
+        })?;
+        let host_tooltip = tooltip.clone();
+        let iface = *interface;
+        Rows::<IconRow>::on_row(&model, "show_tooltip", move |index, _| {
+            if let Some(action) = Action::TOOLBAR.get(index) {
+                let _ = host_tooltip.show(&iface, &TooltipContent::text(action.tooltip()));
+            }
+        })?;
+        let host_tooltip = tooltip.clone();
+        Rows::<IconRow>::on_row(&model, "hide_tooltip", move |_, _| {
+            let _ = host_tooltip.hide();
+        })?;
+
         rml.element_set_inner_rml(host, TEMPLATE)?;
         let action_rows = Action::TOOLBAR
             .into_iter()
@@ -60,7 +79,7 @@ impl ActionBar {
                 let icon = action
                     .icon()
                     .ok_or_else(|| Error::new(1, "toolbar action has no icon"))?;
-                Ok(RmlIconRow {
+                Ok(IconRow {
                     label: action.tooltip().to_owned(),
                     icon: icon.to_owned(),
                     tooltip: action.tooltip().to_owned(),
@@ -70,21 +89,6 @@ impl ActionBar {
             })
             .collect::<Result<Vec<_>, Error>>()?;
         rows.set(&action_rows)?;
-        // RmlUi creates the data-for elements on update, before native event
-        // listeners are attached to the concrete buttons.
-        rml.context_update(context)?;
-
-        for (index, action) in Action::TOOLBAR.into_iter().enumerate() {
-            let (button, exists) = rml.element_get_child(host, index as i32)?;
-            if !exists {
-                continue;
-            }
-            tooltip.bind_to(interface, button, TooltipContent::text(action.tooltip()))?;
-            let queue = events.clone();
-            rml.element_add_event_listener(button, "click", false, move || {
-                queue.borrow_mut().push(ShellEvent::Action(action));
-            })?;
-        }
 
         self.rows = Some(rows);
         self.document = Some(document);

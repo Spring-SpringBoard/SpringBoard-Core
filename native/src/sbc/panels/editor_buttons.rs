@@ -1,9 +1,12 @@
 //! The registered editor-button strip's native data-model projection.
 
-use spring_native::{
-    prelude::{Error, NativeInterfaceRef},
-    RmlDataIconRows, RmlIconRow,
-};
+use std::cell::Cell;
+use std::rc::Rc;
+
+use spring_native::prelude::{Error, NativeInterfaceRef};
+
+use crate::sbc::panels::rows::IconRow;
+use crate::sbc::rml::rows::Rows;
 
 use super::{
     field::element_by_id,
@@ -20,10 +23,13 @@ const TEMPLATE: &str = include_str!("editor_buttons.rml");
 /// projected through a stable RmlUi template instead of regenerating markup.
 #[derive(Default)]
 pub(crate) struct EditorButtons {
-    rows: Option<RmlDataIconRows<'static>>,
+    rows: Option<Rows<IconRow>>,
     document: Option<u64>,
     tab: Option<Tab>,
     active: Option<&'static str>,
+    /// The tab whose specs the bound event handlers resolve indices against.
+    /// The handlers outlive any one tab, so they read it rather than capture it.
+    handler_tab: Rc<Cell<Option<Tab>>>,
 }
 
 impl EditorButtons {
@@ -32,6 +38,7 @@ impl EditorButtons {
         self.document = None;
         self.tab = None;
         self.active = None;
+        self.handler_tab.set(None);
     }
 
     pub(crate) fn render(
@@ -55,7 +62,8 @@ impl EditorButtons {
         if self.document != Some(document) {
             self.forget();
             let model = rml.create_data_model(context, MODEL_NAME)?;
-            self.rows = Some(model.bind_icon_rows("editors")?);
+            self.rows = Some(Rows::<IconRow>::bind(&model, "editors")?);
+            self.bind_events(interface, &model, tooltip, events)?;
             rml.element_set_inner_rml(host, TEMPLATE)?;
             self.document = Some(document);
         }
@@ -66,23 +74,9 @@ impl EditorButtons {
             if let Some(model_rows) = &self.rows {
                 model_rows.set(&rows)?;
             }
-            // Changing a tab changes the number and identity of the data-for
-            // rows, so bind listeners only after RmlUi has materialized them.
-            rml.context_update(context)?;
-            for (index, spec) in specs.iter().enumerate() {
-                let (button, exists) = rml.element_get_child(host, index as i32)?;
-                if !exists {
-                    continue;
-                }
-                tooltip.bind_to(interface, button, TooltipContent::text(spec.tooltip))?;
-                let queue = events.clone();
-                let name = spec.name;
-                rml.element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(ShellEvent::Editor(name));
-                })?;
-            }
             self.tab = Some(tab);
             self.active = active;
+            self.handler_tab.set(Some(tab));
         }
 
         if self.active != active {
@@ -95,10 +89,40 @@ impl EditorButtons {
         Ok(())
     }
 
-    fn rows_for(specs: &[&EditorSpec], active: Option<&'static str>) -> Vec<RmlIconRow> {
+    fn bind_events(
+        &self,
+        interface: &NativeInterfaceRef,
+        model: &spring_native::RmlDataModel<'static>,
+        tooltip: &PanelTooltip,
+        events: &ShellQueue,
+    ) -> Result<(), Error> {
+        let tab = self.handler_tab.clone();
+        let queue = events.clone();
+        Rows::<IconRow>::on_row(model, "select", move |index, _| {
+            if let Some(spec) = spec_at(&tab, index) {
+                queue.borrow_mut().push(ShellEvent::Editor(spec.name));
+            }
+        })?;
+
+        let tab = self.handler_tab.clone();
+        let host = tooltip.clone();
+        let iface = *interface;
+        Rows::<IconRow>::on_row(model, "show_tooltip", move |index, _| {
+            if let Some(spec) = spec_at(&tab, index) {
+                let _ = host.show(&iface, &TooltipContent::text(spec.tooltip));
+            }
+        })?;
+
+        let host = tooltip.clone();
+        Rows::<IconRow>::on_row(model, "hide_tooltip", move |_, _| {
+            let _ = host.hide();
+        })
+    }
+
+    fn rows_for(specs: &[&EditorSpec], active: Option<&'static str>) -> Vec<IconRow> {
         specs
             .iter()
-            .map(|spec| RmlIconRow {
+            .map(|spec| IconRow {
                 label: spec.caption.to_owned(),
                 icon: spec.image.to_owned(),
                 tooltip: spec.tooltip.to_owned(),
@@ -107,4 +131,8 @@ impl EditorButtons {
             })
             .collect()
     }
+}
+
+fn spec_at(tab: &Rc<Cell<Option<Tab>>>, index: usize) -> Option<&'static EditorSpec> {
+    editors_for(tab.get()?).get(index).copied()
 }

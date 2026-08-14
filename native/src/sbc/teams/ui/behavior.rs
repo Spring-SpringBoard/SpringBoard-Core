@@ -191,41 +191,6 @@ impl Behavior for TeamsBehavior {
         };
         bind("teams-add", TeamClick::Add)?;
         bind("team-edit-close", TeamClick::Close)?;
-        let Some(list) = element_by_id(interface, document, "teams-list") else {
-            return Ok(());
-        };
-        for (index, team) in model.teams.iter().enumerate() {
-            if extra_bool(team, "gaia") {
-                continue;
-            }
-            let (row, exists) = interface.rml_ui().element_get_child(list, index as i32)?;
-            if !exists {
-                continue;
-            }
-            let (edit, exists) = interface.rml_ui().element_get_child(row, 2)?;
-            if exists {
-                let clicks = model.clicks.clone();
-                let id = team.id;
-                interface
-                    .rml_ui()
-                    .element_add_event_listener(edit, "click", false, move || {
-                        clicks.borrow_mut().push(TeamClick::Edit(id));
-                    })?;
-            }
-            let (remove, exists) = interface.rml_ui().element_get_child(row, 3)?;
-            if exists {
-                let clicks = model.clicks.clone();
-                let id = team.id;
-                interface.rml_ui().element_add_event_listener(
-                    remove,
-                    "click",
-                    false,
-                    move || {
-                        clicks.borrow_mut().push(TeamClick::Remove(id));
-                    },
-                )?;
-            }
-        }
         model.show_dialog();
         Ok(())
     }

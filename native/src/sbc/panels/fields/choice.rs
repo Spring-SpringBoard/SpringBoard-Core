@@ -1,11 +1,13 @@
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataModel, RmlDataOptionRows, RmlDataVariable, RmlOptionRow,
+    RmlDataModel, RmlDataVariable,
 };
 
 use crate::sbc::panels::field::{
     element_by_id, escape_rml, on_change, ChangeQueue, Field, FieldValue, InteractionQueue,
 };
+use crate::sbc::panels::rows::OptionRow;
+use crate::sbc::rml::rows::Rows;
 
 /// Dropdown select field.
 pub(crate) struct ChoiceField {
@@ -15,7 +17,7 @@ pub(crate) struct ChoiceField {
     value: String,
     items: Vec<String>,
     option_rows: Option<String>,
-    bound_option_rows: Option<RmlDataOptionRows<'static>>,
+    bound_option_rows: Option<Rows<OptionRow>>,
     bound_value: Option<RmlDataVariable<'static, String>>,
     element: Option<u64>,
 }
@@ -100,12 +102,12 @@ impl Field for ChoiceField {
 
     fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
         if self.option_rows.is_none() {
-            let rows = model.bind_option_rows(&self.option_rows_name())?;
+            let rows = Rows::<OptionRow>::bind(model, &self.option_rows_name())?;
             rows.set(
                 &self
                     .items
                     .iter()
-                    .map(|item| RmlOptionRow {
+                    .map(|item| OptionRow {
                         value: item.clone(),
                         label: item.clone(),
                     })

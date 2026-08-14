@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataOptionRows, RmlDataVariable, RmlOptionRow,
+    RmlDataVariable,
 };
 
 use crate::sbc::actions::{available_maps, commit_new_project};
@@ -20,7 +20,9 @@ use crate::sbc::panels::dialogs::form::{DialogForm, FormItem};
 use crate::sbc::panels::field::{element_by_id, ChangeQueue, FieldValue, InteractionQueue};
 use crate::sbc::panels::fields::{ChoiceField, NumericField, StringField};
 use crate::sbc::panels::modal::{Modal, ModalEvent};
+use crate::sbc::panels::rows::OptionRow;
 use crate::sbc::panels::Editor;
+use crate::sbc::rml::rows::Rows;
 
 inventory::submit! {
     crate::sbc::panels::modal::ModalRegistration {
@@ -55,7 +57,7 @@ pub(crate) struct NewProjectDialog {
     events: Rc<RefCell<Vec<PickerEvent>>>,
     form: DialogForm<NewProjectField>,
     bound: bool,
-    map_options: Option<RmlDataOptionRows<'static>>,
+    map_options: Option<Rows<OptionRow>>,
     hidden: Option<RmlDataVariable<'static, bool>>,
     show_blank_size: Option<RmlDataVariable<'static, bool>>,
 }
@@ -82,7 +84,7 @@ impl NewProjectDialog {
     ) -> Result<(), Error> {
         // Populate the map dropdown: the blank map first, then everything the VFS
         // has an archive for.
-        let options = std::iter::once(RmlOptionRow {
+        let options = std::iter::once(OptionRow {
             value: BLANK_MAP.to_string(),
             label: "Blank".to_string(),
         })
@@ -90,7 +92,7 @@ impl NewProjectDialog {
             available_maps(interface)
                 .into_iter()
                 .filter(|map| map != BLANK_MAP)
-                .map(|map| RmlOptionRow {
+                .map(|map| OptionRow {
                     value: map.clone(),
                     label: map,
                 }),
@@ -259,7 +261,7 @@ impl Modal for NewProjectDialog {
         let data_model = interface
             .rml_ui()
             .create_data_model(context, "new_project")?;
-        self.map_options = Some(data_model.bind_option_rows("maps")?);
+        self.map_options = Some(Rows::<OptionRow>::bind(&data_model, "maps")?);
         self.hidden = Some(data_model.bind("hidden", true)?);
         self.show_blank_size = Some(data_model.bind("show_blank_size", false)?);
         self.form.prepare_data_model(&data_model)?;

@@ -8,11 +8,40 @@
 use std::any::Any;
 use std::time::{Duration, Instant};
 
-use spring_native::{prelude::Error, RmlDataNotificationRows, RmlNotificationRow};
+use spring_native::{prelude::Error, RmlFieldType, RmlPercent, RmlValueRef};
 
 use crate::sbc::command_system::model::{Model, ModelFactory};
+use crate::sbc::rml::rows::{Row, Rows};
 
 inventory::submit! { ModelFactory { make: |_iface| Box::new(NotificationManager::default()) } }
+
+#[derive(Debug, PartialEq)]
+pub(crate) struct NotificationRow {
+    pub title: String,
+    pub body: String,
+    pub warning: bool,
+    pub progress: Option<f32>,
+}
+
+impl Row for NotificationRow {
+    const FIELDS: &'static [(&'static str, RmlFieldType)] = &[
+        ("title", RmlFieldType::String),
+        ("body", RmlFieldType::String),
+        ("warning", RmlFieldType::Bool),
+        ("has_progress", RmlFieldType::Bool),
+        ("progress", RmlFieldType::Percent),
+    ];
+
+    fn values<'a>(&'a self, out: &mut Vec<RmlValueRef<'a>>) {
+        out.push(RmlValueRef::String(&self.title));
+        out.push(RmlValueRef::String(&self.body));
+        out.push(RmlValueRef::Bool(self.warning));
+        out.push(RmlValueRef::Bool(self.progress.is_some()));
+        out.push(RmlValueRef::Percent(RmlPercent(
+            self.progress.unwrap_or_default(),
+        )));
+    }
+}
 
 struct Notification {
     /// Dedup key: posting the same name updates the existing toast in place.
@@ -97,7 +126,7 @@ impl NotificationManager {
     /// The static RML template materialises the rows on the next context update.
     pub(crate) fn render(
         &mut self,
-        notification_rows: Option<&RmlDataNotificationRows<'static>>,
+        notification_rows: Option<&Rows<NotificationRow>>,
     ) -> Result<(), Error> {
         let Some(notification_rows) = notification_rows else {
             return Ok(());
@@ -143,10 +172,10 @@ impl NotificationManager {
         }
     }
 
-    fn rows(&self) -> Vec<RmlNotificationRow> {
+    fn rows(&self) -> Vec<NotificationRow> {
         self.items
             .iter()
-            .map(|item| RmlNotificationRow {
+            .map(|item| NotificationRow {
                 title: item.title.clone(),
                 body: item.body.clone(),
                 warning: item.warning,
@@ -158,8 +187,7 @@ impl NotificationManager {
 
 #[cfg(test)]
 mod tests {
-    use super::NotificationManager;
-    use spring_native::RmlNotificationRow;
+    use super::{NotificationManager, NotificationRow};
 
     #[test]
     fn progress_is_a_typed_percentage_not_rendered_markup() {
@@ -168,7 +196,7 @@ mod tests {
 
         assert_eq!(
             notifications.rows(),
-            vec![RmlNotificationRow {
+            vec![NotificationRow {
                 title: "Progress".to_string(),
                 body: "Importing heightmap...".to_string(),
                 warning: false,

@@ -8,16 +8,17 @@
 //! "Add", "Set", "Smooth", ...). Clicking one enters the matching editing state;
 //! clicking the active one leaves it.
 
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataIconRows, RmlDataModel, RmlIconRow,
+    RmlDataModel,
 };
 
+use crate::sbc::panels::rows::IconRow;
 use crate::sbc::panels::tooltip::{PanelTooltip, TooltipContent};
-use crate::sbc::rml::element_by_id;
+use crate::sbc::rml::rows::Rows;
 use crate::sbc::states::{MapBrush, StateRequest};
 
 /// An unset asset field reads as an empty string, not as an absent value.
@@ -42,12 +43,16 @@ pub(crate) struct BrushActions {
     /// Actions the current map cannot support; they render greyed and ignore clicks.
     disabled: Vec<usize>,
     disabled_tooltips: Vec<Option<String>>,
+    /// Hover text by row index, so the event handlers answer without borrowing
+    /// the strip. Refreshed whenever the rows are written.
+    hover_tooltips: Rc<RefCell<Vec<String>>>,
     clicks: Rc<RefCell<Vec<usize>>>,
     request: Option<StateRequest>,
-    tooltip: Option<PanelTooltip>,
+    tooltip: Rc<RefCell<Option<PanelTooltip>>>,
+    engine: Rc<Cell<Option<NativeInterfaceRef>>>,
     /// The action definitions are fixed for an editor, but their captions and
     /// icons still cross into RmlUi as typed values rather than generated RML.
-    rows: Option<RmlDataIconRows<'static>>,
+    rows: Option<Rows<IconRow>>,
 }
 
 impl BrushActions {
@@ -57,16 +62,18 @@ impl BrushActions {
             active: None,
             disabled: Vec::new(),
             disabled_tooltips: vec![None; actions.len()],
+            hover_tooltips: Rc::new(RefCell::new(Vec::new())),
             clicks: Rc::new(RefCell::new(Vec::new())),
             request: None,
-            tooltip: None,
+            tooltip: Rc::new(RefCell::new(None)),
+            engine: Rc::new(Cell::new(None)),
             rows: None,
         }
     }
 
     pub(crate) fn generate_rml(&self) -> String {
         r#"<div id="brush-actions" class="brush-actions">
-            <button data-for="action : brush_actions" data-if="action.visible" class="brush-action" data-class-pressed="action.pressed" data-class-disabled="action.disabled">
+            <button data-for="action : brush_actions" data-if="action.visible" class="brush-action" data-class-pressed="action.pressed" data-class-disabled="action.disabled" data-event-click="select(it_index)" data-event-mouseover="show_tooltip(it_index)" data-event-mouseout="hide_tooltip(it_index)">
                 <img data-attr-src="action.icon" class="brush-action-icon"/>
                 <span class="brush-action-label">{{ action.label }}</span>
             </button>
@@ -78,39 +85,57 @@ impl BrushActions {
         &mut self,
         model: &RmlDataModel<'static>,
     ) -> Result<(), Error> {
-        let rows = model.bind_icon_rows("brush_actions")?;
+        let rows = Rows::<IconRow>::bind(model, "brush_actions")?;
         rows.set(&self.rows_for())?;
+        self.refresh_hover_tooltips();
         self.rows = Some(rows);
+
+        let queue = self.clicks.clone();
+        Rows::<IconRow>::on_row(model, "select", move |index, _| {
+            queue.borrow_mut().push(index);
+        })?;
+        // The tooltip host and the interface are supplied after this runs, so
+        // the handlers read them at event time rather than capturing them.
+        let tooltips = self.hover_tooltips.clone();
+        let host = self.tooltip.clone();
+        let engine = self.engine.clone();
+        Rows::<IconRow>::on_row(model, "show_tooltip", move |index, _| {
+            let (Some(host), Some(iface)) = (host.borrow().clone(), engine.get()) else {
+                return;
+            };
+            if let Some(text) = tooltips.borrow().get(index) {
+                let _ = host.show(&iface, &TooltipContent::text(text));
+            }
+        })?;
+        let host = self.tooltip.clone();
+        Rows::<IconRow>::on_row(model, "hide_tooltip", move |_, _| {
+            if let Some(host) = host.borrow().as_ref() {
+                let _ = host.hide();
+            }
+        })?;
         Ok(())
     }
 
-    pub(crate) fn bind(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        document: u64,
-    ) -> Result<(), Error> {
-        for (index, action) in self.actions.iter().enumerate() {
-            let Some(button) = self.button(interface, document, index) else {
-                continue;
-            };
-            let tooltip = self.disabled_tooltips[index]
-                .as_deref()
-                .unwrap_or(action.caption);
-            if let Some(tooltip_host) = &self.tooltip {
-                tooltip_host.bind_to(interface, button, TooltipContent::text(tooltip))?;
-            }
-            let queue = self.clicks.clone();
-            interface
-                .rml_ui()
-                .element_add_event_listener(button, "click", false, move || {
-                    queue.borrow_mut().push(index);
-                })?;
-        }
-        Ok(())
+    fn refresh_hover_tooltips(&self) {
+        *self.hover_tooltips.borrow_mut() = self
+            .actions
+            .iter()
+            .enumerate()
+            .map(|(index, action)| {
+                self.disabled_tooltips[index]
+                    .as_deref()
+                    .unwrap_or(action.caption)
+                    .to_owned()
+            })
+            .collect();
     }
 
     pub(crate) fn set_tooltip_host(&mut self, tooltip: PanelTooltip) {
-        self.tooltip = Some(tooltip);
+        *self.tooltip.borrow_mut() = Some(tooltip);
+    }
+
+    pub(crate) fn set_engine(&self, interface: &NativeInterfaceRef) {
+        self.engine.set(Some(*interface));
     }
 
     /// Handle queued clicks. Brush buttons choose a tool; clicking the current
@@ -183,16 +208,17 @@ impl BrushActions {
     }
 
     fn render(&self) {
+        self.refresh_hover_tooltips();
         if let Some(rows) = &self.rows {
             let _ = rows.set(&self.rows_for());
         }
     }
 
-    fn rows_for(&self) -> Vec<RmlIconRow> {
+    fn rows_for(&self) -> Vec<IconRow> {
         self.actions
             .iter()
             .enumerate()
-            .map(|(index, action)| RmlIconRow {
+            .map(|(index, action)| IconRow {
                 label: action.caption.to_owned(),
                 icon: action.image.to_owned(),
                 tooltip: action.caption.to_owned(),
@@ -200,17 +226,5 @@ impl BrushActions {
                 disabled: self.disabled.contains(&index),
             })
             .collect()
-    }
-
-    /// Rows are materialised by the editor's one rebuild-time context update,
-    /// before action listeners bind. Indexing the fixed action definition list
-    /// keeps these implementation details out of generated ids and markup.
-    fn button(&self, interface: &NativeInterfaceRef, document: u64, index: usize) -> Option<u64> {
-        let host = element_by_id(interface, document, "brush-actions")?;
-        let (button, exists) = interface
-            .rml_ui()
-            .element_get_child(host, index as i32)
-            .ok()?;
-        exists.then_some(button)
     }
 }

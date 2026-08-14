@@ -224,17 +224,6 @@ MISC_INFO_FIELDS: Final = (
     ((250, 207 + ROW * 2), "2.5"),
     ((250, 207 + ROW * 3), "Native UI"),
 )
-# Rows inside the team-edit dialog: Metal/Storage, then (after the Energy
-# section) Energy/Storage, Colour, Start X/Z at the shared row pitch. The
-# dialog's halves sit at x=120 and x=390.
-TEAM_NUMBERS: Final = (
-    ((120, 345), "125"),
-    ((390, 345), "500"),
-    ((120, 408), "250"),
-    ((390, 408), "750"),
-    ((120, 408 + ROW * 2), "100"),
-    ((390, 408 + ROW * 2), "200"),
-)
 # The shell action toolbar is a fixed nine-icon row.  Keep the action names
 # here, rather than making tests infer an icon's position from its ordinal: the
 # action order is UI presentation, while e2e scenarios care about the command

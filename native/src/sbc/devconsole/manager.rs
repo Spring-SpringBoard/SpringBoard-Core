@@ -146,8 +146,7 @@ impl DevConsoleManager {
                 .render_line_count(&self.console.count_text(self.problems_only))?;
             self.dirty = false;
         }
-        self.render_status(models)?;
-        self.view.update(&self.interface)
+        self.render_status(models)
     }
 
     /// Called by SBC once a command has actually crossed the native bridge.

@@ -2,6 +2,8 @@
 
 use spring_native::prelude::NativeInterfaceRef;
 
+pub(crate) mod rows;
+
 /// Whether `context` is still the live context registered under `name`.
 ///
 /// `luaui reload` runs `RmlGui::Shutdown()` → `Rml::Shutdown()`, which destroys

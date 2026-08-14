@@ -1,6 +1,6 @@
 """Misc domain scenarios and the Teams interaction contract."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from e2e.driver.timing import Delay
 from e2e.driver.utils.models import CommandValue, string_starts_with
@@ -11,7 +11,6 @@ from .helpers.geometry import (
     MISC,
     TAB_X,
     TAB_Y,
-    TEAM_NUMBERS,
     dialog_point,
     editor_point,
     panel_left,
@@ -21,6 +20,16 @@ from .helpers.registry import scenario
 
 if TYPE_CHECKING:
     from e2e.driver.state import RunState
+
+# The numeric half of the team-edit modal, by field name.
+TEAM_VALUES: Final[dict[str, float]] = {
+    "teamMetal": 125.0,
+    "teamMetalMax": 500.0,
+    "teamEnergy": 250.0,
+    "teamEnergyMax": 750.0,
+    "teamStartX": 100.0,
+    "teamStartZ": 200.0,
+}
 
 
 @scenario()
@@ -49,9 +58,10 @@ def info_panel(run_state: "RunState") -> None:
 def teams_panel(run_state: "RunState") -> None:
     """Team-row and edit-dialog interaction.
 
-    Team add/select/edit is deliberately still X11 coverage until the control
-    API grows a typed team-domain handle.  It is not a model for editor-domain
-    tests: the test's contract is the row/modal interaction itself.
+    The row and modal interaction is the contract, so opening, editing and
+    closing stay X11 coverage.  The values inside the modal are ordinary editor
+    fields, so they are set through the control channel: clicking them meant
+    hardcoding a pixel per row, which a layout edit silently invalidates.
     """
     run_state.focus()
     left = panel_left(run_state)
@@ -72,10 +82,10 @@ def teams_panel(run_state: "RunState") -> None:
     run_state.key("ctrl+a", delay=Delay.INPUT)
     run_state.type_text("Blue Team")
     run_state.click(*dialog_point(run_state, DIALOG["team_ai"]), delay=Delay.CONTROL)
-    for point, value in TEAM_NUMBERS:
-        run_state.click(*dialog_point(run_state, point), delay=Delay.INPUT)
-        run_state.key("ctrl+a", delay=Delay.INPUT)
-        run_state.type_text(value)
+    teams = run_state.control.editor("teamsView")
+    for field, value in TEAM_VALUES.items():
+        teams.set(field, value)
+    assert {field: teams.get(field) for field in TEAM_VALUES} == TEAM_VALUES
     run_state.click(*dialog_point(run_state, DIALOG["team_color"]), delay=Delay.FRAME)
     run_state.screenshot_root("team-color-picker-open")
     run_state.click(*dialog_point(run_state, COLOR_PICKER["team_hue"]), delay=Delay.CONTROL)
@@ -107,11 +117,18 @@ def _team_update_matches(value: CommandValue) -> bool:
         return False
     color = value.get("color")
     red = color.get("r") if isinstance(color, dict) else None
+    start = value.get("startPos")
+    if not isinstance(start, dict):
+        return False
     return (
         value.get("name") == "Blue Team"
         and value.get("ai") is True
-        and value.get("metal") == 125.0
-        and value.get("energyMax") == 750.0
+        and value.get("metal") == TEAM_VALUES["teamMetal"]
+        and value.get("metalMax") == TEAM_VALUES["teamMetalMax"]
+        and value.get("energy") == TEAM_VALUES["teamEnergy"]
+        and value.get("energyMax") == TEAM_VALUES["teamEnergyMax"]
+        and start.get("x") == TEAM_VALUES["teamStartX"]
+        and start.get("z") == TEAM_VALUES["teamStartZ"]
         and isinstance(red, int | float)
         and red > 0.2
     )

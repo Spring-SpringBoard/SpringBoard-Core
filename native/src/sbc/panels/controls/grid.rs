@@ -13,10 +13,12 @@ use std::rc::Rc;
 
 use spring_native::{
     prelude::{Error, NativeInterfaceRef},
-    RmlDataGridRows, RmlDataModel, RmlDataVariable,
+    RmlDataModel, RmlDataVariable,
 };
 
+use crate::sbc::panels::controls::grid::render::GridRow;
 use crate::sbc::panels::tooltip::{PanelTooltip, TooltipContent};
+use crate::sbc::rml::rows::Rows;
 use crate::sbc::vfs::{join_entry, leaf, normalize_extensions, vfs_files};
 
 mod render;
@@ -41,7 +43,12 @@ pub(crate) struct GridItem {
     pub tooltip_content: Option<TooltipContent>,
 }
 
-pub(crate) type ClickQueue = Rc<RefCell<Vec<String>>>;
+/// Row indices queued by `data-event-click`, resolved to item ids on drain.
+pub(crate) type ClickQueue = Rc<RefCell<Vec<usize>>>;
+
+/// Hover text by row index, so the event handlers can answer immediately
+/// without borrowing the grid's items.
+pub(crate) type CellTooltips = Rc<RefCell<Vec<Option<TooltipContent>>>>;
 
 #[derive(Debug, Clone)]
 struct GridNavigation {
@@ -64,6 +71,7 @@ pub(crate) struct GridView {
     items: Vec<GridItem>,
     selected: Option<String>,
     clicks: ClickQueue,
+    cell_tooltips: CellTooltips,
     item_size: u32,
     navigation: Option<GridNavigation>,
     /// The navigation breadcrumb belongs to the surrounding screen's model.
@@ -76,14 +84,16 @@ pub(crate) struct GridView {
     /// together as typed data instead of through DOM attributes.
     /// It becomes invalid with its document, so `render` recreates it after a
     /// panel reload.
-    rows: Option<RmlDataGridRows<'static>>,
+    rows: Option<Rows<GridRow>>,
     /// The context that owns `rows`' data model. Unlike document elements,
     /// RmlUi data models survive an editor object being dropped, so an editor
     /// replacement must explicitly release it.
     model_context: Option<u64>,
     bound_document: Option<u64>,
     items_dirty: bool,
-    tooltip: Option<PanelTooltip>,
+    /// Supplied after the data model is created, so the event handlers read it
+    /// at event time rather than capturing it.
+    tooltip: Rc<RefCell<Option<PanelTooltip>>>,
 }
 
 impl GridView {
@@ -93,6 +103,7 @@ impl GridView {
             items: Vec::new(),
             selected: None,
             clicks: Rc::new(RefCell::new(Vec::new())),
+            cell_tooltips: Rc::new(RefCell::new(Vec::new())),
             item_size,
             navigation: None,
             navigation_path: None,
@@ -101,7 +112,7 @@ impl GridView {
             model_context: None,
             bound_document: None,
             items_dirty: true,
-            tooltip: None,
+            tooltip: Rc::new(RefCell::new(None)),
         }
     }
 
@@ -122,13 +133,17 @@ impl GridView {
     }
 
     pub(crate) fn set_tooltip_host(&mut self, tooltip: PanelTooltip) {
-        self.tooltip = Some(tooltip);
+        *self.tooltip.borrow_mut() = Some(tooltip);
     }
 
     /// Clicks queued since the last drain. Handle them outside the RmlUi event
     /// dispatch: acting immediately would free the element being dispatched to.
     pub(crate) fn drain_clicks(&self) -> Vec<String> {
-        self.clicks.borrow_mut().drain(..).collect()
+        self.clicks
+            .borrow_mut()
+            .drain(..)
+            .filter_map(|index| self.items.get(index).map(|item| item.id.clone()))
+            .collect()
     }
 
     /// Browse assets through their pack location, initially `core/`. The

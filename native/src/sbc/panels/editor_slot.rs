@@ -20,6 +20,9 @@ pub(crate) struct EditorSlot {
     /// The open editor's markup has not been generated yet; it is built after
     /// the first refresh, since a model-backed editor has no fields before it.
     needs_rebuild: bool,
+    /// A rebuild wrote new markup whose `data-for` rows the engine has not
+    /// materialised yet. Listeners can only attach from the next frame on.
+    needs_field_bind: bool,
     /// Whether the editor state was Default on the previous panel update.
     /// Action strips must clear only when an active editing state *returns* to
     /// Default (normally Escape), not merely because no definition has been
@@ -38,6 +41,7 @@ impl Default for EditorSlot {
             name: None,
             needs_refresh: false,
             needs_rebuild: false,
+            needs_field_bind: false,
             state_was_default: true,
             field_model_context: None,
         }
@@ -152,6 +156,10 @@ impl EditorSlot {
         input: &PanelInput,
         models: &mut Models,
     ) -> Result<(), Error> {
+        if self.needs_field_bind {
+            self.needs_field_bind = false;
+            self.bind_fields(interface, view, input)?;
+        }
         if !self.needs_refresh {
             return Ok(());
         }
@@ -160,7 +168,7 @@ impl EditorSlot {
         }
         if self.needs_rebuild {
             self.needs_rebuild = false;
-            self.rebuild(interface, view, input)?;
+            self.rebuild(interface, view)?;
         }
         self.write_field_values(interface);
         self.needs_refresh = false;
@@ -207,12 +215,7 @@ impl EditorSlot {
         }
     }
 
-    fn rebuild(
-        &mut self,
-        interface: &NativeInterfaceRef,
-        view: &PanelView,
-        input: &PanelInput,
-    ) -> Result<(), Error> {
+    fn rebuild(&mut self, interface: &NativeInterfaceRef, view: &PanelView) -> Result<(), Error> {
         let Some(content) = view.content_handle() else {
             return Ok(());
         };
@@ -248,11 +251,20 @@ impl EditorSlot {
             content,
             &format!(r#"<div data-model="{EDITOR_FIELDS_MODEL}">{body}</div>"#),
         )?;
-        // `data-for` rows materialise during the context update. Do that once
-        // at rebuild time so an editor can attach listeners to its typed rows
-        // without falling back to generated IDs or markup.
-        rml.context_update(context)?;
+        self.needs_field_bind = true;
+        self.needs_refresh = true;
+        Ok(())
+    }
 
+    fn bind_fields(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        view: &PanelView,
+        input: &PanelInput,
+    ) -> Result<(), Error> {
+        let Some(document) = view.document_handle() else {
+            return Ok(());
+        };
         if let Some(ed) = self.editor.as_mut() {
             ed.set_tooltip_host(view.tooltip().expect("panel tooltip is bound").clone());
             ed.bind_fields(interface, document, input.changes(), input.interactions())?;
