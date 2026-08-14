@@ -134,7 +134,7 @@ pub(crate) struct DevConsoleView {
     /// position from someone reading older edits.
     rendered_command_log: Option<Vec<HistoryCommand>>,
     hidden: Option<RmlDataVariable<'static, bool>>,
-    toolbar_pressed: [Option<RmlDataVariable<'static, bool>>; 10],
+    toolbar_pressed: Vec<(Action, RmlDataVariable<'static, bool>)>,
     log: Option<u64>,
     actions: ActionQueue,
     status_actions: StatusActionQueue,
@@ -189,7 +189,7 @@ impl Default for DevConsoleView {
             log_rows: None,
             rendered_command_log: None,
             hidden: None,
-            toolbar_pressed: [None; 10],
+            toolbar_pressed: Vec::new(),
             log: None,
             actions: Rc::new(RefCell::new(Vec::new())),
             status_actions: Rc::new(RefCell::new(Vec::new())),
@@ -283,8 +283,11 @@ impl DevConsoleView {
             queue.borrow_mut().push(SelectionEvent::Extend(index));
         })?;
         self.hidden = Some(data_model.bind("hidden", !self.visible)?);
-        for (index, action) in Action::ALL.iter().copied().enumerate() {
-            self.toolbar_pressed[index] = Some(data_model.bind(action.pressed_binding(), false)?);
+        for action in Action::ALL {
+            if let Some(binding) = action.pressed_binding() {
+                self.toolbar_pressed
+                    .push((action, data_model.bind(binding, false)?));
+            }
         }
 
         let (doc, ok) = rml.context_create_document(ctx, "body")?;
@@ -293,7 +296,7 @@ impl DevConsoleView {
             self.line_count = None;
             self.log_rows = None;
             self.hidden = None;
-            self.toolbar_pressed = [None; 10];
+            self.toolbar_pressed.clear();
             return Ok(false);
         }
         rml.document_set_title(doc, "Developer Console")?;
@@ -407,13 +410,8 @@ impl DevConsoleView {
         state: ToggleState,
     ) -> Result<(), Error> {
         let _ = interface;
-        for (index, action) in Action::ALL.iter().copied().enumerate() {
-            if !action.is_toggle() {
-                continue;
-            }
-            if let Some(pressed) = &self.toolbar_pressed[index] {
-                pressed.set(state.is_pressed(action))?;
-            }
+        for (action, pressed) in &self.toolbar_pressed {
+            pressed.set(state.is_pressed(*action))?;
         }
         Ok(())
     }
@@ -433,7 +431,7 @@ impl DevConsoleView {
         self.line_count = None;
         self.log_rows = None;
         self.hidden = None;
-        self.toolbar_pressed = [None; 10];
+        self.toolbar_pressed.clear();
         self.rendered_command_log = None;
         self.log = None;
         self.actions.borrow_mut().clear();
@@ -461,7 +459,7 @@ impl DevConsoleView {
         self.line_count = None;
         self.log_rows = None;
         self.hidden = None;
-        self.toolbar_pressed = [None; 10];
+        self.toolbar_pressed.clear();
         if let Some(doc) = self.document.take() {
             let _ = rml.document_close(doc);
         }

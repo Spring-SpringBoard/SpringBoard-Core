@@ -48,27 +48,20 @@ impl Action {
         }
     }
 
-    /// Toggles render pressed when their state is on.
-    pub(crate) fn is_toggle(self) -> bool {
-        !matches!(
-            self,
-            Action::Clear | Action::Restart | Action::ReloadLuaUi | Action::ReloadLuaRules
-        )
-    }
-
-    pub(crate) fn pressed_binding(self) -> &'static str {
-        match self {
-            Action::Clear => "toolbar_clear_pressed",
+    /// The binding a toggle renders its pressed state through. A command
+    /// button has no such state, and its markup binds nothing.
+    pub(crate) fn pressed_binding(self) -> Option<&'static str> {
+        Some(match self {
+            Action::Clear | Action::Restart | Action::ReloadLuaUi | Action::ReloadLuaRules => {
+                return None
+            }
             Action::FilterProblems => "toolbar_filter_problems_pressed",
-            Action::Restart => "toolbar_restart_pressed",
-            Action::ReloadLuaUi => "toolbar_reload_luaui_pressed",
-            Action::ReloadLuaRules => "toolbar_reload_luarules_pressed",
             Action::ToggleCheating => "toolbar_cheating_pressed",
             Action::ToggleGlobalLos => "toolbar_global_los_pressed",
             Action::ToggleGodMode => "toolbar_god_mode_pressed",
             Action::TogglePopupOnError => "toolbar_popup_on_error_pressed",
             Action::ToggleVisibility => "toolbar_visibility_pressed",
-        }
+        })
     }
 }
 
