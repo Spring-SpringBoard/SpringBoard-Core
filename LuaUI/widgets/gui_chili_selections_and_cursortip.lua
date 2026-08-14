@@ -2397,7 +2397,8 @@ function widget:ViewResize(vsx, vsy)
 end
 
 function widget:Initialize()
-    if Spring.GetGameRulesParam("sb_gameMode") == "play" then
+    if Spring.GetGameRulesParam("sb_gameMode") == "play"
+		or Spring.GetGameRulesParam("sb_ui") ~= "chili" then
 		widgetHandler:RemoveWidget(widget)
 		return
     end

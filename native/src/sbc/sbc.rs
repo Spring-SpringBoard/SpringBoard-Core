@@ -33,6 +33,7 @@ impl NativeModule for SBC {
     fn new(interface: NativeInterfaceRef) -> Self {
         super::log::init(interface);
         info!("SBC logging enabled");
+        super::rml::setup(&interface);
 
         SBC {
             interface,

@@ -196,17 +196,13 @@ impl ObjectHandler for UnitModel {
     fn remove(&mut self, model_id: i32) -> Option<ObjectData> {
         let data = self.read(model_id)?;
         let spring_id = self.ids.spring_id(model_id)?;
-        let _ = self
-            .interface
-            .synced_ctrl()
-            .unit()
-            .destroy_unit(
-                spring_id,
-                spring_native::DestroyUnitOptions {
-                    reclaimed: true,
-                    ..Default::default()
-                },
-            );
+        let _ = self.interface.synced_ctrl().unit().destroy_unit(
+            spring_id,
+            spring_native::DestroyUnitOptions {
+                reclaimed: true,
+                ..Default::default()
+            },
+        );
         self.ids.unregister(spring_id);
         self.events.push(ObjectEvent::Removed {
             kind: ObjectKind::Unit,

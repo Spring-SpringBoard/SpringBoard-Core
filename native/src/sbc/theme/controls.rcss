@@ -1,0 +1,61 @@
+.theme-toggle {
+  background-color: #212528;
+  color: #cfd4db;
+  border-left-color: #2e2f32;
+}
+
+.theme-toggle:hover {
+  background-color: #2a2e32;
+  color: #e1e5eb;
+  border-left-color: #4a4d52;
+}
+
+.theme-toggle.pressed {
+  background-color: #18241b;
+  color: #79e68c;
+  border-left-color: #397848;
+}
+
+.theme-toggle.pressed:hover {
+  background-color: #1f3425;
+  color: #9efca6;
+  border-left-color: #5fc878;
+}
+
+.theme-toggle--form:hover {
+  border-color: #4a4d52;
+  border-left-color: #4a4d52;
+}
+
+.theme-toggle-switch {
+  position: relative;
+  width: 34dp;
+  height: 18dp;
+  flex-shrink: 0;
+  background-color: #101315;
+  border: 1dp #78838d;
+  border-radius: 4dp;
+  box-sizing: border-box;
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  left: 1dp;
+  top: 1dp;
+  width: 14dp;
+  height: 14dp;
+  background-color: #9aa4ad;
+  border: 1dp #c1c9d0;
+  border-radius: 3dp;
+  box-sizing: border-box;
+}
+
+.theme-toggle.pressed .theme-toggle-switch {
+  background-color: #285b35;
+  border-color: #73d487;
+}
+
+.theme-toggle.pressed .theme-toggle-thumb {
+  left: 17dp;
+  background-color: #a5f6b2;
+}

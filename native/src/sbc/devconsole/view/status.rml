@@ -1,0 +1,27 @@
+<div id="editor-status" data-model="editor_status">
+	<div id="status-info" class="theme-surface-muted theme-framed">
+		<div id="status-position" class="status-line">{{ position }}</div>
+		<div id="status-performance" class="status-line">
+			<span class="status-metric" data-class-normal="fps_normal" data-class-healthy="fps_healthy" data-class-warning="fps_warning" data-class-critical="fps_critical"><span class="metric-label">FPS</span><span class="metric-value">{{ fps }}</span></span>
+			<span class="status-metric" data-class-normal="process_cpu_normal" data-class-healthy="process_cpu_healthy" data-class-warning="process_cpu_warning" data-class-critical="process_cpu_critical"><span class="metric-label">Process CPU</span><span class="metric-value">{{ process_cpu }}</span></span>
+			<span class="status-metric" data-class-normal="system_cpu_normal" data-class-healthy="system_cpu_healthy" data-class-warning="system_cpu_warning" data-class-critical="system_cpu_critical"><span class="metric-label">System CPU</span><span class="metric-value">{{ system_cpu }}</span></span>
+		</div>
+		<div id="status-system" class="status-line">
+			<span class="status-metric" data-class-normal="lua_memory_normal" data-class-healthy="lua_memory_healthy" data-class-warning="lua_memory_warning" data-class-critical="lua_memory_critical"><span class="metric-label">Lua</span><span class="metric-value">{{ lua_memory }}</span></span>
+			<span class="status-metric" data-class-normal="vram_normal" data-class-healthy="vram_healthy" data-class-warning="vram_warning" data-class-critical="vram_critical"><span class="metric-label">VRAM</span><span class="metric-value">{{ vram }}</span></span>
+			<span class="status-metric" data-class-normal="ram_normal" data-class-healthy="ram_healthy" data-class-warning="ram_warning" data-class-critical="ram_critical"><span class="metric-label">RAM</span><span class="metric-value">{{ ram }}</span></span>
+			<span class="status-metric" data-class-normal="process_memory_normal" data-class-healthy="process_memory_healthy" data-class-warning="process_memory_warning" data-class-critical="process_memory_critical"><span class="metric-label">Process RAM</span><span class="metric-value">{{ process_memory }}</span></span>
+		</div>
+		<div id="status-version" class="status-line">{{ version }}</div>
+	</div>
+	<div id="command-status" class="theme-surface-muted theme-framed">
+		<div id="command-toolbar" class="command-toolbar">
+			<button id="status-undo" class="status-icon-button" data-class-disabled="undo_disabled" title="Undo (Ctrl+Z)"><img src="LuaUI/images/scenedit/anticlockwise-rotation.png"/></button>
+			<button id="status-redo" class="status-icon-button" data-class-disabled="redo_disabled" title="Redo (Ctrl+Y)"><img src="LuaUI/images/scenedit/clockwise-rotation.png"/></button>
+			<button id="status-clear" class="status-icon-button" data-class-disabled="clear_history_disabled" title="Clear undo-redo stack"><img src="LuaUI/images/scenedit/cancel.png"/></button>
+		</div>
+		<div id="command-list" class="command-list theme-inset">
+			<div data-for="command : command_history" data-if="command.visible" class="command-item" data-class-undone="command.muted">{{ command.text }}</div>
+		</div>
+	</div>
+</div>

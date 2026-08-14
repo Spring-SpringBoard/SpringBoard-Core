@@ -32,7 +32,8 @@ impl EventDispatcher {
         level: i32,
     ) -> Result<bool, Error> {
         for index in self.indices(Event::AddConsoleLine) {
-            let handled = self.listeners[index].add_console_line(models, message, section, level)?;
+            let handled =
+                self.listeners[index].add_console_line(models, message, section, level)?;
             if handled {
                 return Ok(true);
             }
@@ -63,14 +64,24 @@ impl EventDispatcher {
         }
     }
 
-    pub(crate) fn draw_screen(&mut self, models: &mut Models, view_size_x: i32, view_size_y: i32) -> Result<(), Error> {
+    pub(crate) fn draw_screen(
+        &mut self,
+        models: &mut Models,
+        view_size_x: i32,
+        view_size_y: i32,
+    ) -> Result<(), Error> {
         for index in self.indices(Event::DrawScreen) {
             self.listeners[index].draw_screen(models, view_size_x, view_size_y)?;
         }
         Ok(())
     }
 
-    pub(crate) fn draw_screen_post(&mut self, models: &mut Models, view_size_x: i32, view_size_y: i32) -> Result<(), Error> {
+    pub(crate) fn draw_screen_post(
+        &mut self,
+        models: &mut Models,
+        view_size_x: i32,
+        view_size_y: i32,
+    ) -> Result<(), Error> {
         for index in self.indices(Event::DrawScreenPost) {
             self.listeners[index].draw_screen_post(models, view_size_x, view_size_y)?;
         }
@@ -102,8 +113,9 @@ impl EventDispatcher {
         mods: KeyMods,
     ) -> Result<bool, Error> {
         for index in self.indices(Event::KeyPress) {
-            let handled =
-                self.listeners[index].key_press(models, key_code, scan_code, is_repeat, label, utf32_char, mods)?;
+            let handled = self.listeners[index].key_press(
+                models, key_code, scan_code, is_repeat, label, utf32_char, mods,
+            )?;
             if handled {
                 return Ok(true);
             }
@@ -121,7 +133,8 @@ impl EventDispatcher {
         mods: KeyMods,
     ) -> Result<bool, Error> {
         for index in self.indices(Event::KeyRelease) {
-            let handled = self.listeners[index].key_release(models, key_code, scan_code, label, utf32_char, mods)?;
+            let handled = self.listeners[index]
+                .key_release(models, key_code, scan_code, label, utf32_char, mods)?;
             if handled {
                 return Ok(true);
             }
@@ -193,7 +206,8 @@ impl EventDispatcher {
 
     pub(crate) fn take_commands(&mut self, models: &mut Models) -> Vec<Box<dyn Command>> {
         for listener in &mut self.listeners {
-            self.pending_commands.extend(listener.drain_commands(models));
+            self.pending_commands
+                .extend(listener.drain_commands(models));
         }
         std::mem::take(&mut self.pending_commands)
     }

@@ -1,0 +1,256 @@
+body {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+#dev-console {
+  position: absolute;
+  left: 0dp;
+  right: 500dp;
+  bottom: 92dp;
+  height: 300dp;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+}
+
+#dev-console.hidden {
+  display: none;
+}
+
+#editor-status {
+  position: absolute;
+  left: 0dp;
+  right: 500dp;
+  bottom: 0dp;
+  height: 92dp;
+  display: flex;
+  flex-direction: row;
+  pointer-events: auto;
+  font-size: 13dp;
+  background-color: transparent;
+}
+
+#status-info {
+  width: 60%;
+  box-sizing: border-box;
+  padding: 5dp;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.status-line {
+  padding: 2dp 5dp;
+  min-height: 15dp;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.status-metric {
+  display: inline-block;
+  min-width: 146dp;
+  margin-right: 8dp;
+  white-space: nowrap;
+}
+
+.metric-label {
+  color: #8fa0af;
+  margin-right: 4dp;
+}
+
+.metric-value {
+  color: #e8eef4;
+}
+.status-metric.healthy .metric-value {
+  color: #7ed99a;
+}
+.status-metric.warning .metric-value {
+  color: #efc96a;
+}
+.status-metric.critical .metric-value {
+  color: #f07979;
+}
+
+#command-status {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0dp;
+  box-sizing: border-box;
+  padding: 5dp;
+}
+
+.command-toolbar {
+  position: absolute;
+  right: 255dp;
+  top: 18dp;
+  display: flex;
+  flex-direction: row;
+  gap: 10dp;
+  align-items: center;
+}
+
+.status-icon-button {
+  width: 34dp;
+  min-width: 34dp;
+  max-width: 34dp;
+  height: 34dp;
+  padding: 5dp;
+  background-color: #22272b;
+  border: 1dp #4b545d;
+  border-radius: 3dp;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-icon-button:hover {
+  background-color: #303940;
+  border-color: #74818d;
+}
+.status-icon-button img {
+  width: 19dp;
+  height: 19dp;
+}
+.status-icon-button.disabled {
+  opacity: 0.35;
+  border-color: #000000;
+}
+
+.command-list {
+  position: absolute;
+  right: 5dp;
+  top: 5dp;
+  width: 240dp;
+  bottom: 5dp;
+  overflow-y: auto;
+  padding: 5dp;
+  display: flex;
+  flex-direction: column;
+  gap: 2dp;
+}
+
+.command-item {
+  padding: 4dp 5dp;
+  background-color: #222222;
+  color: #c8d0e0;
+  display: block;
+  min-height: 17dp;
+}
+
+.command-item.undone {
+  color: #81909b;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  gap: 8dp;
+  align-items: baseline;
+  padding: 4dp 8dp;
+}
+
+.header .title {
+  font-size: 18dp;
+  font-weight: bold;
+  color: #eef1ff;
+}
+
+.error-count {
+  font-size: 13dp;
+  color: #f2686c;
+}
+
+.line-count {
+  font-size: 12dp;
+  color: #8f9aae;
+}
+
+.log-container {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4dp 8dp;
+  font-size: 13dp;
+}
+
+.log-line {
+  display: block;
+  white-space: pre-wrap;
+  padding: 1dp 0dp;
+}
+
+.log-line.severity-info {
+  color: #c8d0e0;
+}
+
+.log-line.severity-warning {
+  color: #e8c46a;
+}
+
+.log-line.severity-error {
+  color: #f2686c;
+}
+
+.log-line.selected {
+  background-color: #335f78;
+  color: #ffffff;
+}
+
+.toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 5dp;
+  padding: 7dp 8dp;
+  border-top-width: 1dp;
+  border-top-color: #000000;
+}
+
+.toolbar button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34dp;
+  height: 34dp;
+  padding: 6dp 12dp;
+  box-sizing: border-box;
+  text-align: center;
+  letter-spacing: 0.05em;
+  font-size: 13dp;
+  color: #c8d0e0;
+  background-color: #1c1d20;
+  border-width: 1dp;
+  border-color: #2a2b2e;
+  border-radius: 2dp;
+}
+
+.toolbar button:hover {
+  background-color: #2a2b2e;
+  color: #d4d8df;
+}
+
+.toolbar button.toggle {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9dp;
+  padding: 6dp 12dp;
+  border-left-width: 6dp;
+  border-radius: 5dp;
+  font-weight: bold;
+}
+
+.command-label {
+  display: block;
+  text-align: center;
+}
+
+.toggle-label {
+  flex: 1 1 auto;
+}

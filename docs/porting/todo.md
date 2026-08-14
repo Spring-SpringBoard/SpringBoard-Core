@@ -381,3 +381,113 @@ The command part is particularly low level and doesn't belong here imo.
 
 I wonder if events could also be simplified or just done better, so we don't have to register ALL events & dispatch them manually.
 Some sort of codegen could help.
+
+## 17. Dev console log render: don't rebuild all rows every dirty frame
+
+`LogPanel::render()` rebuilds the entire `Vec<RmlLogRow>` from all lines whenever
+`dirty` is true. The common case is "one new line arrived" — cloning and clamping
+thousands of strings to append one row is wasteful. Needs benchmarking first to
+confirm it's actually a problem at real line counts, then consider incremental
+append (track `rendered_count`, only push the delta).
+
+## 18. Consider removing models.get() from various event listeners
+
+Particularly nasty to see ConsoleController implement a Model.. even though there's a ConsoleModel which does not.
+
+## 19. Proper enum return for trace_screen_ray
+
+The hit_type here is current an int, making it difficult to use:
+```rs
+let (hit_type, _hit_id, coords) = interface.camera().trace_screen_ray(x, y, options.into())?;
+```
+
+# 20. Purge/consolidate unit testing
+
+Some files have unit testing inside them, at the end. Personally think it hurts readability and makes the file larger than it needs be.
+Also not sure unit tests really catch anything useful, it's usually very simple things that are tested.
+IMO: Either move it to separate files, ideally in separate dirs or remove it.
+
+
+# 21. Step-down for private structs
+
+Private structs should be below private ones. Needs a lint-rule and application project wide
+
+# 22. Unify UI creatin for the future framework cleanup
+
+See 23. This is our goal in terms of developer experience.
+However, before we get that, we should unify all rmlui, to ensure it follows the same pattern, and that there is indeed a pattern to begin with.
+After unifying rmlui, we can then create a framework and apply it almost mechanically.
+
+# 23. Some macro/magic for binding UI
+
+Currently a lot of work, mostly boilerplate, goes into binding to rmlui.
+
+You have to do the following:
+- Create context
+- Bind fields
+- Create document
+- Attach listeners
+
+This should _probably_ be doable declaratively, there's very little unique stuff to do here, it's almost always mechanical.
+Even if you don't automagically scan .rml/rcss and various Rust files, you could declare things by specifying .ui, .rcss, and saying which variables you want it to bind to, and the framework should do the rest.
+
+likewise for setting up those listeners & draining the queue. It's quite convoluted at the per-UI level, lots of Rc+RefCell convoluted code to consume clicks
+
+# 24. 0 radius & reclaim time, right or wrong?
+
+    // A def may carry zero radius/height/reclaimTime, which the engine refuses
+    // and clamps, so only the state after one replay is a fixed point.
+    let before = replay_objects(ctx, &model_ids)?;
+    let replayed = replay_objects(ctx, &model_ids)?;
+    assert_objects_eq("full feature object replay", &before, &replayed)?;
+
+see test_set_params.rs and relevant engine clamping.
+The concern (https://github.com/beyond-all-reason/RecoilEngine/pull/3193#pullrequestreview-4905525942) was that it might crash reclaim time, or cause some draw issues,
+but I'm not again considering the possibility that this might have been right, if certain features are actually serialized like this to begin with: are geovents 0 radius & 0 reclaimtime by default?
+
+# 25. devconsole cleanup hacky noise suppression in session.rs
+
+session.rs has this:
+```rs
+// TODO: Cleanup this hack. Probably added to suppress some kind of noise.
+fn show_console_line(message: &str) -> bool {
+    !message.contains("[CAS::GASCB] Archive file=")
+}
+```
+
+probably added at one point to suppress spammy code, but ideally we shouldn't be doing thi
+
+# 26. text selection & manipulation belongs to rmlui and not specific UI
+
+devconsole does this:
+
+```rs
+  pub fn key_press(&mut self, key_code: i32, mods: KeyMods) -> Result<bool, Error> {
+      self.note_key_press(key_code);
+      if !self.enabled || !self.view.is_ready() {
+          return Ok(false);
+      }
+      if is_key(&self.interface, key_code, "f8") {
+          let visible = !self.view.visible();
+          self.view.set_visible(&self.interface, visible)?;
+          self.refresh_toggles()?;
+          return Ok(true);
+      }
+      if !self.view.visible() {
+          return Ok(false);
+      }
+      let ctrl = self.ctrl_held(mods);
+      if ctrl && is_key(&self.interface, key_code, "a") {
+          self.view.select_all(self.model.rendered_count());
+          self.model.mark_dirty();
+          return Ok(true);
+      }
+      if ctrl && is_key(&self.interface, key_code, "c") {
+          self.copy_selection();
+          return Ok(true);
+      }
+      Ok(false)
+  }
+  ```
+
+  realistically, most of it is stuff (at least bottom with selection and copy) that rmlui/engine should be doing, and not per UI components

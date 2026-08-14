@@ -1,0 +1,38 @@
+scrollbarhorizontal,
+scrollbarhorizontal slidertrack,
+scrollbarhorizontal sliderbar,
+scrollbarhorizontal sliderarrowdec,
+scrollbarhorizontal sliderarrowinc {
+  display: none;
+}
+
+scrollbarvertical {
+  width: 10dp;
+  background-color: #151b20d9;
+}
+
+scrollbarvertical sliderarrowdec,
+scrollbarvertical sliderarrowinc {
+  width: 0dp;
+  height: 0dp;
+}
+
+scrollbarvertical slidertrack {
+  margin-left: 2dp;
+  width: 6dp;
+  background-color: #152638;
+}
+
+scrollbarvertical sliderbar {
+  width: 6dp;
+  min-height: 22dp;
+  background-color: #7595ad;
+}
+
+scrollbarvertical slidertrack:hover {
+  background-color: #29465f;
+}
+
+scrollbarvertical sliderbar:hover {
+  background-color: #a8dcff;
+}

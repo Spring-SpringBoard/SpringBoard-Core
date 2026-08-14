@@ -41,6 +41,10 @@ THEME_DIRNAME = LUA_DIRNAME .. "Configs/chili/themes/"
 --------------------------------------------------------------------------------
 
 function widget:Initialize()
+	if Spring.GetGameRulesParam("sb_ui") ~= "chili" then
+		widgetHandler:RemoveWidget(widget)
+		return
+	end
 	Chili = VFS.Include(CHILI_DIRNAME .. "core.lua", nil, VFS.RAW_FIRST)
 
 	screen0 = Chili.Screen:New{}

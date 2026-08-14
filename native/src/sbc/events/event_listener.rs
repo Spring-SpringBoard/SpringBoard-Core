@@ -39,11 +39,21 @@ pub(crate) trait EventListener {
         let _ = models;
         Vec::new()
     }
-    fn draw_screen(&mut self, models: &mut Models, view_size_x: i32, view_size_y: i32) -> Result<(), Error> {
+    fn draw_screen(
+        &mut self,
+        models: &mut Models,
+        view_size_x: i32,
+        view_size_y: i32,
+    ) -> Result<(), Error> {
         let _ = (models, view_size_x, view_size_y);
         Ok(())
     }
-    fn draw_screen_post(&mut self, models: &mut Models, view_size_x: i32, view_size_y: i32) -> Result<(), Error> {
+    fn draw_screen_post(
+        &mut self,
+        models: &mut Models,
+        view_size_x: i32,
+        view_size_y: i32,
+    ) -> Result<(), Error> {
         let _ = (models, view_size_x, view_size_y);
         Ok(())
     }
@@ -65,7 +75,9 @@ pub(crate) trait EventListener {
         utf32_char: i32,
         mods: KeyMods,
     ) -> Result<bool, Error> {
-        let _ = (models, key_code, scan_code, is_repeat, label, utf32_char, mods);
+        let _ = (
+            models, key_code, scan_code, is_repeat, label, utf32_char, mods,
+        );
         Ok(false)
     }
     fn key_release(

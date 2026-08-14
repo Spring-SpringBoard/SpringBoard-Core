@@ -15,19 +15,10 @@ fn set_object_param_feature(ctx: &mut TestCtx) -> Result<(), String> {
 
     let model_ids = add_all_feature_defs(ctx, &def_names)?;
 
-    let before = read_objects(ctx, ObjectKind::Feature, &model_ids, false)?;
-    for (model_id, object) in model_ids.iter().zip(before.iter()) {
-        dispatch(
-            ctx,
-            serde_json::json!({
-                "className": "SetObjectParamCommand",
-                "objType": "feature",
-                "modelID": model_id,
-                "key": object
-            }),
-        );
-    }
-    let replayed = read_objects(ctx, ObjectKind::Feature, &model_ids, false)?;
+    // A def may carry zero radius/height/reclaimTime, which the engine refuses
+    // and clamps, so only the state after one replay is a fixed point.
+    let before = replay_objects(ctx, &model_ids)?;
+    let replayed = replay_objects(ctx, &model_ids)?;
     assert_objects_eq("full feature object replay", &before, &replayed)?;
 
     for (i, model_id) in model_ids.iter().enumerate() {
@@ -215,6 +206,22 @@ fn add_all_feature_defs(ctx: &mut TestCtx, def_names: &[String]) -> Result<Vec<i
         model_ids.push(model_id);
     }
     Ok(model_ids)
+}
+
+fn replay_objects(ctx: &mut TestCtx, model_ids: &[i32]) -> Result<Vec<Value>, String> {
+    let objects = read_objects(ctx, ObjectKind::Feature, model_ids, false)?;
+    for (model_id, object) in model_ids.iter().zip(objects.iter()) {
+        dispatch(
+            ctx,
+            serde_json::json!({
+                "className": "SetObjectParamCommand",
+                "objType": "feature",
+                "modelID": model_id,
+                "key": object
+            }),
+        );
+    }
+    read_objects(ctx, ObjectKind::Feature, model_ids, false)
 }
 
 fn read_objects(

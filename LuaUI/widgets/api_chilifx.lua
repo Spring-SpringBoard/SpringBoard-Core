@@ -17,11 +17,10 @@ LCS = LCS()
 CHILILFX_DIR = "libs_sb/chilifx/chilifx/"
 
 function widget:Initialize()
-    -- if not WG.Chili then
-    --     Spring.Log("ChiliFX", LOG.ERROR, "Missing chiliui.")
-    --     widgetHandler:RemoveWidget(widget)
-    --     return
-    -- end
+    if Spring.GetGameRulesParam("sb_ui") ~= "chili" then
+        widgetHandler:RemoveWidget(widget)
+        return
+    end
 
     ChiliFX = VFS.Include(CHILILFX_DIR .. "core.lua", nil)
 

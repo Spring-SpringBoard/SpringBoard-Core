@@ -1,0 +1,56 @@
+body {
+  font-family: Poppins;
+}
+
+.theme-surface {
+  background-color: #151b20d9;
+}
+
+.theme-console-text {
+  color: #c8d0e0;
+}
+
+.theme-framed {
+  border-width: 1dp;
+  border-color: #000000;
+}
+
+.theme-surface-muted {
+  color: #e3e9ef;
+  background-color: #151b20c4;
+}
+
+.theme-project-status {
+  background-color: #2a2a2ae0;
+  border: 1dp #555555;
+}
+
+.theme-inset {
+  color: #c8d0e0;
+  background-color: #1a1a1a;
+}
+
+.theme-interaction-drag {
+  color: #f5d316;
+  border-color: #b19c24;
+  background-color: #171a12;
+}
+
+.theme-interaction-drag .field-button-title,
+.theme-interaction-drag .field-button-value {
+  color: #f5d316;
+}
+
+.theme-interaction-drag-text {
+  color: #f5d316;
+}
+
+.theme-interaction-drag-callout {
+  color: #f5d316;
+  background-color: #171a12;
+  border: 1px #b19c24;
+}
+
+.theme-interaction-drag-progress {
+  background-color: #123f63;
+}

@@ -446,7 +446,8 @@ end
 
 function widget:Initialize()
 	Spring.SendCommands('console 0')
-	if Spring.GetGameRulesParam("gameMode") == "play" then
+	if Spring.GetGameRulesParam("gameMode") == "play"
+		or Spring.GetGameRulesParam("sb_ui") ~= "chili" then
 		widgetHandler:RemoveWidget(self)
 		return
 	end
