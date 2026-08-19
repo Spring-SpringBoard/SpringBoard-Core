@@ -491,3 +491,29 @@ devconsole does this:
   ```
 
   realistically, most of it is stuff (at least bottom with selection and copy) that rmlui/engine should be doing, and not per UI components
+
+# 27. update rust & pthon packages (pyproject is outdated)
+
+do this once we've fully migrated everything from rust-wip here
+
+# 28. (optional) Always-on control server — remove the `SBC_CONTROL_FILE` gate
+
+The control server (`native/src/sbc/control/`) is currently gated behind the `SBC_CONTROL_FILE` env var and wrapped in `Option<ControlServer>`. It only starts when the e2e harness sets that var. But the control server is meant for both e2e testing and programmatic control (Blender-style Python API equivalent), so it should always be running.
+
+**What needs to happen:**
+- Add an engine binding to expose the write dir to native modules (there is no Rust-side `get_write_dir()` — the Lua side gets it from the launcher via the `_sl_write_path` mod option, but the launcher is going away). The engine knows its write dir internally (`dataDirLocater.GetWriteDirPath()` in C++, set via `--write-dir`), it's just not wired into the native plugin API.
+- Default the discovery file to `<write_dir>/control.json` so the server can start without external configuration.
+- `SBC_CONTROL_FILE` becomes an optional override for the discovery path, not a gate.
+- Remove the `Option` wrapper — `ControlServer` is always present.
+
+# 29. Failable callouts
+
+I see a ton of callouts that return result. Is this all senseless?
+My guess is they can only really return Errors for the first moment that they're not initialized.
+This is done at plugin boot so it's a great disservice to 99% of the code to have to test this everywhere.
+
+```rs
+    let direction = camera
+        .get_camera_direction()
+        .map_err(|err| ControlError::failed(format!("get_camera_direction: {err:?}")))?;
+```

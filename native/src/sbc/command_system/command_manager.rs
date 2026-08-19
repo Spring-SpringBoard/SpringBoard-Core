@@ -30,6 +30,30 @@ impl CommandManager {
         self.history.command_ids()
     }
 
+    pub(crate) fn undo_depth(&self) -> usize {
+        self.history.command_ids().0.len()
+    }
+
+    pub(crate) fn is_streaming(&self) -> bool {
+        self.stream.is_streaming()
+    }
+
+    pub(crate) fn undo_all(&mut self, ctx: &mut Context) -> Result<usize, String> {
+        let mut undone = 0;
+        while self.undo_depth() > 0 {
+            if self.is_streaming() {
+                return Err("cannot undo all while a streaming command is active".to_string());
+            }
+            let before = self.undo_depth();
+            self.undo(ctx);
+            if self.undo_depth() >= before {
+                return Err("undo did not advance the history cursor".to_string());
+            }
+            undone += 1;
+        }
+        Ok(undone)
+    }
+
     pub fn execute(
         &mut self,
         mut command: Box<dyn Command>,

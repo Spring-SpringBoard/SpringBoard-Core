@@ -4,6 +4,7 @@ set dotenv-load
 # Engine paths come from .env (see .env.example) — never hardcode personal paths.
 engine_build_dir := env_var_or_default("SBC_ENGINE_BUILD_DIR", "")
 engine_rust_dir := env_var_or_default("SBC_ENGINE_RUST_DIR", "")
+tool_pythonpath := "build:tools"
 
 # Show available recipes.
 [private]
@@ -91,3 +92,38 @@ verify-native: lint test-unit build-native
 [group('run')]
 run: build-native
     bash tools/dev/launch.sh
+
+# Run black-box UI E2E tests. The native plugin is rebuilt first.
+[group('test')]
+test-e2e target="all" *args: build-native
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e run "{{target}}" {{args}}
+
+# List every reference image and whether it is approved or still ai-reviewed.
+[group('test')]
+goldens-status:
+    @PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e goldens-status
+
+# Where a case's last captures differ from its goldens, marked in magenta.
+[group('test')]
+goldens-diff case *args:
+    @PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e goldens-diff "{{case}}" {{args}}
+
+# Approve a case's reference images (the human OK): `just goldens-approve developer-console`.
+[group('test')]
+goldens-approve case *shots:
+    PYTHONPATH="{{tool_pythonpath}}" uv run --locked sbc-e2e approve-goldens "{{case}}" {{shots}}
+
+# Path of the most recent e2e run, optionally for one target: `just e2e-dir developer-console`.
+[group('test')]
+e2e-dir target="":
+    @ls -dt artifacts/ui-e2e/*{{target}}* | head -1
+
+# Grep the most recent run's engine log.
+[group('test')]
+e2e-log target pattern:
+    @grep -o ".\{0,20\}{{pattern}}.\{0,120\}" "$(ls -dt artifacts/ui-e2e/*{{target}}* | head -1)/infolog.txt" || echo "no match"
+
+# Open the most recent run's screenshots dir.
+[group('test')]
+e2e-shots target="":
+    @ls "$(ls -dt artifacts/ui-e2e/*{{target}}* | head -1)/screens"

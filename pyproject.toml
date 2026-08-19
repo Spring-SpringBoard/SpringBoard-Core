@@ -1,0 +1,96 @@
+[project]
+name = "springboard-tools"
+version = "0.1.0"
+description = "Development, packaging, smoke, and graphical E2E tools for SpringBoard"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "pillow>=11.0",
+    "typer>=0.23.1",
+]
+
+[project.scripts]
+sbc-e2e = "e2e.cli_e2e:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.408",
+    "pytest>=8",
+    "ruff>=0.15.1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["tools/control", "tools/e2e"]
+
+[tool.pytest.ini_options]
+testpaths = ["tools/e2e/tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "A",
+    "ANN",
+    "ARG",
+    "ASYNC",
+    "B",
+    "C4",
+    "C90",
+    "DTZ",
+    "E",
+    "ERA",
+    "EXE",
+    "F",
+    "FA",
+    "FLY",
+    "FURB",
+    "G",
+    "I",
+    "ICN",
+    "INP",
+    "ISC",
+    "LOG",
+    "N",
+    "PERF",
+    "PIE",
+    "PT",
+    "PTH",
+    "RET",
+    "RSE",
+    "RUF",
+    "SIM",
+    "SLOT",
+    "T10",
+    "TC",
+    "TID",
+    "UP",
+    "YTT",
+]
+
+[tool.pyright]
+pythonVersion = "3.13"
+typeCheckingMode = "strict"
+reportMissingTypeStubs = false
+reportImplicitOverride = "error"
+reportMissingTypeArgument = "error"
+reportPrivateImportUsage = "error"
+reportUnknownArgumentType = "error"
+reportUnknownLambdaType = "error"
+reportUnknownMemberType = "error"
+reportUnknownParameterType = "error"
+reportUnknownVariableType = "error"
+reportUnnecessaryCast = "error"
+reportUnnecessaryComparison = "error"
+reportUnnecessaryContains = "error"
+reportUnnecessaryIsInstance = "error"
+reportUnnecessaryTypeIgnoreComment = "error"
+reportUntypedBaseClass = "error"
+reportUntypedClassDecorator = "error"
+reportUntypedFunctionDecorator = "error"
+reportUntypedNamedTuple = "error"

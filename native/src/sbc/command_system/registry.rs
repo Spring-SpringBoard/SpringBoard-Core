@@ -97,6 +97,12 @@ pub fn from_value<T: serde::de::DeserializeOwned>(
     })
 }
 
+pub fn registered_class_names() -> Vec<&'static str> {
+    let mut names: Vec<&str> = registry().keys().copied().collect();
+    names.sort_unstable();
+    names
+}
+
 // --- Internals.
 
 fn registry() -> &'static HashMap<&'static str, HandlerFn> {

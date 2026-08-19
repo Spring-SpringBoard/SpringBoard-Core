@@ -1,3 +1,7 @@
+if Spring.GetGameRulesParam("sb_ui") ~= "chili" then
+    return false
+end
+
 function widget:GetInfo()
     return {
         name      = "Chotify",
@@ -17,10 +21,6 @@ LCS = LCS()
 CHOTIFY_DIR = "libs_sb/chotify/chotify/"
 
 function widget:Initialize()
-    if Spring.GetGameRulesParam("sb_ui") ~= "chili" then
-        widgetHandler:RemoveWidget(widget)
-        return
-    end
     if not WG.ChiliFX then
         Spring.Log("Chotify", LOG.ERROR, "Missing ChiliFX")
         widgetHandler:RemoveWidget(widget)

@@ -79,7 +79,7 @@ end
 
 s11n = SB.s11n
 
-if WG then
+if WG and WG.Chotify then
     WG.Chotify.spawn.direction = "down"
     WG.Chotify.spawn.leftRatio = 0.25
     WG.Chotify.spawn.rightRatio = nil

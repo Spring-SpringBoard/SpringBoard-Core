@@ -9,6 +9,10 @@
 -- Button to upload log (using the connector)
 -- Scrollbar should have a constant height (it can be too small if there's a lot of text)
 
+if Spring.GetGameRulesParam("sb_ui") ~= "chili" then
+	return false
+end
+
 function widget:GetInfo()
 	return {
 		name    = 'Developer Console',
@@ -446,8 +450,7 @@ end
 
 function widget:Initialize()
 	Spring.SendCommands('console 0')
-	if Spring.GetGameRulesParam("gameMode") == "play"
-		or Spring.GetGameRulesParam("sb_ui") ~= "chili" then
+	if Spring.GetGameRulesParam("gameMode") == "play" then
 		widgetHandler:RemoveWidget(self)
 		return
 	end

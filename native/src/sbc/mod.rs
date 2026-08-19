@@ -2,6 +2,7 @@ mod areas;
 mod command_system;
 pub mod commands_api;
 pub(crate) mod compile;
+mod control;
 mod devconsole;
 mod events;
 pub(crate) mod grass;

@@ -15,3 +15,6 @@ env/
 
 # Rust build artifacts
 native/target/
+
+# E2E run artifacts (screenshots, logs, reports)
+tools/e2e/artifacts/

@@ -6,6 +6,7 @@ use spring_native::prelude::*;
 use crate::sbc::command_system::command::{Command, CommandId};
 use crate::sbc::command_system::model::{Model, Models};
 use crate::sbc::commands_api::{parse_json_command, CommandManager, Context};
+use crate::sbc::control::ControlServer;
 use crate::sbc::events::EventDispatcher;
 use crate::sbc::io::io_api::IoWorker;
 use crate::sbc::keys::KeyMods;
@@ -19,6 +20,8 @@ pub struct SBC {
     models: Models,
     events: EventDispatcher,
     io_worker: IoWorker,
+    // TODO: Make it a non-optional once we have proper access to the write dir
+    pub(crate) control: Option<ControlServer>,
     tests_ran: bool,
 }
 
@@ -41,6 +44,7 @@ impl NativeModule for SBC {
             models: Models::build(interface),
             events: EventDispatcher::new(interface),
             io_worker: IoWorker::new(),
+            control: ControlServer::start(),
             tests_ran: false,
         }
     }
@@ -181,6 +185,7 @@ impl NativeModule for SBC {
         self.drain_io();
         self.events.update(&mut self.models)?;
         self.submit_pending_listener_commands();
+        crate::sbc::control::update(self);
         if !self.tests_ran {
             self.tests_ran = crate::sbc::tests::tests_api::run_if_requested(self);
         }
@@ -258,6 +263,24 @@ impl SBC {
             .to_string();
         log_native_command(&*command, id);
         self.execute_command(command, id, &display);
+    }
+
+    pub(crate) fn undo_all(&mut self) -> Result<usize, String> {
+        let (undone, io_jobs) = {
+            let mut ctx = Context::new(&self.interface, 0, &mut self.models);
+            let undone = self.command_manager.undo_all(&mut ctx)?;
+            (undone, std::mem::take(&mut ctx.io_jobs))
+        };
+        for job in io_jobs {
+            self.io_worker.submit(job);
+        }
+        event_bridge::emit(
+            &self.interface,
+            self.models.get::<ObjectManager>().drain_events(),
+        );
+        self.events.command_applied(&mut self.models);
+        self.sync_command_history();
+        Ok(undone)
     }
 
     fn execute_command(&mut self, command: Box<dyn Command>, id: CommandId, display: &str) {

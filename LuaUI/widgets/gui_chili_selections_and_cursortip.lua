@@ -1,5 +1,9 @@
 --TODO investigate Chili-Error in `Chili Selections & CursorTip`:2435 : [string "LuaUI/Widgets/chili/controls/control.lua"]:897: attempt to index field 'parent' (a nil value). (This bug is many months old. This TODO is written on 18 October 2013). See end of file for longer stacktrace.
 --------------------------------------------------------------------------------
+if Spring.GetGameRulesParam("sb_ui") ~= "chili" then
+  return false
+end
+
 function widget:GetInfo()
   return {
     name      = "Chili Selections & CursorTip",
@@ -2397,8 +2401,7 @@ function widget:ViewResize(vsx, vsy)
 end
 
 function widget:Initialize()
-    if Spring.GetGameRulesParam("sb_gameMode") == "play"
-		or Spring.GetGameRulesParam("sb_ui") ~= "chili" then
+    if Spring.GetGameRulesParam("sb_gameMode") == "play" then
 		widgetHandler:RemoveWidget(widget)
 		return
     end

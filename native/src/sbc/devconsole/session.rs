@@ -11,6 +11,7 @@ pub(crate) struct ConsoleSession {
     all: LogBuffer,
     problems: Vec<LogLine>,
     problem_source_lines: usize,
+    cleared: bool,
 }
 
 impl ConsoleSession {
@@ -19,6 +20,7 @@ impl ConsoleSession {
             all: LogBuffer::new(configured_line_limit(interface)),
             problems: Vec::new(),
             problem_source_lines: 0,
+            cleared: false,
         }
     }
 
@@ -63,6 +65,9 @@ impl ConsoleSession {
             .collect();
         self.problem_source_lines = self.all.total_count();
 
+        if self.cleared {
+            return;
+        }
         let Ok(entries) = interface.messages().get_console_entries(0) else {
             return;
         };
@@ -87,6 +92,7 @@ impl ConsoleSession {
         self.all.clear();
         self.problems.clear();
         self.problem_source_lines = 0;
+        self.cleared = true;
     }
 
     pub(crate) fn visible_lines(&self, problems_only: bool) -> Vec<&LogLine> {

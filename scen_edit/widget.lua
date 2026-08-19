@@ -115,12 +115,11 @@ function widget:Initialize()
     SB.messageManager = MessageManager()
 
     SB.displayUtil = DisplayUtil()
-    if Spring.GetGameRulesParam("sb_gameMode") ~= "play" then
+    SB.gfx = Graphics()
+    gfx = SB.gfx
+    if Spring.GetGameRulesParam("sb_gameMode") ~= "play" and Spring.GetGameRulesParam("sb_ui") == "chili" then
         Spring.SendCommands('forcestart')
         SB.view = View()
-        SB.gfx = Graphics()
-        gfx = SB.gfx
-
         local viewAreaManagerListener = ViewAreaManagerListener()
         SB.model.areaManager:addListener(viewAreaManagerListener)
 

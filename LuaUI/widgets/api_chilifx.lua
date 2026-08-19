@@ -1,3 +1,7 @@
+if Spring.GetGameRulesParam("sb_ui") ~= "chili" then
+    return false
+end
+
 function widget:GetInfo()
     return {
         name      = "ChiliFX",
@@ -17,11 +21,6 @@ LCS = LCS()
 CHILILFX_DIR = "libs_sb/chilifx/chilifx/"
 
 function widget:Initialize()
-    if Spring.GetGameRulesParam("sb_ui") ~= "chili" then
-        widgetHandler:RemoveWidget(widget)
-        return
-    end
-
     ChiliFX = VFS.Include(CHILILFX_DIR .. "core.lua", nil)
 
     WG.ChiliFX = ChiliFX()

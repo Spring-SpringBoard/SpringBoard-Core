@@ -21,3 +21,4 @@ thiserror = "2.0.18"
 ctrl_macros = "0.1.0"
 image = { version = "0.25", default-features = false, features = ["png", "bmp", "jpeg", "tga"] }
 sysinfo = "0.37"
+getrandom = "0.4"
