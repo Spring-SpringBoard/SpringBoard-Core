@@ -30,20 +30,9 @@ pub(crate) fn execute(sbc: &mut SBC, params: Execute) -> Handled {
     Ok(Reply::now(json!({ "className": params.class_name })))
 }
 
-/// Commands disagree about where their fields live: some read them off the
-/// payload, some out of an `opts` object. Offering both means a caller does not
-/// have to know which, and the one the command does not use deserializes away.
 fn payload(params: &Execute) -> Value {
     let mut payload = params.fields.clone();
     payload.insert("className".to_string(), params.class_name.clone().into());
-    // Do not add an empty `opts` object. Unit commands (for example
-    // `UndoCommand`) deserialize from `null`, while commands with fields still
-    // receive the compatibility wrapper below.
-    if !params.fields.is_empty() {
-        payload
-            .entry("opts")
-            .or_insert_with(|| Value::Object(params.fields.clone()));
-    }
     Value::Object(payload)
 }
 
@@ -52,7 +41,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn unit_commands_have_no_synthetic_options() {
+    fn unit_commands_keep_no_fields() {
         let params = Execute {
             class_name: "UndoCommand".to_string(),
             fields: Map::new(),
@@ -62,8 +51,8 @@ mod tests {
     }
 
     #[test]
-    fn field_commands_keep_the_compatibility_options_wrapper() {
-        let fields = serde_json::from_value(json!({ "value": 1 })).unwrap();
+    fn commands_keep_their_original_field_shape() {
+        let fields = serde_json::from_value(json!({ "opts": { "value": 1 } })).unwrap();
         let params = Execute {
             class_name: "SomeCommand".to_string(),
             fields,
@@ -71,7 +60,7 @@ mod tests {
 
         assert_eq!(
             payload(&params),
-            json!({ "className": "SomeCommand", "value": 1, "opts": { "value": 1 } })
+            json!({ "className": "SomeCommand", "opts": { "value": 1 } })
         );
     }
 }

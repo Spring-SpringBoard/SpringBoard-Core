@@ -4,6 +4,39 @@ use spring_native::prelude::NativeInterfaceRef;
 
 pub(crate) mod rows;
 
+const FONT: &str = "fonts/Poppins-Regular.ttf";
+
+const CURSOR_ALIASES: [(&str, &str); 7] = [
+    ("default", "cursornormal"),
+    ("pointer", "cursornormal"),
+    ("move", "uimove"),
+    ("nesw-resize", "uiresized2"),
+    ("nwse-resize", "uiresized1"),
+    ("ns-resize", "uiresizev"),
+    ("ew-resize", "uiresizeh"),
+];
+pub(crate) fn setup(interface: &NativeInterfaceRef) {
+    let rml = interface.rml_ui();
+    if let Err(err) = rml.load_font_face(FONT, true, None) {
+        log::warn!("rml: could not load {FONT}: {err:?}");
+    }
+    for (rml_name, recoil_name) in CURSOR_ALIASES {
+        let _ = rml.set_mouse_cursor_alias(rml_name, recoil_name);
+    }
+}
+
+pub(crate) fn create_context(
+    interface: &NativeInterfaceRef,
+    name: &str,
+) -> Result<(u64, bool), spring_native::prelude::Error> {
+    let context = interface.rml_ui().create_context(name)?;
+    // RmlGui tears down its global font registry during LuaUI reload while
+    // the native module remains loaded. Context creation is the first safe
+    // point after that teardown at which the Rust side can reinstall assets.
+    setup(interface);
+    Ok(context)
+}
+
 /// Whether `context` is still the live context registered under `name`.
 ///
 /// `luaui reload` runs `RmlGui::Shutdown()` → `Rml::Shutdown()`, which destroys

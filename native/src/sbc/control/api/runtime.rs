@@ -1,6 +1,6 @@
 //! Runtime lifecycle operations owned by the engine, rather than an editor.
 
-use serde_json::json;
+use serde_json::{json, Value};
 
 use crate::sbc::sbc::SBC;
 
@@ -26,6 +26,10 @@ pub(crate) fn reload_native_modules(sbc: &SBC) -> Handled {
 
 /// Undo native history, then recreate native modules.
 pub(crate) fn reset_session(sbc: &mut SBC) -> Handled {
+    sbc.interface()
+        .debug_input()
+        .clear_emulated_input(true)
+        .map_err(|error| ControlError::failed(format!("clear emulated input: {error:?}")))?;
     let undone = sbc.undo_all().map_err(ControlError::failed)?;
     sbc.interface()
         .messages()
@@ -35,4 +39,82 @@ pub(crate) fn reset_session(sbc: &mut SBC) -> Handled {
         "undone": undone,
         "reloading": "native-modules",
     })))
+}
+
+/// Drive the engine's debug input emulation from the E2E harness.
+pub(crate) fn emulate_input(sbc: &SBC, params: Value) -> Handled {
+    let kind = params
+        .get("kind")
+        .and_then(Value::as_str)
+        .ok_or_else(|| ControlError::invalid("runtime.emulate_input needs a string kind"))?;
+
+    let debug = sbc.interface().debug_input();
+    match kind {
+        "key_press" | "key_release" => {
+            let key_code = integer(&params, "keycode")?;
+            debug
+                .emulate_key(key_code, kind == "key_press")
+                .map_err(|error| ControlError::failed(format!("debug input {kind}: {error:?}")))?;
+        }
+        "mouse_move" => {
+            let x = integer(&params, "x")?;
+            let y = integer(&params, "y")?;
+            debug
+                .emulate_mouse_move(x, y)
+                .map_err(|error| ControlError::failed(format!("debug input {kind}: {error:?}")))?;
+        }
+        "mouse_press" | "mouse_release" => {
+            let button = integer(&params, "button")?;
+            debug
+                .emulate_mouse_button(button, kind == "mouse_press")
+                .map_err(|error| ControlError::failed(format!("debug input {kind}: {error:?}")))?;
+        }
+        "mouse_wheel" => {
+            let delta = number(&params, "delta")?;
+            debug
+                .emulate_mouse_wheel(delta)
+                .map_err(|error| ControlError::failed(format!("debug input {kind}: {error:?}")))?;
+        }
+        "text_input" => {
+            let text = params.get("text").and_then(Value::as_str).ok_or_else(|| {
+                ControlError::invalid("runtime.emulate_input requires string \"text\"")
+            })?;
+            let consumed = debug
+                .emulate_text_input(text)
+                .map_err(|error| ControlError::failed(format!("debug input {kind}: {error:?}")))?;
+            return Ok(Reply::now(json!({
+                "kind": kind,
+                "consumed": consumed,
+            })));
+        }
+        other => {
+            return Err(ControlError::invalid(format!(
+                "runtime.emulate_input does not support {other:?}"
+            )));
+        }
+    }
+
+    Ok(Reply::now(json!({ "kind": kind })))
+}
+
+fn integer(data: &Value, name: &str) -> Result<i32, ControlError> {
+    data.get(name)
+        .and_then(Value::as_i64)
+        .and_then(|value| i32::try_from(value).ok())
+        .ok_or_else(|| {
+            ControlError::invalid(format!("runtime.emulate_input requires integer {name:?}"))
+        })
+}
+
+fn number(data: &Value, name: &str) -> Result<f32, ControlError> {
+    data.get(name)
+        .and_then(Value::as_f64)
+        .filter(|value| value.is_finite())
+        .map(|value| value as f32)
+        .filter(|value| value.is_finite())
+        .ok_or_else(|| {
+            ControlError::invalid(format!(
+                "runtime.emulate_input requires finite number {name:?}"
+            ))
+        })
 }

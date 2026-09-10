@@ -137,7 +137,7 @@ impl NumericDragOverlay {
         }
         self.forget();
         let rml = interface.rml_ui();
-        let (context, created) = rml.create_context(CONTEXT)?;
+        let (context, created) = rml::create_context(interface, CONTEXT)?;
         if !created {
             return Ok(());
         }

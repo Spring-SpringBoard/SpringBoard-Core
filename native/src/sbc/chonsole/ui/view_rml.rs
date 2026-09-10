@@ -105,7 +105,7 @@ impl ChonsoleRml {
         if !rml.is_ready()? {
             return Ok(false);
         }
-        let (context, created) = rml.create_context(UI_CONTEXT)?;
+        let (context, created) = rml::create_context(interface, UI_CONTEXT)?;
         if !created {
             return Ok(false);
         }

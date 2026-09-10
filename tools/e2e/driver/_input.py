@@ -7,57 +7,119 @@ from typing import override
 
 from .state import RunState
 from .timing import TEXT_INTERVAL_MS, Delay, Timeout, pause
-from .utils.process import run
 from .utils.run_env import MODIFIER_NAMES, MODIFIERS
 from .utils.x11 import window_geometry_values
+
+
+KEYCODES = {
+    "BackSpace": 8,
+    "Backspace": 8,
+    "Tab": 9,
+    "Return": 13,
+    "Escape": 27,
+    "Space": 32,
+    "Delete": 127,
+    "Up": 273,
+    "Down": 274,
+    "Right": 275,
+    "Left": 276,
+    "Insert": 277,
+    "Home": 278,
+    "End": 279,
+    "Page_Up": 280,
+    "Page_Down": 281,
+    "Control_L": 306,
+    "Control_R": 305,
+    "Shift_L": 304,
+    "Shift_R": 303,
+    "Alt_L": 308,
+    "Alt_R": 307,
+    "Super_L": 310,
+    "Super_R": 309,
+    "F1": 282,
+    "F2": 283,
+    "F3": 284,
+    "F4": 285,
+    "F5": 286,
+    "F6": 287,
+    "F7": 288,
+    "F8": 289,
+    "F9": 290,
+    "F10": 291,
+    "F11": 292,
+    "F12": 293,
+    "F13": 294,
+    "F14": 295,
+    "F15": 296,
+}
 
 
 class InputMixin(RunState):
     """Synthesised keyboard and mouse input, plus the X clipboard.
 
-    Window-targeted events provide deterministic coordinates; held modifiers
-    use the focused root window.
+    Input is routed through the engine's debug emulation API. Coordinates stay
+    in the same top-left, window-relative space used by the scenarios.
     """
 
     @override
     def focus(self) -> None:
         self.require_window()
-        run("xdotool", "windowactivate", self.window, "windowfocus", self.window, check=False)
         pause(Delay.INPUT)
         self.release_modifiers()
         self.event("focus", window=self.window)
 
     def release_modifiers(self) -> None:
         self.require_window()
-        args = ["xdotool"]
         for modifier in MODIFIERS:
-            args += ["keyup", "--window", self.window, modifier]
-        run(*args, check=False)
+            self._input("key_release", keycode=self._keycode(modifier))
         pause(Delay.EVENT)
+
+    def _input(self, kind: str, **data: object) -> None:
+        self.control.call("runtime.emulate_input", kind=kind, **data)
+
+    @staticmethod
+    def _keycode(name: str) -> int:
+        if name in KEYCODES:
+            return KEYCODES[name]
+        if len(name) == 1:
+            return ord(name.lower())
+        raise ValueError(f"no emulated keycode for {name!r}")
+
+    def _key_down(self, name: str) -> None:
+        self._input("key_press", keycode=self._keycode(name))
+
+    def _key_up(self, name: str) -> None:
+        self._input("key_release", keycode=self._keycode(name))
 
     @override
     def key(self, name: str, delay: Delay = Delay.INPUT) -> None:
         self.require_window()
         self.event("key", key=name)
         if "+" in name:
-            self.focus()
-            # Give X time to attach modifier state to the base key event.
-            run("xdotool", "key", "--window", self.window, "--delay", "10", name)
+            parts = name.split("+")
+            modifiers, base = parts[:-1], parts[-1]
+            for modifier in modifiers:
+                self._key_down(MODIFIER_NAMES.get(modifier, modifier))
+            self._key_down(base)
+            self._key_up(base)
+            for modifier in reversed(modifiers):
+                self._key_up(MODIFIER_NAMES.get(modifier, modifier))
         else:
-            run("xdotool", "key", "--window", self.window, name)
+            self._key_down(name)
+            self._key_up(name)
         pause(delay)
 
     @contextmanager
     @override
     def modifier(self, name: str) -> Generator[None]:
         """Hold a modifier across pointer input."""
-        self.focus()
         self.event("modifier_down", modifier=name)
-        run("xdotool", "keydown", name)
+        normalized = MODIFIER_NAMES.get(name, name)
+        self._key_down(normalized)
         try:
             yield
         finally:
-            run("xdotool", "keyup", name)
+            self._key_up(normalized)
             self.event("modifier_up", modifier=name)
 
     @override
@@ -66,8 +128,12 @@ class InputMixin(RunState):
         normalized = tuple(MODIFIER_NAMES.get(mod, mod) for mod in modifiers)
         chord = "+".join((*normalized, name))
         self.event("key_chord", chord=chord)
-        self.focus()
-        run("xdotool", "key", "--window", self.window, "--delay", "10", chord)
+        for modifier in normalized:
+            self._key_down(modifier)
+        self._key_down(name)
+        self._key_up(name)
+        for modifier in reversed(normalized):
+            self._key_up(modifier)
         pause(delay)
 
     @override
@@ -78,23 +144,7 @@ class InputMixin(RunState):
         # preceding click/key, not a fixed text-entry delay.
         self.sync_input()
         self.event("type", text=text)
-        for index, fragment in enumerate(text.split("/")):
-            if fragment:
-                run(
-                    "xdotool",
-                    "type",
-                    "--window",
-                    self.window,
-                    "--delay",
-                    str(delay_ms),
-                    "--",
-                    fragment,
-                )
-            if index < text.count("/"):
-                # Spring consumes physical scancodes while xdotool resolves a
-                # keysym through the active X layout; keycode 61 is slash in
-                # the engine's fixed layout even when that layout maps it to &.
-                run("xdotool", "key", "--window", self.window, "keycode", "61")
+        self._input("text_input", text=text)
         pause(Delay.INPUT)
 
     @override
@@ -116,16 +166,10 @@ class InputMixin(RunState):
     def click(self, x: int, y: int, button: int = 1, delay: Delay = Delay.INPUT) -> None:
         self.require_window()
         self.event("click", x=x, y=y, button=button)
-        run(
-            "xdotool",
-            "mousemove",
-            "--window",
-            self.window,
-            str(x),
-            str(y),
-            "click",
-            str(button),
-        )
+        self._input("mouse_move", x=x, y=y)
+        self._input("mouse_press", button=button)
+        self._input("mouse_release", button=button)
+        self._emulated_pointer = (x, y)
         pause(delay)
 
     @override
@@ -139,18 +183,20 @@ class InputMixin(RunState):
         """
         self.require_window()
         self.event("click_settled", x=x, y=y, button=button)
-        run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
+        self._input("mouse_move", x=x, y=y)
         pause(Delay.CONTROL)
-        run("xdotool", "mousedown", str(button))
+        self._input("mouse_press", button=button)
         pause(Delay.POLL)
-        run("xdotool", "mouseup", str(button))
+        self._input("mouse_release", button=button)
+        self._emulated_pointer = (x, y)
         pause(delay)
 
     @override
     def move(self, x: int, y: int, delay: Delay = Delay.INPUT) -> None:
         self.require_window()
         self.event("move", x=x, y=y)
-        run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
+        self._input("mouse_move", x=x, y=y)
+        self._emulated_pointer = (x, y)
         pause(delay)
 
     @override
@@ -164,15 +210,16 @@ class InputMixin(RunState):
         """
         self.require_window()
         self.event("move_relative", dx=dx, dy=dy, steps=steps)
+        pointer = getattr(self, "_emulated_pointer", None)
+        if pointer is None:
+            geometry = window_geometry_values(self.window)
+            pointer = (geometry["WIDTH"] // 2, geometry["HEIGHT"] // 2)
+        x, y = pointer
         for _ in range(steps):
-            run(
-                "xdotool",
-                "mousemove_relative",
-                "--sync",
-                "--",
-                str(round(dx / steps)),
-                str(round(dy / steps)),
-            )
+            x += round(dx / steps)
+            y += round(dy / steps)
+            self._input("mouse_move", x=x, y=y)
+            self._emulated_pointer = (x, y)
             pause(delay)
 
     @override
@@ -184,30 +231,27 @@ class InputMixin(RunState):
         """
         self.require_window()
         self.event("wheel", x=x, y=y, clicks=clicks, up=up)
-        button = "4" if up else "5"
-        run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
-        for _ in range(clicks):
-            run("xdotool", "click", "--window", self.window, button)
-            pause(Delay.EVENT)
+        self._input("mouse_move", x=x, y=y)
+        self._input("mouse_wheel", delta=clicks if up else -clicks)
+        self._emulated_pointer = (x, y)
         pause(delay)
 
     @override
     def wheel_root(self, x: int, y: int, clicks: int = 1, up: bool = True, delay: Delay = Delay.FRAME) -> None:
         """Scroll with the real pointer so held modifiers apply."""
         self.event("wheel_root", x=x, y=y, clicks=clicks, up=up)
-        button = "4" if up else "5"
-        root_x, root_y = self._root_point(x, y)
-        run("xdotool", "mousemove", str(root_x), str(root_y))
-        for _ in range(clicks):
-            run("xdotool", "click", button)
-            pause(Delay.EVENT)
+        self._input("mouse_move", x=x, y=y)
+        self._input("mouse_wheel", delta=clicks if up else -clicks)
+        self._emulated_pointer = (x, y)
         pause(delay)
 
     @override
     def click_root(self, x: int, y: int, button: int = 1, delay: Delay = Delay.INPUT) -> None:
         self.event("click_root", x=x, y=y, button=button)
-        root_x, root_y = self._root_point(x, y)
-        run("xdotool", "mousemove", str(root_x), str(root_y), "click", str(button))
+        self._input("mouse_move", x=x, y=y)
+        self._input("mouse_press", button=button)
+        self._input("mouse_release", button=button)
+        self._emulated_pointer = (x, y)
         pause(delay)
 
     def drag_root(
@@ -226,16 +270,17 @@ class InputMixin(RunState):
         # when SDL delivers motion coordinates relative to the client. Adding
         # that origin here would shift the press outside the intended control.
         self.event("drag_root", x1=x1, y1=y1, x2=x2, y2=y2, button=button, steps=steps)
-        run("xdotool", "mousemove", "--window", self.window, str(x1), str(y1))
+        self._input("mouse_move", x=x1, y=y1)
         pause(Delay.CONTROL)
-        run("xdotool", "mousedown", "--window", self.window, str(button))
+        self._input("mouse_press", button=button)
         pause(step_delay)
         for i in range(1, steps + 1):
             xi = round(x1 + (x2 - x1) * i / steps)
             yi = round(y1 + (y2 - y1) * i / steps)
-            run("xdotool", "mousemove", "--window", self.window, str(xi), str(yi))
+            self._input("mouse_move", x=xi, y=yi)
             pause(step_delay)
-        run("xdotool", "mouseup", "--window", self.window, str(button))
+        self._input("mouse_release", button=button)
+        self._emulated_pointer = (x2, y2)
         pause(Delay.CONTROL)
 
     @override
@@ -245,17 +290,19 @@ class InputMixin(RunState):
         selection rectangle."""
         self.require_window()
         self.event("press", x=x, y=y, button=button)
-        run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
+        self._input("mouse_move", x=x, y=y)
         pause(Delay.CONTROL)
-        run("xdotool", "mousedown", "--window", self.window, str(button))
+        self._input("mouse_press", button=button)
+        self._emulated_pointer = (x, y)
         pause(delay)
 
     @override
     def release(self, x: int, y: int, button: int = 1, delay: Delay = Delay.FRAME) -> None:
         self.require_window()
         self.event("release", x=x, y=y, button=button)
-        run("xdotool", "mousemove", "--window", self.window, str(x), str(y))
-        run("xdotool", "mouseup", "--window", self.window, str(button))
+        self._input("mouse_move", x=x, y=y)
+        self._input("mouse_release", button=button)
+        self._emulated_pointer = (x, y)
         pause(delay)
 
     @override
@@ -274,20 +321,21 @@ class InputMixin(RunState):
         # single-step drag reads as a plain click.
         self.require_window()
         self.event("drag", x1=x1, y1=y1, x2=x2, y2=y2, button=button, steps=steps)
-        run("xdotool", "mousemove", "--window", self.window, str(x1), str(y1))
+        self._input("mouse_move", x=x1, y=y1)
         # Let the move land before the press. The editor traces the ground from
         # where it last saw the pointer, so a press that overtakes its own move
         # traces from the *previous* spot -- off the map, if that was a parked
         # screenshot -- and the brush refuses to paint.
         pause(Delay.CONTROL)
-        run("xdotool", "mousedown", "--window", self.window, str(button))
+        self._input("mouse_press", button=button)
         pause(step_delay)
         for i in range(1, steps + 1):
             xi = round(x1 + (x2 - x1) * i / steps)
             yi = round(y1 + (y2 - y1) * i / steps)
-            run("xdotool", "mousemove", "--window", self.window, str(xi), str(yi))
+            self._input("mouse_move", x=xi, y=yi)
             pause(step_delay)
-        run("xdotool", "mouseup", "--window", self.window, str(button))
+        self._input("mouse_release", button=button)
+        self._emulated_pointer = (x2, y2)
         pause(Delay.CONTROL)
 
     @override

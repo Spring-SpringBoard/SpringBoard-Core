@@ -82,7 +82,7 @@ impl DevConsoleView {
             self.rendered_command_log = None;
         }
         let rml = interface.rml_ui();
-        let (context, created) = rml.create_context(STATUS_CONTEXT)?;
+        let (context, created) = rml::create_context(interface, STATUS_CONTEXT)?;
         if !created {
             return Ok(());
         }

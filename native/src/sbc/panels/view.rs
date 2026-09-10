@@ -139,7 +139,7 @@ impl PanelView {
             return Ok(false);
         }
 
-        let (ctx, ok) = rml.create_context(UI_CONTEXT)?;
+        let (ctx, ok) = rml::create_context(interface, UI_CONTEXT)?;
         if !ok {
             return Ok(false);
         }

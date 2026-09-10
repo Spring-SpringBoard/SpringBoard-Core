@@ -69,6 +69,7 @@ fn route(sbc: &mut SBC, request: &Request) -> Handled {
         "runtime.barrier" => runtime::barrier(sbc),
         "runtime.reload_native_modules" => runtime::reload_native_modules(sbc),
         "runtime.reset_session" => runtime::reset_session(sbc),
+        "runtime.emulate_input" => runtime::emulate_input(sbc, request.params.clone()),
         other => Err(ControlError::no_such_method(other)),
     }
 }

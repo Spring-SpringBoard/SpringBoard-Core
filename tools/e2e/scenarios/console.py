@@ -231,10 +231,12 @@ def chonsole_native_suggestions(run_state: "RunState") -> None:
     run_state.move(row_x, third_row_y, delay=Delay.FRAME)
     scroll_start = run_state.screenshot("wheel-scroll-start")
     run_state.wheel(row_x, third_row_y, clicks=6, up=False)
+    run_state.wait_for_stable_region(suggestion_box)
     scroll_down = run_state.screenshot("wheel-scroll-down")
     run_state.assert_region_pixels(scroll_start, scroll_down, suggestion_box, min_changed=100)
     run_state.move(int(width * (CHONSOLE["left_fraction"] + CHONSOLE["width_fraction"] + 0.03)), third_row_y)
     run_state.move(row_x, third_row_y)
+    run_state.wait_for_stable_region(suggestion_box)
     scroll_reentered = run_state.screenshot("wheel-scroll-reentered")
     run_state.assert_region_pixels(scroll_down, scroll_reentered, suggestion_box, max_changed=0)
 

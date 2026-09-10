@@ -6,7 +6,6 @@ use spring_native::prelude::*;
 use crate::sbc::command_system::command::Command;
 use crate::sbc::command_system::command::CommandId;
 use crate::sbc::command_system::model::{Model, Models};
-use crate::sbc::command_system::UndoCommand;
 use crate::sbc::commands_api::{parse_json_command, CommandManager, Context};
 use crate::sbc::control::ControlServer;
 use crate::sbc::events::EventDispatcher;
@@ -263,18 +262,16 @@ impl SBC {
     /// session-boundary primitive for the control channel, not a user-facing
     /// action: every undoable native command is undone in history order.
     pub(crate) fn undo_all(&mut self) -> Result<usize, String> {
-        let mut undone = 0;
-        while self.command_manager.undo_depth() > 0 {
-            if self.command_manager.is_streaming() {
-                return Err("cannot undo all while a streaming command is active".to_string());
-            }
-            let before = self.command_manager.undo_depth();
-            self.submit_command(Box::new(UndoCommand));
-            if self.command_manager.undo_depth() >= before {
-                return Err("undo command did not advance the history cursor".to_string());
-            }
-            undone += 1;
+        let (undone, io_jobs) = {
+            let mut ctx = Context::new(&self.interface, 0, &mut self.models);
+            let undone = self.command_manager.undo_all(&mut ctx)?;
+            (undone, std::mem::take(&mut ctx.io_jobs))
+        };
+        for job in io_jobs {
+            self.io_worker.submit(job);
         }
+        self.events.command_applied(&mut self.models);
+        self.sync_command_history();
         Ok(undone)
     }
 
