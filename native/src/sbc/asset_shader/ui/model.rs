@@ -13,6 +13,15 @@ pub(crate) enum AssetShaderField {
     ShadowDensity,
     ShadowBias,
     AmbientScale,
+    AmbientFloor,
+    AmbientSky,
+    DirectScale,
+    RoughnessFloor,
+    BaseDetail,
+    FamilyDetail,
+    Dirt,
+    ColourDetail,
+    Metal,
 }
 
 use AssetShaderField::*;
@@ -29,6 +38,27 @@ pub(crate) const DEBUG_VIEWS: &[&str] = &[
     "Tangent frame",
     "UV gradient",
     "UV checker",
+    // Raw triplanar inputs, for when a layer is in the wrong place rather than the wrong colour.
+    "Object pos",
+    "Object normal",
+    "Detail sample",
+    // What the Toksvig widening reads: white wherever the tiling detail is still resolvable.
+    "Detail spread",
+    "Grain spread",
+    // The two sparse layers on their own. Either one showing a regular grid of identical marks
+    // is a tiling lattice reading through its distribution gate, which is invisible in "Final"
+    // once it is under paint and lighting but obvious here.
+    "Dirt",
+    "Pits",
+    // Metalness has no other tell: a metal texel keeps its albedo, roughness, normal and
+    // occlusion and simply loses its diffuse, so it reads as a dark mark that no other view
+    // explains.
+    "Metalness",
+    "Glow",
+    // The metal lookup with v flipped. Should be identical to "Metalness"; if it is not, the
+    // map is upside down relative to the atlas.
+    "Metalness (v flipped)",
+    "Detail uniforms",
 ];
 
 /// Maps the panel can show, and the texture each one lives in. `{}` stands for
@@ -84,5 +114,28 @@ pub(crate) fn asset_shader_model() -> TableModel<AssetShaderField> {
         number(ShadowDensity, "shadowDensity", "Shadow", 0.7),
         number(ShadowBias, "shadowBias", "Bias", 1.5),
         number(AmbientScale, "ambientScale", "Ambient", 1.0),
+        // The ambient split and the direct multiplier. Ambient used to be `0.6 + 0.8 * sky`,
+        // which gave a downward-facing surface 60% of what an upward-facing one got and left
+        // the hull with no darks at all; these are what that became, and they are the two
+        // numbers to reach for when a ship reads flat.
+        number(AmbientFloor, "ambientFloor", "Amb floor", 0.18),
+        number(AmbientSky, "ambientSky", "Amb sky", 1.10),
+        number(DirectScale, "directScale", "Direct", 1.45),
+        number(RoughnessFloor, "roughnessFloor", "Rough floor", 0.045),
+        // The layers, so one can be taken out and the artefact attributed to it.
+        TableEntry::new(
+            BaseDetail,
+            Box::new(BooleanField::new("baseDetail", "Base detail", true)),
+        ),
+        TableEntry::new(
+            FamilyDetail,
+            Box::new(BooleanField::new("familyDetail", "Family detail", true)),
+        ),
+        TableEntry::new(Dirt, Box::new(BooleanField::new("dirt", "Dirt", true))),
+        TableEntry::new(
+            ColourDetail,
+            Box::new(BooleanField::new("colourDetail", "Pits", true)),
+        ),
+        TableEntry::new(Metal, Box::new(BooleanField::new("metal", "Metalness", true))),
     ])
 }

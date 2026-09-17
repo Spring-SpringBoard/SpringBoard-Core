@@ -67,6 +67,7 @@ fn params(model: &TableModel<AssetShaderField>) -> AssetShaderParams {
         FieldValue::Number(n) => n,
         _ => 0.0,
     };
+    let boolean = |id| matches!(model.value(id), FieldValue::Bool(true));
 
     AssetShaderParams {
         asset: ASSET.to_string(),
@@ -79,6 +80,15 @@ fn params(model: &TableModel<AssetShaderField>) -> AssetShaderParams {
         shadow_density: number(ShadowDensity),
         shadow_bias: number(ShadowBias),
         ambient_scale: number(AmbientScale),
+        ambient_floor: number(AmbientFloor),
+        ambient_sky: number(AmbientSky),
+        direct_scale: number(DirectScale),
+        roughness_floor: number(RoughnessFloor),
+        base_detail: boolean(BaseDetail),
+        family_detail: boolean(FamilyDetail),
+        dirt: boolean(Dirt),
+        colour_detail: boolean(ColourDetail),
+        metal: boolean(Metal),
     }
 }
 

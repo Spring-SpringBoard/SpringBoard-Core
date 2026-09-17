@@ -18,6 +18,15 @@ pub(crate) struct AssetShaderParams {
     pub shadow_density: f32,
     pub shadow_bias: f32,
     pub ambient_scale: f32,
+    pub ambient_floor: f32,
+    pub ambient_sky: f32,
+    pub direct_scale: f32,
+    pub roughness_floor: f32,
+    pub base_detail: bool,
+    pub family_detail: bool,
+    pub dirt: bool,
+    pub colour_detail: bool,
+    pub metal: bool,
 }
 
 impl AssetShaderParams {
@@ -33,6 +42,15 @@ impl AssetShaderParams {
             "shadowDensity": self.shadow_density,
             "shadowBias": self.shadow_bias,
             "ambientScale": self.ambient_scale,
+            "ambientFloor": self.ambient_floor,
+            "ambientSky": self.ambient_sky,
+            "directScale": self.direct_scale,
+            "roughnessFloor": self.roughness_floor,
+            "baseDetail": self.base_detail,
+            "familyDetail": self.family_detail,
+            "dirt": self.dirt,
+            "colourDetail": self.colour_detail,
+            "metal": self.metal,
         })
     }
 }

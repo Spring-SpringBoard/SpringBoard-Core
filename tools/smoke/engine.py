@@ -202,15 +202,26 @@ def _settings_text() -> str:
     position_overrides = {
         "WindowPosX": os.environ.get("SBC_WINDOW_POS_X"),
         "WindowPosY": os.environ.get("SBC_WINDOW_POS_Y"),
+        # Window size, for runs that only want pixels to measure. Offscreen runs draw through a
+        # software rasteriser, where cost is close to linear in pixel count: a capture pass at the
+        # developer's 2560x1371 spends about two seconds a frame, and most of that is resolution
+        # the measurement never uses.
+        "XResolutionWindowed": os.environ.get("SBC_WINDOW_W"),
+        "YResolutionWindowed": os.environ.get("SBC_WINDOW_H"),
     }
     position_overrides = {key: value for key, value in position_overrides.items() if value}
     if not position_overrides:
         return settings_text
     for key, value in position_overrides.items():
+        env_name = {
+            "WindowPosX": "SBC_WINDOW_POS_X",
+            "WindowPosY": "SBC_WINDOW_POS_Y",
+            "XResolutionWindowed": "SBC_WINDOW_W",
+            "YResolutionWindowed": "SBC_WINDOW_H",
+        }[key]
         try:
             int(value)
         except ValueError as err:
-            env_name = "SBC_WINDOW_POS_X" if key == "WindowPosX" else "SBC_WINDOW_POS_Y"
             raise RuntimeError(f"{env_name} must be an integer") from err
     settings_lines = settings_text.splitlines(keepends=True)
     for key, value in position_overrides.items():
