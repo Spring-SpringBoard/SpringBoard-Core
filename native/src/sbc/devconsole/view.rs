@@ -68,6 +68,7 @@ pub(crate) enum StatusAction {
     Undo,
     Redo,
     ClearHistory,
+    ToggleStatus,
 }
 
 /// One row in the undo/redo history strip. `undone` is the visual undo cursor:
@@ -126,6 +127,11 @@ pub(crate) struct DevConsoleView {
     status_metrics: Option<StatusMetricBindings>,
     status_action_disabled: [Option<RmlDataVariable<'static, bool>>; 3],
     status_history: Option<Rows<TextRow>>,
+    status_minimized: Option<RmlDataVariable<'static, bool>>,
+    status_sidebar_minimized: Option<RmlDataVariable<'static, bool>>,
+    status_tab_text: Option<RmlDataVariable<'static, String>>,
+    console_status_minimized: Option<RmlDataVariable<'static, bool>>,
+    console_sidebar_minimized: Option<RmlDataVariable<'static, bool>>,
     error_count: Option<RmlDataVariable<'static, String>>,
     line_count: Option<RmlDataVariable<'static, String>>,
     log_rows: Option<Rows<LogRow>>,
@@ -134,7 +140,7 @@ pub(crate) struct DevConsoleView {
     /// position from someone reading older edits.
     rendered_command_log: Option<Vec<HistoryCommand>>,
     hidden: Option<RmlDataVariable<'static, bool>>,
-    toolbar_pressed: Vec<(Action, RmlDataVariable<'static, bool>)>,
+    toolbar_pressed: [Option<RmlDataVariable<'static, bool>>; 10],
     log: Option<u64>,
     actions: ActionQueue,
     status_actions: StatusActionQueue,
@@ -184,12 +190,17 @@ impl Default for DevConsoleView {
             status_metrics: None,
             status_action_disabled: [None; 3],
             status_history: None,
+            status_minimized: None,
+            status_sidebar_minimized: None,
+            status_tab_text: None,
+            console_status_minimized: None,
+            console_sidebar_minimized: None,
             error_count: None,
             line_count: None,
             log_rows: None,
             rendered_command_log: None,
             hidden: None,
-            toolbar_pressed: Vec::new(),
+            toolbar_pressed: [None; 10],
             log: None,
             actions: Rc::new(RefCell::new(Vec::new())),
             status_actions: Rc::new(RefCell::new(Vec::new())),
@@ -266,7 +277,7 @@ impl DevConsoleView {
             return Ok(false);
         }
 
-        let (ctx, ok) = rml::create_context(interface, UI_CONTEXT)?;
+        let (ctx, ok) = rml.create_context(UI_CONTEXT)?;
         if !ok {
             return Ok(false);
         }
@@ -283,11 +294,10 @@ impl DevConsoleView {
             queue.borrow_mut().push(SelectionEvent::Extend(index));
         })?;
         self.hidden = Some(data_model.bind("hidden", !self.visible)?);
-        for action in Action::ALL {
-            if let Some(binding) = action.pressed_binding() {
-                self.toolbar_pressed
-                    .push((action, data_model.bind(binding, false)?));
-            }
+        self.console_status_minimized = Some(data_model.bind("status_minimized", false)?);
+        self.console_sidebar_minimized = Some(data_model.bind("sidebar_minimized", false)?);
+        for (index, action) in Action::ALL.iter().copied().enumerate() {
+            self.toolbar_pressed[index] = Some(data_model.bind(action.pressed_binding(), false)?);
         }
 
         let (doc, ok) = rml.context_create_document(ctx, "body")?;
@@ -296,7 +306,9 @@ impl DevConsoleView {
             self.line_count = None;
             self.log_rows = None;
             self.hidden = None;
-            self.toolbar_pressed.clear();
+            self.console_status_minimized = None;
+            self.console_sidebar_minimized = None;
+            self.toolbar_pressed = [None; 10];
             return Ok(false);
         }
         rml.document_set_title(doc, "Developer Console")?;
@@ -315,6 +327,29 @@ impl DevConsoleView {
         let visible = self.visible;
         self.set_visible(interface, visible)?;
         Ok(true)
+    }
+
+    pub(crate) fn sync_ui_layout(
+        &mut self,
+        status_min: bool,
+        sidebar_min: bool,
+    ) -> Result<(), Error> {
+        if let Some(field) = &self.status_minimized {
+            field.set(status_min)?;
+        }
+        if let Some(field) = &self.status_sidebar_minimized {
+            field.set(sidebar_min)?;
+        }
+        if let Some(field) = &self.status_tab_text {
+            field.set(if status_min { "▲" } else { "▼" }.to_string())?;
+        }
+        if let Some(field) = &self.console_status_minimized {
+            field.set(status_min)?;
+        }
+        if let Some(field) = &self.console_sidebar_minimized {
+            field.set(sidebar_min)?;
+        }
+        Ok(())
     }
 
     pub(crate) fn set_visible(
@@ -410,8 +445,13 @@ impl DevConsoleView {
         state: ToggleState,
     ) -> Result<(), Error> {
         let _ = interface;
-        for (action, pressed) in &self.toolbar_pressed {
-            pressed.set(state.is_pressed(*action))?;
+        for (index, action) in Action::ALL.iter().copied().enumerate() {
+            if !action.is_toggle() {
+                continue;
+            }
+            if let Some(pressed) = &self.toolbar_pressed[index] {
+                pressed.set(state.is_pressed(action))?;
+            }
         }
         Ok(())
     }
@@ -427,11 +467,16 @@ impl DevConsoleView {
         self.status_metrics = None;
         self.status_action_disabled = [None; 3];
         self.status_history = None;
+        self.status_minimized = None;
+        self.status_sidebar_minimized = None;
+        self.status_tab_text = None;
+        self.console_status_minimized = None;
+        self.console_sidebar_minimized = None;
         self.error_count = None;
         self.line_count = None;
         self.log_rows = None;
         self.hidden = None;
-        self.toolbar_pressed.clear();
+        self.toolbar_pressed = [None; 10];
         self.rendered_command_log = None;
         self.log = None;
         self.actions.borrow_mut().clear();
@@ -455,11 +500,16 @@ impl DevConsoleView {
         self.status_metrics = None;
         self.status_action_disabled = [None; 3];
         self.status_history = None;
+        self.status_minimized = None;
+        self.status_sidebar_minimized = None;
+        self.status_tab_text = None;
+        self.console_status_minimized = None;
+        self.console_sidebar_minimized = None;
         self.error_count = None;
         self.line_count = None;
         self.log_rows = None;
         self.hidden = None;
-        self.toolbar_pressed.clear();
+        self.toolbar_pressed = [None; 10];
         if let Some(doc) = self.document.take() {
             let _ = rml.document_close(doc);
         }

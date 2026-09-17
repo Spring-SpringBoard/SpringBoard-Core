@@ -1,4 +1,5 @@
-<div id="editor-status" data-model="editor_status">
+<div id="editor-status" data-model="editor_status" data-class-minimized="status_minimized" data-class-sidebar-minimized="sidebar_minimized">
+	<button id="status-tab-toggle" class="status-tab-toggle" title="Toggle status bar">{{ status_tab_text }}</button>
 	<div id="status-info" class="theme-surface-muted theme-framed">
 		<div id="status-position" class="status-line">{{ position }}</div>
 		<div id="status-performance" class="status-line">

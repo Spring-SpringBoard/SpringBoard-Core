@@ -1,4 +1,5 @@
-<div id="native-panel" class="panel-container theme-surface">
+<div id="native-panel" class="panel-container theme-surface" data-model="panel_shell" data-class-minimized="sidebar_minimized">
+    <button id="sidebar-tab-toggle" class="sidebar-tab-toggle" title="Toggle right sidebar">{{ sidebar_tab_text }}</button>
     <div id="tab-bar" class="tab-bar"></div>
     <div id="action-bar" class="action-bar"></div>
     <div id="editor-button-panel" class="editor-button-panel"></div>
@@ -16,6 +17,13 @@
         <button id="project-status-upload" class="project-status-btn">Upload Log</button>
         <button id="project-status-exit" class="project-status-btn danger">Exit</button>
     </div>
+</div>
+<div id="playback-controls" class="playback-controls-float theme-playback" data-model="panel_shell">
+    <button id="playback-play" class="playback-btn" data-class-active="game_running" title="Resume simulation">Play</button>
+    <button id="playback-pause" class="playback-btn" data-class-active="game_paused" title="Pause simulation">Pause</button>
+    <button id="playback-step" class="playback-btn" title="Step simulation 1 frame">Step</button>
+    <button id="toggle-status-bar" class="playback-btn toggle" data-class-active="status_bar_visible" title="Toggle bottom status bar">Status Bar</button>
+    <button id="toggle-sidebar" class="playback-btn toggle" data-class-active="sidebar_visible" title="Toggle right sidebar">Sidebar</button>
 </div>
 <div id="notifications-root" class="notifications-float" data-model="panel_shell">
     <div data-for="notification : notifications" class="notification">

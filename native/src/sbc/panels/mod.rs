@@ -24,7 +24,9 @@ pub(crate) mod rows;
 pub(crate) mod runtime;
 mod tab_bar;
 pub(crate) mod tooltip;
+pub(crate) mod ui_layout;
 mod view;
 
 pub(crate) use editor::Editor;
 pub(crate) use manager::PanelManager;
+pub(crate) use ui_layout::UiLayout;

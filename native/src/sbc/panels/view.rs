@@ -47,6 +47,11 @@ pub(crate) enum ShellEvent {
     Tab(Tab),
     Editor(&'static str),
     Action(Action),
+    Play,
+    Pause,
+    Step,
+    ToggleSidebar,
+    ToggleStatusBar,
 }
 
 pub(crate) type ShellQueue = Rc<RefCell<Vec<ShellEvent>>>;
@@ -58,6 +63,8 @@ pub(crate) struct PanelView {
     document: Option<u64>,
     root: Option<u64>,
     content: Option<u64>,
+    playback_controls: Option<u64>,
+    sidebar_tab_toggle: Option<u64>,
     project_status_caption: Option<RmlDataVariable<'static, String>>,
     project_open_disabled: Option<RmlDataVariable<'static, bool>>,
     notification_rows: Option<Rows<NotificationRow>>,
@@ -67,6 +74,12 @@ pub(crate) struct PanelView {
     cursor_tip_hidden: Option<RmlDataVariable<'static, bool>>,
     cursor_tip_left: Option<RmlDataVariable<'static, RmlPixels>>,
     cursor_tip_top: Option<RmlDataVariable<'static, RmlPixels>>,
+    sidebar_minimized: Option<RmlDataVariable<'static, bool>>,
+    sidebar_tab_text: Option<RmlDataVariable<'static, String>>,
+    sidebar_visible: Option<RmlDataVariable<'static, bool>>,
+    status_bar_visible: Option<RmlDataVariable<'static, bool>>,
+    game_running: Option<RmlDataVariable<'static, bool>>,
+    game_paused: Option<RmlDataVariable<'static, bool>>,
     action_bar: ActionBar,
     editor_buttons: EditorButtons,
     tab_bar: TabBar,
@@ -82,6 +95,8 @@ impl Default for PanelView {
             document: None,
             root: None,
             content: None,
+            playback_controls: None,
+            sidebar_tab_toggle: None,
             project_status_caption: None,
             project_open_disabled: None,
             notification_rows: None,
@@ -91,6 +106,12 @@ impl Default for PanelView {
             cursor_tip_hidden: None,
             cursor_tip_left: None,
             cursor_tip_top: None,
+            sidebar_minimized: None,
+            sidebar_tab_text: None,
+            sidebar_visible: None,
+            status_bar_visible: None,
+            game_running: None,
+            game_paused: None,
             action_bar: ActionBar::default(),
             editor_buttons: EditorButtons::default(),
             tab_bar: TabBar::default(),
@@ -152,6 +173,12 @@ impl PanelView {
             Some(data_model.bind("project_status_caption", String::new())?);
         self.project_open_disabled = Some(data_model.bind("project_open_disabled", true)?);
         self.notification_rows = Some(Rows::<NotificationRow>::bind(&data_model, "notifications")?);
+        self.sidebar_minimized = Some(data_model.bind("sidebar_minimized", false)?);
+        self.sidebar_tab_text = Some(data_model.bind("sidebar_tab_text", "▶".to_string())?);
+        self.sidebar_visible = Some(data_model.bind("sidebar_visible", true)?);
+        self.status_bar_visible = Some(data_model.bind("status_bar_visible", true)?);
+        self.game_running = Some(data_model.bind("game_running", true)?);
+        self.game_paused = Some(data_model.bind("game_paused", false)?);
         let tooltip_model = rml.create_data_model(ctx, "panel_tooltip")?;
         self.tooltip = Some(PanelTooltip::bind(&tooltip_model)?);
         let cursor_tip_model = rml.create_data_model(ctx, "cursor_tip")?;
@@ -166,6 +193,12 @@ impl PanelView {
             self.project_status_caption = None;
             self.project_open_disabled = None;
             self.notification_rows = None;
+            self.sidebar_minimized = None;
+            self.sidebar_tab_text = None;
+            self.sidebar_visible = None;
+            self.status_bar_visible = None;
+            self.game_running = None;
+            self.game_paused = None;
             self.tooltip = None;
             self.cursor_tip_title = None;
             self.cursor_tip_rows = None;
@@ -188,6 +221,8 @@ impl PanelView {
         self.document = Some(doc);
         self.root = element_by_id(interface, doc, "native-panel");
         self.content = element_by_id(interface, doc, "main-content");
+        self.playback_controls = element_by_id(interface, doc, "playback-controls");
+        self.sidebar_tab_toggle = element_by_id(interface, doc, "sidebar-tab-toggle");
 
         self.tab_bar
             .render(interface, doc, self.current_tab, &self.events)?;
@@ -198,6 +233,7 @@ impl PanelView {
             &self.events,
         )?;
         self.render_editor_buttons(interface)?;
+        self.bind_shell_buttons(interface, doc)?;
         Ok(true)
     }
 
@@ -283,6 +319,33 @@ impl PanelView {
         Ok(())
     }
 
+    pub(crate) fn sync_playback(
+        &mut self,
+        paused: bool,
+        sidebar_min: bool,
+        status_min: bool,
+    ) -> Result<(), Error> {
+        if let Some(var) = &self.game_paused {
+            var.set(paused)?;
+        }
+        if let Some(var) = &self.game_running {
+            var.set(!paused)?;
+        }
+        if let Some(var) = &self.sidebar_minimized {
+            var.set(sidebar_min)?;
+        }
+        if let Some(var) = &self.sidebar_tab_text {
+            var.set(if sidebar_min { "◀".to_string() } else { "▶".to_string() })?;
+        }
+        if let Some(var) = &self.sidebar_visible {
+            var.set(!sidebar_min)?;
+        }
+        if let Some(var) = &self.status_bar_visible {
+            var.set(!status_min)?;
+        }
+        Ok(())
+    }
+
     // ── Lifecycle ──────────────────────────────────────────────────
 
     /// The engine renders every RmlUi context in RmlGui::RenderFrame, between
@@ -306,6 +369,7 @@ impl PanelView {
         }
         self.root = None;
         self.content = None;
+        self.playback_controls = None;
         self.project_status_caption = None;
         self.project_open_disabled = None;
         self.notification_rows = None;
@@ -315,14 +379,57 @@ impl PanelView {
         self.cursor_tip_hidden = None;
         self.cursor_tip_left = None;
         self.cursor_tip_top = None;
+        self.sidebar_minimized = None;
+        self.sidebar_tab_text = None;
+        self.sidebar_visible = None;
+        self.status_bar_visible = None;
+        self.game_running = None;
+        self.game_paused = None;
     }
 
     pub(crate) fn contains(&self, interface: &NativeInterfaceRef, x: i32, y: i32) -> bool {
-        self.root
+        let in_root = self
+            .root
             .and_then(|r| {
                 interface
                     .rml_ui()
                     .element_is_point_within_element(r, x as f32, y as f32)
+                    .ok()
+            })
+            .unwrap_or(false);
+        if in_root {
+            return true;
+        }
+        let in_playback = self
+            .playback_controls
+            .and_then(|p| {
+                interface
+                    .rml_ui()
+                    .element_is_point_within_element(p, x as f32, y as f32)
+                    .ok()
+            })
+            .unwrap_or(false);
+        if in_playback {
+            return true;
+        }
+        let in_toggle = self
+            .sidebar_tab_toggle
+            .and_then(|t| {
+                interface
+                    .rml_ui()
+                    .element_is_point_within_element(t, x as f32, y as f32)
+                    .ok()
+            })
+            .unwrap_or(false);
+        if in_toggle {
+            return true;
+        }
+        self.document
+            .and_then(|doc| element_by_id(interface, doc, "project-status-root"))
+            .and_then(|status| {
+                interface
+                    .rml_ui()
+                    .element_is_point_within_element(status, x as f32, y as f32)
                     .ok()
             })
             .unwrap_or(false)
@@ -392,6 +499,8 @@ impl PanelView {
         self.document = None;
         self.root = None;
         self.content = None;
+        self.playback_controls = None;
+        self.sidebar_tab_toggle = None;
         self.project_status_caption = None;
         self.project_open_disabled = None;
         self.notification_rows = None;
@@ -401,9 +510,42 @@ impl PanelView {
         self.cursor_tip_hidden = None;
         self.cursor_tip_left = None;
         self.cursor_tip_top = None;
+        self.sidebar_minimized = None;
+        self.sidebar_tab_text = None;
+        self.sidebar_visible = None;
+        self.status_bar_visible = None;
+        self.game_running = None;
+        self.game_paused = None;
         self.action_bar.forget();
         self.editor_buttons.forget();
         self.tab_bar.forget();
         self.events.borrow_mut().clear();
+    }
+
+    fn bind_shell_buttons(
+        &self,
+        interface: &NativeInterfaceRef,
+        document: u64,
+    ) -> Result<(), Error> {
+        let buttons = [
+            ("playback-play", ShellEvent::Play),
+            ("playback-pause", ShellEvent::Pause),
+            ("playback-step", ShellEvent::Step),
+            ("toggle-status-bar", ShellEvent::ToggleStatusBar),
+            ("toggle-sidebar", ShellEvent::ToggleSidebar),
+            ("sidebar-tab-toggle", ShellEvent::ToggleSidebar),
+        ];
+        for (id, event) in buttons {
+            let Some(element) = element_by_id(interface, document, id) else {
+                continue;
+            };
+            let queue = self.events.clone();
+            interface
+                .rml_ui()
+                .element_add_event_listener(element, "click", false, move || {
+                    queue.borrow_mut().push(event.clone());
+                })?;
+        }
+        Ok(())
     }
 }

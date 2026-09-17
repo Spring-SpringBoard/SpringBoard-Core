@@ -26,3 +26,100 @@ body {
     height: 100%;
     pointer-events: auto;
 }
+
+#native-panel.minimized {
+    width: 36dp;
+    right: 0dp;
+    background-color: transparent;
+    border-left: none;
+}
+
+#native-panel.minimized .tab-bar,
+#native-panel.minimized .action-bar,
+#native-panel.minimized .editor-button-panel,
+#native-panel.minimized .main-content {
+    display: none;
+}
+
+.sidebar-tab-toggle {
+    position: absolute;
+    left: -28dp;
+    top: 8dp;
+    width: 28dp;
+    height: 36dp;
+    background-color: #171b18;
+    border: 1dp #313a33;
+    border-radius: 4dp 0dp 0dp 4dp;
+    color: #c8d0e0;
+    font-size: 16dp;
+    text-align: center;
+    line-height: 32dp;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.sidebar-tab-toggle:hover {
+    background-color: #242d26;
+    color: #ffffff;
+    border-color: #63b779;
+}
+
+#native-panel.minimized .sidebar-tab-toggle {
+    left: 4dp;
+    border-radius: 4dp;
+}
+
+/* Playback & View Controls at top */
+.playback-controls-float {
+    position: absolute;
+    left: 440dp;
+    top: 8dp;
+    height: 32dp;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 4dp;
+    padding: 3dp 6dp;
+    border-radius: 4dp;
+    background-color: #171b18;
+    border: 1dp #313a33;
+    pointer-events: auto;
+    box-sizing: border-box;
+}
+
+.playback-btn {
+    height: 24dp;
+    padding: 2dp 8dp;
+    font-size: 11dp;
+    color: #c8d0e0;
+    background-color: #22272b;
+    border: 1dp #4b545d;
+    border-radius: 3dp;
+    cursor: pointer;
+    display: inline-block;
+    text-align: center;
+    line-height: 20dp;
+    pointer-events: auto;
+}
+
+.playback-btn:hover {
+    background-color: #303940;
+    color: #ffffff;
+    border-color: #74818d;
+}
+
+.playback-btn.active {
+    background-color: #193b24;
+    border-color: #63b779;
+    color: #ffffff;
+}
+
+.playback-btn.toggle {
+    color: #9aa8b5;
+}
+
+.playback-btn.toggle.active {
+    background-color: #223545;
+    border-color: #5d9ad4;
+    color: #e2f0fc;
+}

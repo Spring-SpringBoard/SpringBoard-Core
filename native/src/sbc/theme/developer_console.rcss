@@ -27,6 +27,14 @@ body {
 	display: none;
 }
 
+#dev-console.sidebar-minimized {
+	right: 36dp;
+}
+
+#dev-console.status-minimized {
+	bottom: 26dp;
+}
+
 /* The scen_edit floating status and command windows live directly beneath the
    console. They are editor status, not console output, so F8 only hides the
    console and leaves these always-useful coordinates/history visible. */
@@ -43,6 +51,47 @@ body {
 	/* The children own the surface. Keeping this transparent avoids blending
 	   the shared surface twice across the status bar. */
 	background-color: transparent;
+}
+
+#editor-status.sidebar-minimized {
+	right: 36dp;
+}
+
+#editor-status.minimized {
+	height: 24dp;
+}
+
+#editor-status.minimized #status-info,
+#editor-status.minimized #command-status {
+	display: none;
+}
+
+.status-tab-toggle {
+	position: absolute;
+	left: 8dp;
+	top: -22dp;
+	width: 36dp;
+	height: 22dp;
+	background-color: #22272b;
+	border: 1dp #4b545d;
+	border-radius: 4dp 4dp 0dp 0dp;
+	color: #c8d0e0;
+	font-size: 11dp;
+	text-align: center;
+	line-height: 20dp;
+	cursor: pointer;
+	pointer-events: auto;
+}
+
+.status-tab-toggle:hover {
+	background-color: #303940;
+	border-color: #74818d;
+	color: #ffffff;
+}
+
+#editor-status.minimized .status-tab-toggle {
+	top: 1dp;
+	border-radius: 4dp;
 }
 
 #status-info {

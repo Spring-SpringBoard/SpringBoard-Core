@@ -108,6 +108,9 @@ impl DevConsoleView {
             Some(data_model.bind("clear_history_disabled", true)?),
         ];
         self.status_history = Some(Rows::<TextRow>::bind(&data_model, "command_history")?);
+        self.status_minimized = Some(data_model.bind("status_minimized", false)?);
+        self.status_sidebar_minimized = Some(data_model.bind("sidebar_minimized", false)?);
+        self.status_tab_text = Some(data_model.bind("status_tab_text", "▼".to_string())?);
 
         let (document, created) = rml.context_create_document(context, "body")?;
         if !created {
@@ -117,6 +120,9 @@ impl DevConsoleView {
             self.status_metrics = None;
             self.status_action_disabled = [None; 3];
             self.status_history = None;
+            self.status_minimized = None;
+            self.status_sidebar_minimized = None;
+            self.status_tab_text = None;
             return Ok(());
         }
         rml.document_set_title(document, "Editor status")?;
@@ -137,6 +143,7 @@ impl DevConsoleView {
             ("status-undo", StatusAction::Undo),
             ("status-redo", StatusAction::Redo),
             ("status-clear", StatusAction::ClearHistory),
+            ("status-tab-toggle", StatusAction::ToggleStatus),
         ] {
             let Some(button) = element_by_id(interface, doc, id) else {
                 continue;

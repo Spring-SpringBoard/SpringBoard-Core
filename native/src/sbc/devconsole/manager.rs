@@ -15,6 +15,7 @@ use crate::sbc::devconsole::status::StatusPresenter;
 use crate::sbc::devconsole::view::{DevConsoleView, HistoryCommand, StatusAction, ToggleState};
 use crate::sbc::keys::{is_key, KeyMods};
 use crate::sbc::objects::SelectionManager;
+use crate::sbc::panels::UiLayout;
 use crate::sbc::port_flags::{self, UiImpl};
 
 inventory::submit! {
@@ -127,7 +128,10 @@ impl DevConsoleManager {
         }
 
         self.process_actions()?;
-        self.process_status_actions();
+        self.process_status_actions(models);
+        let status_min = models.get::<UiLayout>().status_bar_minimized;
+        let sidebar_min = models.get::<UiLayout>().sidebar_minimized;
+        self.view.sync_ui_layout(status_min, sidebar_min)?;
         if !self.view.is_ready() {
             return Ok(());
         }
@@ -244,14 +248,22 @@ impl DevConsoleManager {
         Ok(false)
     }
 
-    fn process_status_actions(&mut self) {
+    fn process_status_actions(&mut self, models: &mut Models) {
         for action in self.view.drain_status_actions() {
-            let command: Box<dyn Command> = match action {
-                StatusAction::Undo => Box::new(UndoCommand),
-                StatusAction::Redo => Box::new(RedoCommand),
-                StatusAction::ClearHistory => Box::new(ClearUndoRedoCommand),
-            };
-            self.pending_commands.push(command);
+            match action {
+                StatusAction::ToggleStatus => {
+                    models.get::<UiLayout>().toggle_status_bar();
+                }
+                StatusAction::Undo => {
+                    self.pending_commands.push(Box::new(UndoCommand));
+                }
+                StatusAction::Redo => {
+                    self.pending_commands.push(Box::new(RedoCommand));
+                }
+                StatusAction::ClearHistory => {
+                    self.pending_commands.push(Box::new(ClearUndoRedoCommand));
+                }
+            }
         }
     }
 

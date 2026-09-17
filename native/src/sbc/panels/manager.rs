@@ -23,6 +23,7 @@ use crate::sbc::panels::input::{PanelInput, PendingAction};
 use crate::sbc::panels::modal::ModalEvent;
 use crate::sbc::panels::modal_stack::ModalStack;
 use crate::sbc::panels::numeric_drag_overlay::NumericDragOverlay;
+use crate::sbc::panels::ui_layout::UiLayout;
 use crate::sbc::panels::view::{PanelView, ShellEvent};
 use crate::sbc::port_flags::{self, UiImpl};
 use crate::sbc::project::new_project_dialog::NewProjectDialog;
@@ -238,6 +239,15 @@ impl PanelManager {
                     .get::<NotificationManager>()
                     .render(self.view.notification_rows())?;
             }
+            let is_paused = self
+                .interface
+                .display()
+                .get_game_speed()
+                .map(|(_, _, paused)| paused)
+                .unwrap_or(false);
+            let sidebar_min = models.get::<UiLayout>().sidebar_minimized;
+            let status_min = models.get::<UiLayout>().status_bar_minimized;
+            self.view.sync_playback(is_paused, sidebar_min, status_min)?;
         }
         Ok(())
     }
@@ -341,6 +351,21 @@ impl PanelManager {
                     )?;
                 }
                 ShellEvent::Action(action) => self.run_action(action, models)?,
+                ShellEvent::Play => {
+                    let _ = self.interface.messages().send_commands("pause 0", "");
+                }
+                ShellEvent::Pause => {
+                    let _ = self.interface.messages().send_commands("pause 1", "");
+                }
+                ShellEvent::Step => {
+                    let _ = self.interface.messages().send_commands("skip 1", "");
+                }
+                ShellEvent::ToggleSidebar => {
+                    models.get::<UiLayout>().toggle_sidebar();
+                }
+                ShellEvent::ToggleStatusBar => {
+                    models.get::<UiLayout>().toggle_status_bar();
+                }
             }
         }
         Ok(())
