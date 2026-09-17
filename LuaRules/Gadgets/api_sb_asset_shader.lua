@@ -85,15 +85,19 @@ local params = {
 	-- Diagnostic: 0 shades every texel as a dielectric again, which is what the engine did before
 	-- the metallic map was read, for telling its contribution apart from everything else.
 	metal = true,
-	shadowDensity = 0.7,
+	-- Off. Measured on the turntable: at the default bias the shadow pass contributed nothing
+	-- but acne -- local contrast 0.0215 against 0.0175 with it off -- and at any bias high enough
+	-- to clear the acne the result was pixel-identical to off. So it was buying stripes and no
+	-- shadows. `sb_asset_shadow_density` and `sb_asset_shadow_bias` turn it back on to retry.
+	shadowDensity = 0.0,
 	shadowBias = 1.5,
 	ambientScale = 1.0,
 	-- Hemisphere ambient: the share a surface facing away from the sky still gets, and how much
 	-- more one facing it collects. See the note beside `ambientLight`.
-	ambientFloor = 0.18,
-	ambientSky = 1.10,
+	ambientFloor = 0.01,
+	ambientSky = 0.10,
 	-- How strongly the sun lights the surface, against that ambient. See the note by `direct`.
-	directScale = 1.45,
+	directScale = 8.0,
 	-- Per-surface-type tiling detail for assets that ship a family strip (`shipdetailtex`).
 	-- Additive to everything else; toggled at runtime with `/luarules assetfamilydetail`, so its
 	-- cost can be read straight off the frame rate.
@@ -116,8 +120,20 @@ local params = {
 	dirt = true,
 	colourDetail = true,
 	-- AgX, as Blender renders these. 0 falls back to the old plain gamma.
+	--
+	-- These five numbers are one setting and were picked together, against a Blender render of
+	-- the same maps rather than by eye: nearly no ambient, a sun eight times what it was, and an
+	-- exposure that places the result low on the AgX curve. Separately none of them work. Raising
+	-- the sun alone lifts the mid-tones with the highlights and the ship just gets brighter;
+	-- lowering the exposure alone compresses the range and the ship just gets flatter. Together
+	-- they give what the studio render has and this shader did not: most of the hull dark, with a
+	-- narrow bright edge that does not clip.
+	--
+	-- Ambient is near zero because these ships are in space. There is nothing out there to light
+	-- the side facing away from the sun, and a hemisphere that fills it in is what made every
+	-- metal surface read as grey plastic.
 	tonemap = 1.0,
-	tonemapExposure = 1.0,
+	tonemapExposure = 0.28,
 	-- How much environment a metal reflects. Space is dark; see the note beside `envLight`.
 	envScale = 1.0,
 }
