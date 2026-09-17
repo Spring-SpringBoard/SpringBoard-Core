@@ -85,11 +85,18 @@ local params = {
 	-- Diagnostic: 0 shades every texel as a dielectric again, which is what the engine did before
 	-- the metallic map was read, for telling its contribution apart from everything else.
 	metal = true,
-	-- Off. Measured on the turntable: at the default bias the shadow pass contributed nothing
-	-- but acne -- local contrast 0.0215 against 0.0175 with it off -- and at any bias high enough
-	-- to clear the acne the result was pixel-identical to off. So it was buying stripes and no
-	-- shadows. `sb_asset_shadow_density` and `sb_asset_shadow_bias` turn it back on to retry.
-	shadowDensity = 0.0,
+	-- On, but only because the shadow map is now big enough to be worth sampling.
+	--
+	-- This was off for a while, and the reason was real: at the engine's default ShadowMapSize of
+	-- 2048 the pass contributed nothing but acne, and no bias setting bought a shadow without the
+	-- stripes. That was never a bias problem. The engine fits one shadow map to the camera
+	-- frustum, so a 2048 map put a texel several elmos across on a 200-elmo ship -- wider than the
+	-- panel relief it was meant to shadow, which is the definition of a surface that can only
+	-- shadow itself. Measured on the turntable as local contrast over the shadows-off baseline:
+	-- +0.0040 at 2048, +0.0015 at 4096, +0.0003 at 8192. The project now asks for 8192
+	-- (`tools/dev/springsettings.cfg`), where the banding across the shield face is gone and
+	-- about a sixth of the lit pixels still differ from shadows off -- real occlusion, no acne.
+	shadowDensity = 1.0,
 	shadowBias = 1.5,
 	ambientScale = 1.0,
 	-- Hemisphere ambient: the share a surface facing away from the sky still gets, and how much

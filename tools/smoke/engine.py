@@ -208,6 +208,11 @@ def _settings_text() -> str:
         # the measurement never uses.
         "XResolutionWindowed": os.environ.get("SBC_WINDOW_W"),
         "YResolutionWindowed": os.environ.get("SBC_WINDOW_H"),
+        # Shadow resolution, for runs that are measuring shadow quality rather than using it.
+        # The engine spreads one shadow map over the camera frustum, so how many texels land on
+        # a model is a property of the run, not of the model: an A/B needs to move it.
+        "ShadowMapSize": os.environ.get("SBC_SHADOW_MAP_SIZE"),
+        "Shadows": os.environ.get("SBC_SHADOWS"),
     }
     position_overrides = {key: value for key, value in position_overrides.items() if value}
     if not position_overrides:
@@ -218,6 +223,8 @@ def _settings_text() -> str:
             "WindowPosY": "SBC_WINDOW_POS_Y",
             "XResolutionWindowed": "SBC_WINDOW_W",
             "YResolutionWindowed": "SBC_WINDOW_H",
+            "ShadowMapSize": "SBC_SHADOW_MAP_SIZE",
+            "Shadows": "SBC_SHADOWS",
         }[key]
         try:
             int(value)
