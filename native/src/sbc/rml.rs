@@ -6,6 +6,16 @@ pub(crate) mod rows;
 
 const FONT: &str = "fonts/Poppins-Regular.ttf";
 
+/// Weights the theme asks for. RmlUi resolves `font-weight` against the faces that were actually
+/// registered and warns, per element, per frame, when it cannot find one -- and five rules across
+/// the console and panel themes ask for bold.
+///
+/// Only the regular face ships, so bold is registered from the same file. That is a real
+/// compromise and worth stating: text styled bold renders at regular weight rather than
+/// synthesising a heavier one. The alternatives were to drop `font-weight: bold` from the themes,
+/// which loses the distinction the rules were written for, or to add a second TTF.
+const WEIGHTS: [Option<i32>; 2] = [None, Some(700)];
+
 const CURSOR_ALIASES: [(&str, &str); 7] = [
     ("default", "cursornormal"),
     ("pointer", "cursornormal"),
@@ -17,8 +27,10 @@ const CURSOR_ALIASES: [(&str, &str); 7] = [
 ];
 pub(crate) fn setup(interface: &NativeInterfaceRef) {
     let rml = interface.rml_ui();
-    if let Err(err) = rml.load_font_face(FONT, true, None) {
-        log::warn!("rml: could not load {FONT}: {err:?}");
+    for weight in WEIGHTS {
+        if let Err(err) = rml.load_font_face(FONT, true, weight) {
+            log::warn!("rml: could not load {FONT} at weight {weight:?}: {err:?}");
+        }
     }
     for (rml_name, recoil_name) in CURSOR_ALIASES {
         let _ = rml.set_mouse_cursor_alias(rml_name, recoil_name);

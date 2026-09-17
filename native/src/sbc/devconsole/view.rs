@@ -297,7 +297,11 @@ impl DevConsoleView {
         self.console_status_minimized = Some(data_model.bind("status_minimized", false)?);
         self.console_sidebar_minimized = Some(data_model.bind("sidebar_minimized", false)?);
         for (index, action) in Action::ALL.iter().copied().enumerate() {
-            self.toolbar_pressed[index] = Some(data_model.bind(action.pressed_binding(), false)?);
+            // Only the actions that carry a pressed state have a binding to bind; the array is
+            // indexed by action, so the rest simply stay None.
+            if let Some(binding) = action.pressed_binding() {
+                self.toolbar_pressed[index] = Some(data_model.bind(binding, false)?);
+            }
         }
 
         let (doc, ok) = rml.context_create_document(ctx, "body")?;
@@ -446,9 +450,8 @@ impl DevConsoleView {
     ) -> Result<(), Error> {
         let _ = interface;
         for (index, action) in Action::ALL.iter().copied().enumerate() {
-            if !action.is_toggle() {
-                continue;
-            }
+            // An action with no pressed binding has no slot filled, so this skips it already --
+            // `is_toggle` said the same thing twice and no longer exists.
             if let Some(pressed) = &self.toolbar_pressed[index] {
                 pressed.set(state.is_pressed(action))?;
             }
