@@ -37,6 +37,7 @@ local DETAIL_DIRT_TEXUNIT = 8
 local GLOW_TEXUNIT = 9
 local SHIP_DETAIL_TEXUNIT = 10
 local METAL_TEXUNIT = 11
+local SHIP_TONE_TEXUNIT = 12
 
 -- Raw GL enums, because `SetForwardMaterialUniform` takes the type as a plain int and
 -- the `GL` table stops at FLOAT_VEC4 -- it never exports FLOAT_VEC3. Spelling both out
@@ -110,6 +111,8 @@ local params = {
 	-- cost can be read straight off the frame rate.
 	familyDetail = true,
 	familyDetailStrength = 1.0,
+	-- The armour layer, for assets that ship one (`shipdetailtonetex`). Off only to compare against.
+	armourDetail = true,
 	-- Diagnostic: scales the direct specular term. 0 isolates whether a bright artefact is a
 	-- highlight or is in the maps.
 	specularScale = 1.0,
@@ -148,6 +151,9 @@ local params = {
 -- Start-up overrides from modoptions, so a headless run can A/B a single frame without the panel.
 do
 	local options = Spring.GetModOptions() or {}
+	if options.sb_asset_armour then
+		params.armourDetail = options.sb_asset_armour ~= "0"
+	end
 	if options.sb_asset_family_detail then
 		params.familyDetail = options.sb_asset_family_detail ~= "0"
 	end
@@ -278,6 +284,15 @@ uniform vec3 shipDetailSlot;
 uniform float shipGrainScale;
 uniform float shipFittingScale;
 uniform float shipFittingSlot;
+// The armour layer. One family whose surface noise is drawn here, per pixel and in object space,
+// instead of baked: baked, it is only as sharp as the atlas, which on a close camera is blur. The
+// tone strip has the detail strip's layout and holds the slot's albedo as a ratio to its own mean,
+// stored halved so "no change" is mid-grey.
+uniform sampler2D shipToneTex;
+uniform float shipArmourEnabled;
+uniform float shipArmourSlot;
+uniform float shipArmourScale;
+uniform float shipArmourContrast;
 
 uniform mat4 shadowMatrix;
 uniform mat4 viewInverse;
@@ -588,6 +603,28 @@ vec4 sampleShipSlot(vec2 uv, vec2 duvdx, vec2 duvdy, float slot)
 		vec2(duvdx.x * tile, duvdx.y), vec2(duvdy.x * tile, duvdy.y));
 }
 
+// The tone strip's counterpart of `sampleShipSlot`: same layout, same gradient handling.
+float sampleShipToneSlot(vec2 uv, vec2 duvdx, vec2 duvdy, float slot)
+{
+	float tile = shipDetailSlot.x;
+	vec2 atlasUv = vec2(fract(uv.x) * tile + slot * shipDetailSlot.y + shipDetailSlot.z, uv.y);
+	return texture2DGradARB(shipToneTex, atlasUv,
+		vec2(duvdx.x * tile, duvdx.y), vec2(duvdy.x * tile, duvdy.y)).r;
+}
+
+// Triplanar tone, weighted exactly as `sampleShipDetail` weights its planes.
+float sampleShipTone(vec3 position, vec3 normal, float scale, float slot)
+{
+	vec3 w = pow(abs(normalize(normal)), vec3(4.0));
+	w /= max(w.x + w.y + w.z, 1e-5);
+	vec3 p = position * scale;
+	vec3 dpdx = dFdx(p);
+	vec3 dpdy = dFdy(p);
+	return sampleShipToneSlot(p.yz, dpdx.yz, dpdy.yz, slot) * w.x
+	     + sampleShipToneSlot(p.zx, dpdx.zx, dpdy.zx, slot) * w.y
+	     + sampleShipToneSlot(p.xy, dpdx.xy, dpdy.xy, slot) * w.z;
+}
+
 // Triplanar from object space, sharpened so the three projections do not smear into each other on
 // the flat faces these hulls are made of. Three lookups.
 vec4 sampleShipDetail(vec3 position, vec3 normal, float scale, float slot, out float spread)
@@ -730,6 +767,34 @@ void main()
 				tangentNormal, normalize(vec3(fn.xy * familyDetailStrength * fittingFade, fn.z)));
 			shipRoughness += (f.a - 0.5) * 0.25 * familyDetailStrength;
 		}
+	}
+
+	// The armour layer: the scanned steel on a tile a few dozen elmos across, colour included.
+	//
+	// Sampled twice, at scales in the golden ratio and offset from each other, and averaged. A
+	// tile this large repeats only a handful of times across a shield face, few enough that the
+	// eye finds the repeat and reads it as a printed pattern; two incommensurate copies do not
+	// line up anywhere, so there is no repeat to find. Averaging halves the variance, so the
+	// deviation is re-expanded by sqrt(2) about the mean -- the same arithmetic the studio shader
+	// uses for the same reason. Faded like every runtime layer once its tile is finer than a pixel.
+	if (shipArmourEnabled > 0.5 && abs(family - shipArmourSlot) < 0.5) {
+		const vec3 ARMOUR_OFFSET = vec3(13.7, 5.3, 9.1);
+		const float ARMOUR_SECOND = 0.618;
+		float fade = detailResolvable(objectPos, shipArmourScale);
+		float spreadA, spreadB;
+		vec4 a = sampleShipDetail(objectPos, objectNormal, shipArmourScale, shipArmourSlot, spreadA);
+		vec4 b = sampleShipDetail(objectPos + ARMOUR_OFFSET, objectNormal,
+			shipArmourScale * ARMOUR_SECOND, shipArmourSlot, spreadB);
+		float toneA = sampleShipTone(objectPos, objectNormal, shipArmourScale, shipArmourSlot);
+		float toneB = sampleShipTone(objectPos + ARMOUR_OFFSET, objectNormal,
+			shipArmourScale * ARMOUR_SECOND, shipArmourSlot);
+		// Stored halved: 0.5 is the slot's own mean.
+		float ratio = 1.0 + ((toneA + toneB) - 1.0) * 1.41421 * shipArmourContrast;
+		albedo *= mix(1.0, max(ratio, 0.0), fade);
+		vec3 an = (a.xyz + b.xyz) - 1.0;
+		tangentNormal = blendNormals(tangentNormal,
+			normalize(vec3(an.xy * 1.41421 * familyDetailStrength * fade, an.z)));
+		shipRoughness += ((a.a + b.a) * 0.5 - 0.5) * 0.35 * 1.41421 * fade;
 	}
 
 	// The colour tile is white outside a pit and black at its centre. It is localized dirt,
@@ -1034,6 +1099,14 @@ local function collectFeatureMaps()
 				shipFittingSlot = customNumber(custom, "shipdetail_fitting_slot", 0),
 				shipGrainElmos = customNumber(custom, "shipdetail_grain_elmos", 2.0),
 				shipFittingElmos = customNumber(custom, "shipdetail_fitting_elmos", 25.6),
+				-- The armour layer: one family whose surface noise is drawn here, per pixel, on a
+				-- coarse tile of its own, rather than baked into the atlas where it is only as
+				-- sharp as the atlas is. The tone strip carries its colour; the detail strip
+				-- above carries its normal and roughness, in the same slot.
+				shipTone = custom.shipdetailtonetex,
+				shipArmourSlot = customNumber(custom, "shipdetail_armour_slot", -1),
+				shipArmourElmos = customNumber(custom, "shipdetail_armour_elmos", 24.0),
+				shipArmourContrast = customNumber(custom, "shipdetail_armour_contrast", 1.0),
 			}
 			found = found + 1
 		end
@@ -1065,6 +1138,7 @@ local function compileShader()
 			glowTex = GLOW_TEXUNIT,
 			shipDetailTex = SHIP_DETAIL_TEXUNIT,
 			metalTex = METAL_TEXUNIT,
+			shipToneTex = SHIP_TONE_TEXUNIT,
 		},
 	})
 
@@ -1115,6 +1189,9 @@ local function applyObjectMaterial(objectID, defID, isUnit)
 	if maps.metal then
 		texunits[METAL_TEXUNIT] = maps.metal
 	end
+	if maps.shipTone then
+		texunits[SHIP_TONE_TEXUNIT] = maps.shipTone
+	end
 	local material = {
 		shader = shader,
 		usecamera = true,
@@ -1149,6 +1226,11 @@ local function applyObjectMaterial(objectID, defID, isUnit)
 			setUniform("shipGrainScale", GL_FLOAT, {1.0 / math.max(maps.shipGrainElmos, 0.01)})
 			setUniform("shipFittingScale", GL_FLOAT, {1.0 / math.max(maps.shipFittingElmos, 0.01)})
 			setUniform("shipFittingSlot", GL_FLOAT, {maps.shipFittingSlot})
+			local armour = maps.shipTone and maps.shipArmourSlot >= 0 and params.armourDetail
+			setUniform("shipArmourEnabled", GL_FLOAT, {armour and 1.0 or 0.0})
+			setUniform("shipArmourSlot", GL_FLOAT, {maps.shipArmourSlot})
+			setUniform("shipArmourScale", GL_FLOAT, {1.0 / math.max(maps.shipArmourElmos, 0.01)})
+			setUniform("shipArmourContrast", GL_FLOAT, {maps.shipArmourContrast})
 		end
 		setUniform("metalEnabled", GL_FLOAT, {hasMetal})
 		setUniform("detailColourEnabled", GL_FLOAT, {hasColour})
