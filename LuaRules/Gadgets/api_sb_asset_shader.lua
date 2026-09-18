@@ -102,8 +102,13 @@ local params = {
 	ambientScale = 1.0,
 	-- Hemisphere ambient: the share a surface facing away from the sky still gets, and how much
 	-- more one facing it collects. See the note beside `ambientLight`.
-	ambientFloor = 0.01,
-	ambientSky = 0.10,
+	--
+	-- Raised from 0.01 / 0.10 (with `envScale` from 1 to 6) by A/B on the Phalanx: at the old
+	-- levels the side away from the sun -- the whole keel -- was black, form and all. These lift it
+	-- to a readable dark grey and leave the lit side and its contrast where they were, because the
+	-- sun at `directScale` 8 still dominates anything it reaches.
+	ambientFloor = 0.25,
+	ambientSky = 1.0,
 	-- How strongly the sun lights the surface, against that ambient. See the note by `direct`.
 	directScale = 8.0,
 	-- Per-surface-type tiling detail for assets that ship a family strip (`shipdetailtex`).
@@ -139,13 +144,15 @@ local params = {
 	-- they give what the studio render has and this shader did not: most of the hull dark, with a
 	-- narrow bright edge that does not clip.
 	--
-	-- Ambient is near zero because these ships are in space. There is nothing out there to light
-	-- the side facing away from the sun, and a hemisphere that fills it in is what made every
-	-- metal surface read as grey plastic.
+	-- Ambient was near zero because these ships are in space, with nothing out there to light the
+	-- side facing away from the sun. That matched the studio render but left the keel a black
+	-- hole in play, so it now fills to a dark grey (see `ambientFloor`). It still stays well under
+	-- the sun: a strong hemisphere fill is what once made every metal surface read as grey plastic.
 	tonemap = 1.0,
 	tonemapExposure = 0.28,
 	-- How much environment a metal reflects. Space is dark; see the note beside `envLight`.
-	envScale = 1.0,
+	-- Metal takes almost nothing from the diffuse ambient, so this is what lifts a metal keel.
+	envScale = 6.0,
 }
 
 -- Start-up overrides from modoptions, so a headless run can A/B a single frame without the panel.
