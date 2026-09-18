@@ -782,6 +782,14 @@ void main()
 
 	vec3 baseTangentNormal = texture2D(normalTex, texCoord).xyz * 2.0 - 1.0;
 
+	// The face's own orientation, for choosing which plane a ship layer projects from. Not the
+	// interpolated normal: hulls are smoothed by angle, and a big flat side of two triangles next to
+	// a shallow chamfer carries a normal that swings across the whole face towards it. Weighted by
+	// that, the projection drifted plane to plane over one flat plate, and where an edge-on plane
+	// took over the fittings smeared into streaks (Shield Ship flank, debug view 11). Taken here,
+	// in uniform control flow, where the derivatives are defined for every pixel.
+	vec3 faceNormal = normalize(cross(dFdx(objectPos), dFdy(objectPos)));
+
 	// Mortar is sampled at a different scale, not merely weaker. It is an aggregate and
 	// mottles at a few elmos where dressed stone weathers across tens, and feature *size* is
 	// what the eye reads as a different material long before a change in strength does.
@@ -863,7 +871,7 @@ void main()
 		float grain = FAMILY_GRAIN[int(family)] * familyDetailStrength * grainFade;
 		vec4 grainSurface;
 		vec4 g = stochasticShipDetail(
-			objectPos, objectNormal, shipGrainScale, family, 0.0, grainSurface, grainSpread);
+			objectPos, faceNormal, shipGrainScale, family, 0.0, grainSurface, grainSpread);
 		vec3 gn = g.xyz * 2.0 - 1.0;
 		grainSpread = clamp(grainSpread, 1e-4, 1.0);
 		tangentNormal = blendNormals(tangentNormal, normalize(vec3(gn.xy * grain, gn.z)));
@@ -871,7 +879,7 @@ void main()
 		if (abs(family - 1.0) < 0.5) {
 			float fittingSpread;
 			vec4 f = sampleShipDetail(
-				objectPos, objectNormal, shipFittingScale, shipFittingSlot, fittingSpread);
+				objectPos, faceNormal, shipFittingScale, shipFittingSlot, fittingSpread);
 			vec3 fn = f.xyz * 2.0 - 1.0;
 			float fittingFade = detailResolvable(objectPos, shipFittingScale);
 			tangentNormal = blendNormals(
@@ -892,7 +900,7 @@ void main()
 		vec4 surface;
 		float armourSpread;
 		vec4 a = stochasticShipDetail(
-			objectPos, objectNormal, shipArmourScale, shipArmourSlot, 1.0, surface, armourSpread);
+			objectPos, faceNormal, shipArmourScale, shipArmourSlot, 1.0, surface, armourSpread);
 		// Tone is stored halved: 0.5 is the slot's own mean, and 1.0 twice it.
 		float ratio = 1.0 + (surface.r - 0.5) * 2.0 * shipArmourContrast;
 		albedo *= mix(1.0, max(ratio, 0.0), fade);
