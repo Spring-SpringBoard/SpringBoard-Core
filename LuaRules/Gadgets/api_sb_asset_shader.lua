@@ -1003,6 +1003,7 @@ void main()
 	// the offset the lookup lands half a shadow map away from the fragment, which is
 	// why this shader appeared to have no self-shadowing at all.
 	float occluded = 1.0;
+	bool shadowOutside = false;
 	if (shadowsEnabled > 0.5) {
 		vec4 world = viewInverse * vec4(viewPos, 1.0);
 
@@ -1025,7 +1026,18 @@ void main()
 
 		vec4 shadowVertexPos = shadowMatrix * world;
 		shadowVertexPos.xy += vec2(0.5);
-		occluded = shadow2DProj(shadowTex, shadowVertexPos).r;
+
+		// Outside the shadow map is unknown, not dark. The engine fits the map to the part of
+		// the camera frustum within 100 elmos of the terrain's height (ShadowHandler.cpp,
+		// CalcShadowProjectionPos), and ships fly well above that, so part of a hull can land
+		// off the map's edge. Sampling there clamps to the edge texel and reads as shadow:
+		// a straight dark band across a shield, cast by nothing, that moved with the camera
+		// because the fit does.
+		vec3 shadowCoord = shadowVertexPos.xyz / shadowVertexPos.w;
+		shadowOutside = any(lessThan(shadowCoord, vec3(0.0))) ||
+			any(greaterThan(shadowCoord, vec3(1.0)));
+		if (!shadowOutside)
+			occluded = shadow2DProj(shadowTex, shadowVertexPos).r;
 	}
 
 	// Terminator softening, kept separate from the lookup so the Shadow debug view
@@ -1111,7 +1123,8 @@ void main()
 		else if (debugView < 3.5) color = normalize(detailNormal) * 0.5 + 0.5;
 		else if (debugView < 4.5) color = vec3(roughness);
 		else if (debugView < 5.5) color = vec3(occlusion);
-		else if (debugView < 6.5) color = vec3(occluded);
+		// Red: off the shadow map's edge, so treated as lit rather than looked up.
+		else if (debugView < 6.5) color = shadowOutside ? vec3(0.8, 0.1, 0.1) : vec3(occluded);
 		else if (debugView < 7.5) color = normalize(viewTangent) * 0.5 + 0.5;
 		else if (debugView < 8.5) color = vec3(fract(texCoord * UV_GRADIENT_REPEAT), 0.0);
 		else if (debugView < 9.5) color = uvChecker(texCoord);
