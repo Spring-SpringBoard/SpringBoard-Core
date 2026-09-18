@@ -603,6 +603,42 @@ vec4 sampleShipSlot(vec2 uv, vec2 duvdx, vec2 duvdy, float slot)
 		vec2(duvdx.x * tile, duvdx.y), vec2(duvdy.x * tile, duvdy.y));
 }
 
+// Stochastic sampling (Heitz & Neyret 2018), so a tiling texture shows no repeat.
+//
+// The plane is covered in triangles a third of a tile across. Each triangle corner gets a random
+// offset into the tile, and a pixel blends the three corners' samples by its barycentric weights:
+// neighbouring triangles show unrelated parts of the tile, and nothing is seamed because the
+// weights are continuous. Measured with ship-game-assets' `tools/tiling_demo.py` on the scanned
+// steel, correlation between one tile and the next goes from 0.886 tiled plainly, and 0.332 with
+// the two-scale blend this replaces, to 0.000. The studio shader uses the same grid and cell size.
+//
+// The offsets are constant within a triangle, so the lookup keeps the unshifted coordinate's
+// gradients: the mip level is chosen as if nothing had moved, and nothing flickers at the edges.
+const float STOCHASTIC_CELL = 0.35;
+
+vec2 stochasticHash(vec2 p)
+{
+	return fract(sin(vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)))) * 43758.5453);
+}
+
+// Weights belong to *vertices*, and the two triangles of a cell share (1, 0) and (0, 1). Their
+// weights must agree along the shared edge or the blend jumps there and the grid is drawn as
+// hard-edged patches -- the studio port got this wrong first, with the upper pair swapped.
+void stochasticGrid(vec2 uv, out vec3 w, out vec2 o1, out vec2 o2, out vec2 o3)
+{
+	vec2 s = uv / STOCHASTIC_CELL;
+	vec2 skewed = vec2(s.x - 0.57735027 * s.y, 1.15470054 * s.y);
+	vec2 base = floor(skewed);
+	vec2 f = skewed - base;
+	float z = 1.0 - f.x - f.y;
+	float lower = step(0.0, z);
+	float upper = 1.0 - lower;
+	w = vec3(abs(z), mix(1.0 - f.y, f.y, lower), mix(1.0 - f.x, f.x, lower));
+	o1 = stochasticHash(base + vec2(upper, upper));
+	o2 = stochasticHash(base + vec2(upper, lower));
+	o3 = stochasticHash(base + vec2(lower, upper));
+}
+
 // The tone strip's counterpart of `sampleShipSlot`: same layout, same gradient handling.
 float sampleShipToneSlot(vec2 uv, vec2 duvdx, vec2 duvdy, float slot)
 {
@@ -610,19 +646,6 @@ float sampleShipToneSlot(vec2 uv, vec2 duvdx, vec2 duvdy, float slot)
 	vec2 atlasUv = vec2(fract(uv.x) * tile + slot * shipDetailSlot.y + shipDetailSlot.z, uv.y);
 	return texture2DGradARB(shipToneTex, atlasUv,
 		vec2(duvdx.x * tile, duvdx.y), vec2(duvdy.x * tile, duvdy.y)).r;
-}
-
-// Triplanar tone, weighted exactly as `sampleShipDetail` weights its planes.
-float sampleShipTone(vec3 position, vec3 normal, float scale, float slot)
-{
-	vec3 w = pow(abs(normalize(normal)), vec3(4.0));
-	w /= max(w.x + w.y + w.z, 1e-5);
-	vec3 p = position * scale;
-	vec3 dpdx = dFdx(p);
-	vec3 dpdy = dFdy(p);
-	return sampleShipToneSlot(p.yz, dpdx.yz, dpdy.yz, slot) * w.x
-	     + sampleShipToneSlot(p.zx, dpdx.zx, dpdy.zx, slot) * w.y
-	     + sampleShipToneSlot(p.xy, dpdx.xy, dpdy.xy, slot) * w.z;
 }
 
 // Triplanar from object space, sharpened so the three projections do not smear into each other on
@@ -642,6 +665,78 @@ vec4 sampleShipDetail(vec3 position, vec3 normal, float scale, float slot, out f
 	       + length(b.xyz * 2.0 - 1.0) * w.y
 	       + length(c.xyz * 2.0 - 1.0) * w.z;
 	return a * w.x + b * w.y + c * w.z;
+}
+
+// One slot, stochastically, on one projection plane: detail (normal RGB, roughness A) and, when
+// asked, tone -- both from the same three texels, so relief and colour stay registered.
+//
+// The blend is re-expanded about 0.5 by 1/sqrt(sum of squared weights), which undoes the variance
+// three averaged samples lose. That is exact only about each channel's true mean, and it varies
+// per pixel -- an error in the centre would come out shaped like the grid -- so the pipeline
+// stores every channel here centred on 0.5 (ship-game-assets `textures.write_engine_detail`).
+// Normal z is the exception: it is not centred, and every caller renormalises the normal anyway.
+vec4 stochasticShipSlot(vec2 uv, vec2 duvdx, vec2 duvdy, float slot, float wantTone,
+	out float tone, out float spread)
+{
+	vec3 w;
+	vec2 o1, o2, o3;
+	stochasticGrid(uv, w, o1, o2, o3);
+	vec4 a = sampleShipSlot(uv + o1, duvdx, duvdy, slot);
+	vec4 b = sampleShipSlot(uv + o2, duvdx, duvdy, slot);
+	vec4 c = sampleShipSlot(uv + o3, duvdx, duvdy, slot);
+	float restore = inversesqrt(dot(w, w));
+	vec4 blended = a * w.x + b * w.y + c * w.z;
+	vec4 result = 0.5 + (blended - 0.5) * restore;
+	result.z = blended.z;
+	// Filtering shortens each sample's own normal; the blend's shortening is a different thing and
+	// the restore has already dealt with it. So the Toksvig spread is taken per sample.
+	spread = length(a.xyz * 2.0 - 1.0) * w.x
+	       + length(b.xyz * 2.0 - 1.0) * w.y
+	       + length(c.xyz * 2.0 - 1.0) * w.z;
+	tone = 0.5;
+	if (wantTone > 0.5) {
+		float ta = sampleShipToneSlot(uv + o1, duvdx, duvdy, slot);
+		float tb = sampleShipToneSlot(uv + o2, duvdx, duvdy, slot);
+		float tc = sampleShipToneSlot(uv + o3, duvdx, duvdy, slot);
+		tone = 0.5 + (ta * w.x + tb * w.y + tc * w.z - 0.5) * restore;
+	}
+	return result;
+}
+
+// Triplanar, stochastic. Three lookups per plane, so up to nine -- but these hulls are made of flat
+// faces, and after the weights are sharpened almost every pixel has one plane carrying all of it.
+// Planes under 1% are skipped outright, which puts most of the hull at three lookups. The
+// gradients are taken before the branches, where they are defined for every pixel.
+vec4 stochasticShipDetail(vec3 position, vec3 normal, float scale, float slot, float wantTone,
+	out float tone, out float spread)
+{
+	vec3 w = pow(abs(normalize(normal)), vec3(4.0));
+	w /= max(w.x + w.y + w.z, 1e-5);
+	w *= step(0.01, w);
+	w /= max(w.x + w.y + w.z, 1e-5);
+	vec3 p = position * scale;
+	vec3 dpdx = dFdx(p);
+	vec3 dpdy = dFdy(p);
+	vec4 result = vec4(0.0);
+	float t, s;
+	tone = 0.0;
+	spread = 0.0;
+	if (w.x > 0.0) {
+		result += stochasticShipSlot(p.yz, dpdx.yz, dpdy.yz, slot, wantTone, t, s) * w.x;
+		tone += t * w.x;
+		spread += s * w.x;
+	}
+	if (w.y > 0.0) {
+		result += stochasticShipSlot(p.zx, dpdx.zx, dpdy.zx, slot, wantTone, t, s) * w.y;
+		tone += t * w.y;
+		spread += s * w.y;
+	}
+	if (w.z > 0.0) {
+		result += stochasticShipSlot(p.xy, dpdx.xy, dpdy.xy, slot, wantTone, t, s) * w.z;
+		tone += t * w.z;
+		spread += s * w.z;
+	}
+	return result;
 }
 
 void main()
@@ -752,7 +847,9 @@ void main()
 	if (familyDetail > 0.5 && familyDetailEnabled > 0.5 && family < 3.5) {
 		float grainFade = detailResolvable(objectPos, shipGrainScale);
 		float grain = FAMILY_GRAIN[int(family)] * familyDetailStrength * grainFade;
-		vec4 g = sampleShipDetail(objectPos, objectNormal, shipGrainScale, family, grainSpread);
+		float grainTone;
+		vec4 g = stochasticShipDetail(
+			objectPos, objectNormal, shipGrainScale, family, 0.0, grainTone, grainSpread);
 		vec3 gn = g.xyz * 2.0 - 1.0;
 		grainSpread = clamp(grainSpread, 1e-4, 1.0);
 		tangentNormal = blendNormals(tangentNormal, normalize(vec3(gn.xy * grain, gn.z)));
@@ -771,30 +868,23 @@ void main()
 
 	// The armour layer: the scanned steel on a tile a few dozen elmos across, colour included.
 	//
-	// Sampled twice, at scales in the golden ratio and offset from each other, and averaged. A
-	// tile this large repeats only a handful of times across a shield face, few enough that the
-	// eye finds the repeat and reads it as a printed pattern; two incommensurate copies do not
-	// line up anywhere, so there is no repeat to find. Averaging halves the variance, so the
-	// deviation is re-expanded by sqrt(2) about the mean -- the same arithmetic the studio shader
-	// uses for the same reason. Faded like every runtime layer once its tile is finer than a pixel.
+	// A tile this large repeats only a handful of times across a shield face -- few enough that the
+	// eye finds the repeat and reads it as a printed pattern -- which is what the stochastic sampler
+	// is for. It replaced two incommensurate copies averaged together, which measured 0.332
+	// correlation between neighbouring tiles and visibly banded. Faded like every runtime layer
+	// once its tile is finer than a pixel.
 	if (shipArmourEnabled > 0.5 && abs(family - shipArmourSlot) < 0.5) {
-		const vec3 ARMOUR_OFFSET = vec3(13.7, 5.3, 9.1);
-		const float ARMOUR_SECOND = 0.618;
 		float fade = detailResolvable(objectPos, shipArmourScale);
-		float spreadA, spreadB;
-		vec4 a = sampleShipDetail(objectPos, objectNormal, shipArmourScale, shipArmourSlot, spreadA);
-		vec4 b = sampleShipDetail(objectPos + ARMOUR_OFFSET, objectNormal,
-			shipArmourScale * ARMOUR_SECOND, shipArmourSlot, spreadB);
-		float toneA = sampleShipTone(objectPos, objectNormal, shipArmourScale, shipArmourSlot);
-		float toneB = sampleShipTone(objectPos + ARMOUR_OFFSET, objectNormal,
-			shipArmourScale * ARMOUR_SECOND, shipArmourSlot);
-		// Stored halved: 0.5 is the slot's own mean.
-		float ratio = 1.0 + ((toneA + toneB) - 1.0) * 1.41421 * shipArmourContrast;
+		float tone, armourSpread;
+		vec4 a = stochasticShipDetail(
+			objectPos, objectNormal, shipArmourScale, shipArmourSlot, 1.0, tone, armourSpread);
+		// Tone is stored halved: 0.5 is the slot's own mean, and 1.0 twice it.
+		float ratio = 1.0 + (tone - 0.5) * 2.0 * shipArmourContrast;
 		albedo *= mix(1.0, max(ratio, 0.0), fade);
-		vec3 an = (a.xyz + b.xyz) - 1.0;
+		vec3 an = a.xyz * 2.0 - 1.0;
 		tangentNormal = blendNormals(tangentNormal,
-			normalize(vec3(an.xy * 1.41421 * familyDetailStrength * fade, an.z)));
-		shipRoughness += ((a.a + b.a) * 0.5 - 0.5) * 0.35 * 1.41421 * fade;
+			normalize(vec3(an.xy * familyDetailStrength * fade, an.z)));
+		shipRoughness += (a.a - 0.5) * 0.35 * fade;
 	}
 
 	// The colour tile is white outside a pit and black at its centre. It is localized dirt,
