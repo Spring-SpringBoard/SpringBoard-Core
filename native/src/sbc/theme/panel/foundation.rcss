@@ -31,7 +31,7 @@ body {
     width: 36dp;
     right: 0dp;
     background-color: transparent;
-    border-left: none;
+    border-left-width: 0dp;
 }
 
 #native-panel.minimized .tab-bar,

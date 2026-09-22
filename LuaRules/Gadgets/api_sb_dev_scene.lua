@@ -29,7 +29,9 @@ if gadgetHandler:IsSyncedCode() then
 	function gadget:Initialize()
 		local defID = FeatureDefNames[SCENE] and FeatureDefNames[SCENE].id
 		if not defID then
-			Spring.Log("sb-dev-scene", LOG.WARNING, ("no featureDef %q"):format(SCENE))
+			-- A game mounted over the editor names its scenes the same way and places them
+			-- itself; nothing is wrong when the name is not a feature here.
+			Spring.Log("sb-dev-scene", LOG.INFO, ("no featureDef %q; not placing one"):format(SCENE))
 			gadgetHandler:RemoveGadget(self)
 			return
 		end
