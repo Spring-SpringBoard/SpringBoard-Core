@@ -68,7 +68,6 @@ The renderer sends `values` after every command, so the panel shows the applied 
 | Panel | `native/src/sbc/render_lab/`: `renderer.rs` stores the last reply (a `Model` fed by the `renderLab` message handler), `model.rs` builds fields, `layout.rs` groups them by category, `behavior.rs` turns field changes into commands, `protocol.rs` sends them. |
 | Push button | `panels/fields/button.rs`: value is the press count, so each press is a change. |
 | Control channel | `describe` returns the open editor's live fields (`PanelManager::control_open_fields`). `Control.refresh_schema()` in `tools/control` fetches it again. `tools/sweep` drives the Lab's `debugView`. |
-| Lua renderer | `LuaRules/Gadgets/api_sb_asset_shader.lua` implements the same protocol for the generated-asset shader. It disables itself when `luarules/wasm/shipgame-look.wasm` exists. |
 | Ship Game | `wasm-src/crates/shipcore/src/lab/` (catalogue, wire format, state; engine-free, tested), `rules-synced/src/game_lab.rs` (relay, test scenes), `rules-unsynced/src/lab.rs` (applies values, overlay, camera). `just lab` opens the editor with the Lab; `just lab-sweep` captures every scene, view and solo. |
 
 ## Not done
