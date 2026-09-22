@@ -70,6 +70,7 @@ fn route(sbc: &mut SBC, request: &Request) -> Handled {
         "runtime.reload_native_modules" => runtime::reload_native_modules(sbc),
         "runtime.reset_session" => runtime::reset_session(sbc),
         "runtime.emulate_input" => runtime::emulate_input(sbc, request.params.clone()),
+        "runtime.give_order" => runtime::give_order(sbc, request.params.clone()),
         other => Err(ControlError::no_such_method(other)),
     }
 }

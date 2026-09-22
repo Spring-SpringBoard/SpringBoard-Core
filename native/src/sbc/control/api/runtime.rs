@@ -41,6 +41,40 @@ pub(crate) fn reset_session(sbc: &mut SBC) -> Handled {
     })))
 }
 
+/// Select `units` (default: every unit of the local team) and give them one order, as a player's
+/// click does: the engine's `GiveOrder` on the selection, sent over the network like any order.
+pub(crate) fn give_order(sbc: &SBC, params: Value) -> Handled {
+    let interface = sbc.interface();
+    let cmd = integer(&params, "cmd")?;
+    let values: Vec<f32> = params
+        .get("params")
+        .and_then(Value::as_array)
+        .map(|list| list.iter().filter_map(Value::as_f64).map(|v| v as f32).collect())
+        .unwrap_or_default();
+    let units: Vec<i32> = match params.get("units").and_then(Value::as_array) {
+        Some(list) => list.iter().filter_map(Value::as_i64).map(|id| id as i32).collect(),
+        None => {
+            let team = interface
+                .player()
+                .get_local_team_id()
+                .map_err(|error| ControlError::failed(format!("local team: {error:?}")))?;
+            interface
+                .units_query()
+                .get_team_units(team)
+                .map_err(|error| ControlError::failed(format!("team units: {error:?}")))?
+        }
+    };
+    interface
+        .selection()
+        .select_unit_array(&units, false)
+        .map_err(|error| ControlError::failed(format!("select: {error:?}")))?;
+    let given = interface
+        .units_commands()
+        .give_order(cmd, &values, 0, 0)
+        .map_err(|error| ControlError::failed(format!("give order: {error:?}")))?;
+    Ok(Reply::now(json!({ "units": units, "given": given })))
+}
+
 /// Drive the engine's debug input emulation from the E2E harness.
 pub(crate) fn emulate_input(sbc: &SBC, params: Value) -> Handled {
     let kind = params
