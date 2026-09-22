@@ -78,7 +78,11 @@ pub(crate) fn is_cheating(interface: &NativeInterfaceRef) -> bool {
 }
 
 pub(crate) fn is_god_mode(interface: &NativeInterfaceRef) -> bool {
-    interface.game().is_god_mode_enabled().unwrap_or(false)
+    // Enabled at all, then for allies and for enemies; the console shows the first.
+    interface
+        .game()
+        .is_god_mode_enabled()
+        .is_ok_and(|(enabled, _allies, _enemies)| enabled)
 }
 
 pub(crate) fn is_global_los(interface: &NativeInterfaceRef) -> bool {

@@ -36,7 +36,7 @@ const UI_STYLE: &str = concat!(
     include_str!("../theme/panel/asset_picker.rcss"),
     include_str!("../theme/panel/notifications.rcss"),
     include_str!("../theme/panel/project_status.rcss"),
-    include_str!("../theme/panel/asset_shader.rcss"),
+    include_str!("../theme/panel/render_lab.rcss"),
 );
 
 /// A shell-level click, queued by an RmlUi event listener and drained by the
@@ -335,7 +335,11 @@ impl PanelView {
             var.set(sidebar_min)?;
         }
         if let Some(var) = &self.sidebar_tab_text {
-            var.set(if sidebar_min { "◀".to_string() } else { "▶".to_string() })?;
+            var.set(if sidebar_min {
+                "◀".to_string()
+            } else {
+                "▶".to_string()
+            })?;
         }
         if let Some(var) = &self.sidebar_visible {
             var.set(!sidebar_min)?;

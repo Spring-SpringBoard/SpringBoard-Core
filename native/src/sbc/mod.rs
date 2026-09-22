@@ -1,6 +1,5 @@
 mod actions;
 mod areas;
-mod asset_shader;
 mod chonsole;
 mod command_system;
 pub mod commands_api;
@@ -19,6 +18,7 @@ mod panels;
 mod port_flags;
 mod project;
 mod render;
+mod render_lab;
 mod states;
 mod teams;
 mod terrain_cpu;

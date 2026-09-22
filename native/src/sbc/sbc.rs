@@ -28,6 +28,10 @@ pub struct SBC {
     pub(crate) control: Option<ControlServer>,
 }
 
+/// What a renderer's Rendering Lab replies start with, and the handler tag they go to.
+const RENDERER_REPLY_PREFIX: &str = "springboard|lab|";
+const RENDERER_REPLY_TAG: &str = "renderLab";
+
 /// The `{ tag, data }` envelope Lua sends over `Spring.InvokeNativeModule`.
 /// `data` is left as raw JSON — only the command system knows its shape.
 #[derive(Deserialize)]
@@ -56,6 +60,31 @@ impl NativeModule for SBC {
 
     fn handle_lua_call(&mut self, msg: &str) -> Result<(), Error> {
         self.route(msg);
+        Ok(())
+    }
+
+    /// Every `SendLuaRulesMsg`, whoever sent it. A renderer that is not Lua answers the
+    /// Rendering Lab this way: it cannot call the native module, and with a game mounted as a
+    /// mutator there is no SpringBoard Lua to relay for it.
+    fn handle_lua_msg(
+        &mut self,
+        _player_id: i32,
+        _script: i32,
+        _mode: i32,
+        data: &[u8],
+    ) -> Result<(), Error> {
+        let Some(reply) = std::str::from_utf8(data)
+            .ok()
+            .and_then(|text| text.strip_prefix(RENDERER_REPLY_PREFIX))
+        else {
+            return Ok(());
+        };
+        match serde_json::from_str(reply) {
+            Ok(data) => {
+                crate::sbc::message_handler::dispatch(self, RENDERER_REPLY_TAG, data);
+            }
+            Err(err) => error!("renderer reply is not JSON: {err}"),
+        }
         Ok(())
     }
 

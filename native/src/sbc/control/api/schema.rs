@@ -6,8 +6,11 @@ use serde_json::{json, Value};
 use crate::sbc::command_system::registry::registered_class_names;
 use crate::sbc::panels::field::{FieldSpec, FieldValue};
 use crate::sbc::panels::registry::{editors_for, Tab};
+use crate::sbc::panels::PanelManager;
+use crate::sbc::sbc::SBC;
 
-pub(crate) fn describe() -> Value {
+pub(crate) fn describe(sbc: &mut SBC) -> Value {
+    let open = sbc.model::<PanelManager>().control_open_fields();
     let tabs: Vec<Value> = Tab::all()
         .into_iter()
         .map(|tab| {
@@ -17,11 +20,14 @@ pub(crate) fn describe() -> Value {
                     // Building the editor is what gives its field list. Editors
                     // are plain field structs until they are bound to a
                     // document, so this touches nothing.
-                    let editor = (spec.make)();
+                    let fields = match &open {
+                        Some((name, fields)) if *name == spec.name => fields.clone(),
+                        _ => (spec.make)().field_specs(),
+                    };
                     json!({
                         "name": spec.name,
                         "caption": spec.caption,
-                        "fields": editor.field_specs().into_iter().map(field_json).collect::<Vec<_>>(),
+                        "fields": fields.into_iter().map(field_json).collect::<Vec<_>>(),
                     })
                 })
                 .collect();

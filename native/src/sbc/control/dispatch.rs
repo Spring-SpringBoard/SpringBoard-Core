@@ -50,7 +50,7 @@ pub(crate) fn finish_update(sbc: &mut SBC) {
 
 fn route(sbc: &mut SBC, request: &Request) -> Handled {
     match request.method.as_str() {
-        "describe" => Ok(Reply::now(schema::describe())),
+        "describe" => Ok(Reply::now(schema::describe(sbc))),
         "ui.open" => editors::open(sbc, params(request)?),
         "ui.set" => editors::set(sbc, params(request)?),
         "ui.get" => editors::get(sbc, params(request)?),

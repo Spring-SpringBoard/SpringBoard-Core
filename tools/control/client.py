@@ -29,6 +29,14 @@ class Control:
         self._dialogs = index_dialogs(self, schema)
         self.commands = Commands(self, schema["commands"])
 
+    def refresh_schema(self) -> None:
+        """Fetch `describe` again: an editor that builds its fields once open is only
+        described in full after it has been opened."""
+        schema = self._connection.call("describe")
+        self._editors = index_editors(self, schema)
+        self._dialogs = index_dialogs(self, schema)
+        self.commands = Commands(self, schema["commands"])
+
     @property
     def instance_id(self) -> str:
         return self._connection.instance_id

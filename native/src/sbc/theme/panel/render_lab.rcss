@@ -1,0 +1,55 @@
+/* Rendering Lab: the notes and the explanation block under the fields. */
+
+div.render-lab-note
+{
+	display: block;
+	margin: 4dp 0dp 6dp 0dp;
+	padding: 8dp;
+	background-color: #0f1a12;
+	border: 1dp #2c4a33;
+	color: #9fb8a6;
+	font-size: 12dp;
+}
+
+div.render-lab-explain
+{
+	display: block;
+	margin: 4dp 0dp 6dp 0dp;
+	padding: 8dp;
+	background-color: #0f1a12;
+	border: 1dp #2c4a33;
+}
+
+div.render-lab-explain-title
+{
+	display: block;
+	color: #d8e8dc;
+	font-size: 14dp;
+	margin-bottom: 4dp;
+}
+
+span.render-lab-explain-id
+{
+	color: #6f8a76;
+	font-size: 11dp;
+}
+
+div.render-lab-explain-heading
+{
+	display: block;
+	color: #7fc48f;
+	font-size: 11dp;
+	margin-top: 6dp;
+}
+
+div.render-lab-explain-text
+{
+	display: block;
+	color: #b9cbbf;
+	font-size: 12dp;
+}
+
+div.field-button button.field-push
+{
+	width: 100%;
+}

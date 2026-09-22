@@ -104,6 +104,13 @@ impl PanelManager {
         self.control_field_value(name)
     }
 
+    /// The open editor's fields as they are now: an editor that builds its fields at run
+    /// time (Properties, the Rendering Lab) has none until it is open.
+    pub(crate) fn control_open_fields(&self) -> Option<(&'static str, Vec<FieldSpec>)> {
+        let name = self.view.active_editor()?;
+        Some((name, self.slot.editor()?.field_specs()))
+    }
+
     pub(crate) fn control_field_value(&self, name: &str) -> Result<FieldValue, ControlError> {
         Ok(self.control_field_spec(name)?.value)
     }

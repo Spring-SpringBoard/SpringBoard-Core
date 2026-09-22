@@ -12,7 +12,7 @@ from control import Editor
 from . import capture
 from .framing import Framing
 
-EDITOR = "assetShaderEditor"
+EDITOR = "renderLab"
 DEBUG_FIELD = "debugView"
 
 # The right-hand panel's fixed width, cropped away so a frame is about the asset.
