@@ -680,8 +680,10 @@ void main()
 	// is for. It replaced two incommensurate copies averaged together, which measured 0.332
 	// correlation between neighbouring tiles and visibly banded. Faded like every runtime layer
 	// once its tile is finer than a pixel.
+	float armourShown = 0.0;
 	if (shipArmourEnabled > 0.5 && abs(family - shipArmourSlot) < 0.5) {
 		float fade = detailResolvable(objectPos, shipArmourScale);
+		armourShown = fade;
 		vec4 surface;
 		float armourSpread;
 		vec4 a = stochasticShipDetail(
@@ -912,8 +914,10 @@ void main()
 #ifdef IBL
 	if (iblEnabled > 0.5) {
 		hemisphere = 0.0;
-		vec3 worldN = normalize((viewInverse * vec4(N, 0.0)).xyz);
-		vec3 worldR = normalize((viewInverse * vec4(reflection, 0.0)).xyz);
+		// The engine loads cube maps upside down (see the sky pass): flip y to look up.
+		const vec3 CUBE_FLIP = vec3(1.0, -1.0, 1.0);
+		vec3 worldN = normalize((viewInverse * vec4(N, 0.0)).xyz) * CUBE_FLIP;
+		vec3 worldR = normalize((viewInverse * vec4(reflection, 0.0)).xyz) * CUBE_FLIP;
 		vec3 matt = textureCubeLod(envMap, worldN, IBL_SPECULAR_LEVELS).rgb;
 		vec3 sheen = textureCubeLod(envMap, worldR, roughness * (IBL_SPECULAR_LEVELS - 1.0)).rgb;
 		ambientLight = matt * matt * iblDiffuse * occlusion * ambientScale;
@@ -1010,6 +1014,8 @@ void main()
 		// `metaltex` has been written in the wrong convention.
 		else if (debugView < 19.5)
 			color = vec3(texture2D(metalTex, vec2(texCoord.x, 1.0 - texCoord.y)).r);
+		// 20: where the armor layer is applied, and how strongly after its distance fade.
+		else if (debugView < 20.5) color = vec3(armourShown);
 		else                       color = vec3(detailScaleFine, detailStrength * 0.1, 0.0);
 		gl_FragColor = vec4(color, 1.0);
 		return;

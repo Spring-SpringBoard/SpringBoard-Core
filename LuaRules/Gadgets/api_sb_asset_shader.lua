@@ -60,7 +60,7 @@ local LAB_CONTROLS = {
 local LAB_VIEWS = {
 	"final", "albedo", "normal", "detail_normal", "roughness", "occlusion", "shadow", "tangent",
 	"uv_gradient", "uv_checker", "object_position", "object_normal", "detail_sample",
-	"detail_spread", "grain_spread", "dirt", "pits", "metalness", "glow", "metalness_flipped",
+	"detail_spread", "grain_spread", "dirt", "pits", "metalness", "glow", "metalness_flipped", "armor",
 }
 local LAB_VIEW_NAMES = {
 	"Final", "Albedo", "Normal", "Detail normal", "Roughness", "Occlusion", "Shadow",
