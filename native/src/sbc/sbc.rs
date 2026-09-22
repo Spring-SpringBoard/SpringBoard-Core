@@ -28,7 +28,7 @@ pub struct SBC {
     pub(crate) control: Option<ControlServer>,
 }
 
-/// What a renderer's Rendering Lab replies start with, and the handler tag they go to.
+/// Prefix of Rendering Lab replies, and the message handler tag they are dispatched to.
 const RENDERER_REPLY_PREFIX: &str = "springboard|lab|";
 const RENDERER_REPLY_TAG: &str = "renderLab";
 
@@ -63,9 +63,9 @@ impl NativeModule for SBC {
         Ok(())
     }
 
-    /// Every `SendLuaRulesMsg`, whoever sent it. A renderer that is not Lua answers the
-    /// Rendering Lab this way: it cannot call the native module, and with a game mounted as a
-    /// mutator there is no SpringBoard Lua to relay for it.
+    /// Receives every `SendLuaRulesMsg`. A non-Lua renderer (Core WASM) replies to the
+    /// Rendering Lab this way, since it cannot call the native module and a mounted game
+    /// replaces SpringBoard's LuaUI.
     fn handle_lua_msg(
         &mut self,
         _player_id: i32,

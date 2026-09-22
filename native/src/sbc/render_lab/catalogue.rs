@@ -1,5 +1,5 @@
-//! What a renderer says it offers, as it arrives. Concepts, not uniforms: the editor shows
-//! these and never needs to know what stands behind them.
+//! Deserialized renderer capabilities: controls, views, overlays, scenes. Ids are rendering
+//! concepts, not shader uniforms.
 
 use std::collections::BTreeMap;
 
@@ -61,7 +61,7 @@ pub(crate) struct Lights {
     pub chosen: u32,
 }
 
-/// Where every control stands, after any command.
+/// Current renderer state, sent after every command.
 #[derive(Debug, Clone, Deserialize, PartialEq, Default)]
 pub(crate) struct State {
     #[serde(default)]

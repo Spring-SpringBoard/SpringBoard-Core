@@ -11,7 +11,7 @@ use super::model::{LabModel, Role, NONE};
 use super::protocol;
 use super::renderer::RendererModel;
 
-/// How often the renderer is asked for its capabilities while it has given none.
+/// Interval between capability requests until the renderer answers.
 const ASK_AGAIN: Duration = Duration::from_secs(2);
 
 #[derive(Default)]
@@ -53,7 +53,7 @@ impl Behavior for LabBehavior {
             return Watch::Rebuild;
         }
         if model.state_from != renderer.state_revision() {
-            // The status line carries the lights and the solo, so it is markup, not a value.
+            // Status line (light counts, solo) is markup, not a field value.
             return Watch::Rebuild;
         }
         Watch::Unchanged

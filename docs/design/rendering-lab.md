@@ -1,41 +1,36 @@
 ---
 name: Rendering Lab
-description: A panel that switches, solos, inspects and explains whatever renderer is running, by concept rather than by uniform
+description: Panel that toggles, solos, inspects and documents the running renderer's features, addressed by concept id
 ---
 
 # Rendering Lab
 
-`Env → Rendering Lab`. The panel has no controls of its own: it asks the running renderer
-what it offers and builds its fields from the answer. Ship Game's renderer (a Core WASM
-module) answers with its materials, lights, effects, frame passes and levels of detail; the
-generated-asset shader gadget answers with its material layers and light strengths. Another
-game's renderer would answer with its own.
+`Env → Rendering Lab`. The panel has no built-in controls. On open it requests the running
+renderer's capabilities and builds its fields from the reply. Ship Game's renderer (Core WASM)
+reports materials, lights, effects, frame passes and levels of detail. The generated-asset
+shader gadget reports its material layers and light strengths.
 
-Status: **V1** — toggle, solo, reset, named debug views, one overlay (local lights), test
-scenes, and the text beside every control.
+Status: V1. Toggle, solo, reset, named debug views, one overlay (local lights), test scenes,
+and a description for every control.
 
-## The rule
+## Ids are concepts
 
-> Expose rendering concepts, not renderer implementation details.
+Controls are named by rendering concept (`lighting.local`), not by implementation
+(`shader.uniform.lightCount`). If the implementation changes, the id, panel and test scene
+stay the same; only the renderer's description text changes.
 
-A control is `lighting.local`, never `shader.uniform.lightCount`. When the implementation
-under a concept changes (32 uniform lights today, clustered lights later) the id, the panel
-and the test scene stay; only the renderer's explanation text changes.
+## Terms
 
-## Three things kept apart
-
-- **Control** — what is on: `material.dirt`, `lighting.ibl`, `frame.bloom` ...
-- **Debug view** — what a pixel contains: albedo, normal, roughness ... one quantity as colour.
-- **Test scene** — what to look at it in: one ship, one light, nothing else.
-
-**Solo** is a preset over controls: whatever would drown a feature out goes off, the feature
-comes on, and the values from before come back when the solo ends. Which controls a feature
-drowns in is the renderer's to say (`solo` in its capabilities).
+- **Control**: a feature switch or value, e.g. `material.dirt`, `lighting.ibl`, `frame.bloom`.
+- **Debug view**: one shader quantity shown as color (albedo, normal, roughness, ...).
+- **Test scene**: a fixed setup to inspect in, e.g. one ship with one light.
+- **Solo**: switches off the controls listed in the feature's `solo` set, switches the feature
+  on, and restores the previous values when the solo ends. The renderer defines each set.
 
 ## Protocol
 
-Editor → renderer, as a LuaRules message in SpringBoard's envelope
-(`lua_bridge::rules_message`, tag `renderLab`, `data` a line of text):
+Editor to renderer: a LuaRules message in SpringBoard's envelope (`lua_bridge::rules_message`,
+tag `renderLab`), `data` is one command line:
 
 ```
 list
@@ -47,10 +42,9 @@ reset
 scene <id>
 ```
 
-Renderer → editor, a JSON object prefixed `springboard|lab|`, sent as a **rules** message
-(`SendLuaRulesMsg`). The native module hears every rules message (`SBC::handle_lua_msg`), so
-this needs no Lua on the way — which matters, because a game mounted as a mutator replaces
-SpringBoard's `LuaUI/main.lua` and no SpringBoard widget runs then.
+Renderer to editor: a JSON object prefixed `springboard|lab|`, sent with `SendLuaRulesMsg`.
+The native module receives every rules message (`SBC::handle_lua_msg`). No Lua relay is used
+because a game mounted as a mutator replaces SpringBoard's `LuaUI/main.lua`.
 
 ```json
 {"kind":"capabilities","controls":[{"id":"lighting.local","name":"Local lights",
@@ -62,24 +56,23 @@ SpringBoard's `LuaUI/main.lua` and no SpringBoard widget runs then.
  "scenes":[{"id":"local_light","name":"Dynamic light","what":"..."}],
  "values":{...},"view":"final","overlays_on":[],"solo":null,"scene":null,
  "lights":{"candidates":0,"chosen":0}}
-{"kind":"values", ...the same tail...}
+{"kind":"values", ...same state fields...}
 ```
 
-`values` is sent after every command, so the panel always shows what the renderer has,
-not what it asked for.
+The renderer sends `values` after every command, so the panel shows the applied state.
 
-## Where the pieces are
+## Code
 
 | | |
 | --- | --- |
-| Panel | `native/src/sbc/render_lab/` — `renderer.rs` keeps the last reply (a `Model`, fed by the `renderLab` message handler), `model.rs` builds fields from it, `layout.rs` lays them out by category, `behavior.rs` turns field changes into lines, `protocol.rs` sends them. |
-| Push button | `panels/fields/button.rs` — its value is a press count, so every press is a change. |
-| Control channel | `describe` lists the open editor's live fields (`PanelManager::control_open_fields`), since this panel has none until the renderer answers; `Control.refresh_schema()` in `tools/control` refetches. `tools/sweep` drives the Lab's `debugView`. |
-| Lua renderer | `LuaRules/Gadgets/api_sb_asset_shader.lua` answers the same lines for the generated-asset shader, and stands down when the game's renderer (`luarules/wasm/shipgame-look.wasm`) is mounted. |
-| Ship Game | `wasm-src/crates/shipcore/src/lab/` (catalogue, wire format, state; engine-free, tested), `rules-synced/src/game_lab.rs` (relay and test scenes), `rules-unsynced/src/lab.rs` (values into the renderer, overlay, camera). `just lab` there drives the panel through the control channel and captures every scene, view and solo. |
+| Panel | `native/src/sbc/render_lab/`: `renderer.rs` stores the last reply (a `Model` fed by the `renderLab` message handler), `model.rs` builds fields, `layout.rs` groups them by category, `behavior.rs` turns field changes into commands, `protocol.rs` sends them. |
+| Push button | `panels/fields/button.rs`: value is the press count, so each press is a change. |
+| Control channel | `describe` returns the open editor's live fields (`PanelManager::control_open_fields`). `Control.refresh_schema()` in `tools/control` fetches it again. `tools/sweep` drives the Lab's `debugView`. |
+| Lua renderer | `LuaRules/Gadgets/api_sb_asset_shader.lua` implements the same protocol for the generated-asset shader. It disables itself when `luarules/wasm/shipgame-look.wasm` exists. |
+| Ship Game | `wasm-src/crates/shipcore/src/lab/` (catalogue, wire format, state; engine-free, tested), `rules-synced/src/game_lab.rs` (relay, test scenes), `rules-unsynced/src/lab.rs` (applies values, overlay, camera). `just lab` opens the editor with the Lab; `just lab-sweep` captures every scene, view and solo. |
 
-## Not yet
+## Not done
 
-A/B states with a wipe, shadow-map and LOD overlays, the light-candidate inspector as a list,
-capture metadata and GPU timings per pass. The protocol has room for all of them (more
-overlays, more reply kinds); none needs the panel to change shape.
+A/B comparison with a wipe, shadow-map and LOD overlays, a light-candidate list, capture
+metadata, per-pass GPU timings. Each fits the protocol as a new overlay or reply kind without
+changing the panel's structure.

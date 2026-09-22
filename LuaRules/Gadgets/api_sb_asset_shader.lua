@@ -27,9 +27,8 @@ if gadgetHandler:IsSyncedCode() then
 	return
 end
 
---- What this renderer offers the Rendering Lab: its material layers and light strengths, by
---- concept, and the shader's debug views by name. The game's Rust renderer offers the same ids
---- (`shipcore::lab::catalogue`), so the panel reads alike whichever is drawing.
+--- Rendering Lab capabilities of this renderer. Ids match the game's Rust renderer
+--- (`shipcore::lab::catalogue`).
 local LAB_CONTROLS = {
 	{ id = "material.metallic", name = "Metallic", category = "material", param = "metal",
 		what = "Parts of the hull that are bare metal: they reflect the surroundings and take no diffuse light." },
@@ -37,8 +36,8 @@ local LAB_CONTROLS = {
 		what = "Fine tiling relief and roughness over every surface." },
 	{ id = "material.family_detail", name = "Family detail", category = "material", param = "familyDetail",
 		what = "Each surface family with a relief of its own." },
-	{ id = "material.armour_detail", name = "Armour detail", category = "material", param = "armourDetail",
-		what = "The armour family's surface drawn per pixel rather than baked." },
+	{ id = "material.armour_detail", name = "Armor detail", category = "material", param = "armourDetail",
+		what = "The armor family's surface drawn per pixel rather than baked." },
 	{ id = "material.dirt", name = "Dirt", category = "material", param = "dirt",
 		what = "Grime gathered in corners and seams." },
 	{ id = "material.pits", name = "Pits", category = "material", param = "colourDetail",
@@ -739,8 +738,8 @@ local function recvParams(_, msg)
 	end
 end
 
---- The game's own renderer, when it is mounted: it dresses the ships itself and answers the
---- Rendering Lab, so this gadget stands down.
+--- When the game's renderer is mounted it shades the ships and answers the Rendering Lab,
+--- and this gadget disables itself.
 local GAME_RENDERER = "luarules/wasm/shipgame-look.wasm"
 
 local labStart
@@ -800,7 +799,7 @@ local function labCapabilities()
 	return reply
 end
 
---- One line from the Rendering Lab: see the game's `shipcore::lab::wire` for the words.
+--- Parse one Rendering Lab command line (format: the game's `shipcore::lab::wire`).
 local function labCommand(line)
 	local words = {}
 	for word in line:gmatch("%S+") do

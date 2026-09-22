@@ -1,5 +1,5 @@
-//! The renderer as the editor last heard from it. Replies arrive as `renderLab` messages
-//! (relayed by `api_sb_render_lab.lua`) and are kept here for the panel to read.
+//! Last renderer reply. Arrives as a `springboard|lab|` LuaRules message, dispatched to the
+//! `renderLab` handler.
 
 use crate::sbc::command_system::model::{Model, ModelFactory};
 use crate::sbc::message_handler::MessageHandler;
@@ -14,7 +14,7 @@ inventory::submit! { MessageHandler { tag: "renderLab", handler: receive } }
 pub(crate) struct RendererModel {
     capabilities: Option<Capabilities>,
     state: State,
-    /// Bumped as a reply of each kind arrives, so a panel knows what to rebuild.
+    /// Incremented per reply kind; the panel rebuilds on change.
     capabilities_revision: u64,
     state_revision: u64,
 }

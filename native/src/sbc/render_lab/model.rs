@@ -1,5 +1,4 @@
-//! The panel's fields, built from whatever the renderer said it offers. Nothing here is fixed:
-//! a renderer with other controls gets other fields.
+//! Panel fields, built at runtime from the renderer's capabilities.
 
 use crate::sbc::panels::field::{Field, FieldValue};
 use crate::sbc::panels::fields::{BooleanField, ButtonField, ChoiceField, NumericField};
@@ -15,7 +14,7 @@ pub(crate) const SCENE_FIELD: &str = "scene";
 pub(crate) const LOAD_SCENE_FIELD: &str = "loadScene";
 pub(crate) const RESET_FIELD: &str = "reset";
 
-/// What a field stands for.
+/// The renderer item a field maps to.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum Role {
     Control(String),
@@ -38,10 +37,10 @@ pub(crate) struct LabModel {
     pub entries: Vec<Entry>,
     pub capabilities: Option<Capabilities>,
     pub state: State,
-    /// The renderer replies these were built from.
+    /// Reply revisions the fields were built from.
     pub built_from: u64,
     pub state_from: u64,
-    /// The control whose text is shown.
+    /// Control whose description is shown.
     pub explaining: Option<String>,
 }
 
@@ -73,7 +72,7 @@ fn control_field(control: &ControlSpec) -> Box<dyn Field> {
 }
 
 impl LabModel {
-    /// Fields for what the renderer offers.
+    /// Build fields from the capabilities.
     pub fn build(&mut self, capabilities: &Capabilities, revision: u64) {
         let mut entries = Vec::new();
         entries.push(Entry {
@@ -118,11 +117,9 @@ impl LabModel {
         });
         entries.push(Entry {
             role: Role::LoadScene,
-            field: Box::new(
-                ButtonField::new(LOAD_SCENE_FIELD, "Load").with_tooltip(
-                    "Replace what is placed with the scene, apply its settings and frame it.",
-                ),
-            ),
+            field: Box::new(ButtonField::new(LOAD_SCENE_FIELD, "Load").with_tooltip(
+                "Replace what is placed with the scene, apply its settings and frame it.",
+            )),
         });
         for control in &capabilities.controls {
             entries.push(Entry {
@@ -150,7 +147,7 @@ impl LabModel {
         self.built_from = revision;
     }
 
-    /// The renderer's values into the fields.
+    /// Copy renderer values into the fields.
     pub fn take_state(&mut self, state: &State, revision: u64) {
         self.state = state.clone();
         self.state_from = revision;

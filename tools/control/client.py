@@ -30,8 +30,7 @@ class Control:
         self.commands = Commands(self, schema["commands"])
 
     def refresh_schema(self) -> None:
-        """Fetch `describe` again: an editor that builds its fields once open is only
-        described in full after it has been opened."""
+        """Fetch `describe` again. Editors that build fields at runtime list them only once open."""
         schema = self._connection.call("describe")
         self._editors = index_editors(self, schema)
         self._dialogs = index_dialogs(self, schema)

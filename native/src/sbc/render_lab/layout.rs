@@ -88,8 +88,7 @@ pub(crate) fn layout(model: &LabModel) -> Vec<Item<usize>> {
     items
 }
 
-/// The categories in the renderer's order, with any a control names that the renderer did
-/// not list.
+/// Categories in the renderer's order, plus any used by a control but not listed.
 fn categories(capabilities: &super::catalogue::Capabilities) -> Vec<Named> {
     let mut categories = capabilities.categories.clone();
     for control in &capabilities.controls {

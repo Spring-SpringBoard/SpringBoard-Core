@@ -10,8 +10,7 @@ use crate::sbc::panels::field::{
     element_by_id, escape_rml, ChangeQueue, CommitRequest, Field, FieldValue, InteractionQueue,
 };
 
-/// A full-width push button. Its value is how many times it has been pressed, so
-/// every press is a change the runtime lets through to the behavior.
+/// Full-width push button. Value is the press count, so each press registers as a change.
 pub(crate) struct ButtonField {
     name: String,
     title: String,
@@ -102,7 +101,7 @@ impl Field for ButtonField {
     }
 
     fn set_value(&mut self, value: &FieldValue) {
-        // The control channel presses it by setting any number.
+        // Control channel: setting any number presses it.
         if let FieldValue::Number(_) = value {
             self.presses = self.presses.wrapping_add(1);
         }

@@ -1,5 +1,5 @@
-//! The lines the editor sends the renderer, inside the native → LuaRules envelope. Whichever
-//! renderer is running answers them; see the game's `shipcore::lab::wire`.
+//! Command lines sent to the renderer in the native → LuaRules envelope. Format: see the
+//! game's `shipcore::lab::wire`.
 
 use spring_native::prelude::NativeInterfaceRef;
 
