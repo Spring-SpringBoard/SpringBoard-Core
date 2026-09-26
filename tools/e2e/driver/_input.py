@@ -10,7 +10,6 @@ from .timing import TEXT_INTERVAL_MS, Delay, Timeout, pause
 from .utils.run_env import MODIFIER_NAMES, MODIFIERS
 from .utils.x11 import window_geometry_values
 
-
 KEYCODES = {
     "BackSpace": 8,
     "Backspace": 8,

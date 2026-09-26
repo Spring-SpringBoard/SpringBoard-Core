@@ -247,7 +247,8 @@ impl PanelManager {
                 .unwrap_or(false);
             let sidebar_min = models.get::<UiLayout>().sidebar_minimized;
             let status_min = models.get::<UiLayout>().status_bar_minimized;
-            self.view.sync_playback(is_paused, sidebar_min, status_min)?;
+            self.view
+                .sync_playback(is_paused, sidebar_min, status_min)?;
         }
         Ok(())
     }

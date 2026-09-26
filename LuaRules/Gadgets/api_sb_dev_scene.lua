@@ -44,6 +44,11 @@ if gadgetHandler:IsSyncedCode() then
 		Spring.Log("sb-dev-scene", LOG.NOTICE, ("placed %d x %s"):format(COPIES, SCENE))
 	end
 else
+	-- A material/LOD capture harness supplies and verifies its own camera.
+	-- Keep feature placement available without competing with that camera.
+	if OPTIONS.sb_dev_scene_camera == "0" then
+		return false
+	end
 	-- Camera framing, both overridable per run so a sweep can capture the same asset
 	-- at several distances and angles.
 	local DISTANCE = tonumber(OPTIONS.sb_dev_scene_dist) or 320
