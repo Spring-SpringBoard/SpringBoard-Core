@@ -85,6 +85,8 @@ pub(crate) struct PanelView {
     tab_bar: TabBar,
     events: ShellQueue,
     current_tab: Tab,
+    /// The tabs the bar shows; see `Tab::visible`.
+    visible_tabs: Vec<Tab>,
     active_editor: Option<&'static str>,
 }
 
@@ -117,6 +119,10 @@ impl Default for PanelView {
             tab_bar: TabBar::default(),
             events: Rc::new(RefCell::new(Vec::new())),
             current_tab: Tab::Objects,
+            visible_tabs: Tab::all()
+                .into_iter()
+                .filter(|tab| *tab != Tab::Effects)
+                .collect(),
             active_editor: None,
         }
     }
@@ -224,8 +230,13 @@ impl PanelView {
         self.playback_controls = element_by_id(interface, doc, "playback-controls");
         self.sidebar_tab_toggle = element_by_id(interface, doc, "sidebar-tab-toggle");
 
-        self.tab_bar
-            .render(interface, doc, self.current_tab, &self.events)?;
+        self.tab_bar.render(
+            interface,
+            doc,
+            self.current_tab,
+            &self.visible_tabs,
+            &self.events,
+        )?;
         self.action_bar.bind(
             interface,
             doc,
@@ -297,10 +308,37 @@ impl PanelView {
         self.current_tab = tab;
         self.active_editor = None;
 
-        self.tab_bar
-            .render(interface, doc, self.current_tab, &self.events)?;
+        self.tab_bar.render(
+            interface,
+            doc,
+            self.current_tab,
+            &self.visible_tabs,
+            &self.events,
+        )?;
         self.render_editor_buttons(interface)?;
         self.clear_content(interface)
+    }
+
+    /// Show these tabs in the bar. Returns whether the list changed.
+    pub(crate) fn set_visible_tabs(
+        &mut self,
+        interface: &NativeInterfaceRef,
+        tabs: Vec<Tab>,
+    ) -> Result<bool, Error> {
+        if self.visible_tabs == tabs {
+            return Ok(false);
+        }
+        self.visible_tabs = tabs;
+        if let Some(doc) = self.document {
+            self.tab_bar.render(
+                interface,
+                doc,
+                self.current_tab,
+                &self.visible_tabs,
+                &self.events,
+            )?;
+        }
+        Ok(true)
     }
 
     pub(crate) fn set_active_editor(

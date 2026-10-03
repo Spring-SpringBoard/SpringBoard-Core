@@ -44,6 +44,12 @@ impl Models {
         Models { map }
     }
 
+    /// One model, for tests that need a registry without an engine.
+    #[cfg(test)]
+    pub(crate) fn insert<T: Model>(&mut self, model: T) {
+        self.map.insert(TypeId::of::<T>(), Box::new(model));
+    }
+
     pub fn get<T: Model>(&mut self) -> &mut T {
         self.map
             .get_mut(&TypeId::of::<T>())

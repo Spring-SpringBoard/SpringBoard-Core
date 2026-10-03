@@ -23,6 +23,7 @@ use crate::sbc::panels::input::{PanelInput, PendingAction};
 use crate::sbc::panels::modal::ModalEvent;
 use crate::sbc::panels::modal_stack::ModalStack;
 use crate::sbc::panels::numeric_drag_overlay::NumericDragOverlay;
+use crate::sbc::panels::registry::Tab;
 use crate::sbc::panels::ui_layout::UiLayout;
 use crate::sbc::panels::view::{PanelView, ShellEvent};
 use crate::sbc::port_flags::{self, UiImpl};
@@ -161,6 +162,14 @@ impl PanelManager {
                     ed.select_edit_field(&field, &self.interface);
                 }
             }
+        }
+
+        // The Effects tab comes and goes with the game's renderer offering it.
+        crate::sbc::render_lab::ask_until_answered(&self.interface, models);
+        let visible = Tab::visible(models);
+        let current_hidden = !visible.contains(&self.view.current_tab());
+        if self.view.set_visible_tabs(&self.interface, visible)? && current_hidden {
+            self.view.queue_event(ShellEvent::Tab(Tab::Objects));
         }
 
         self.process_shell_events(models)?;

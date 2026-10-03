@@ -1,7 +1,6 @@
 use crate::sbc::panels::field::escape_rml;
 use crate::sbc::panels::runtime::Item;
 
-use super::catalogue::Named;
 use super::model::{LabModel, Role, NONE};
 
 pub(crate) fn layout(model: &LabModel) -> Vec<Item<usize>> {
@@ -24,7 +23,8 @@ pub(crate) fn layout(model: &LabModel) -> Vec<Item<usize>> {
     if !header.is_empty() {
         items.push(Item::OwnedRow(header));
     }
-    if !capabilities.scenes.is_empty() {
+    let scenes = capabilities.scenes_in(model.panel);
+    if !scenes.is_empty() {
         items.push(Item::OwnedSection("Test scene".to_string()));
         let mut row = Vec::new();
         row.extend(id(Role::Scene));
@@ -32,12 +32,15 @@ pub(crate) fn layout(model: &LabModel) -> Vec<Item<usize>> {
         items.push(Item::OwnedRow(row));
         let chosen = id(Role::Scene).map(|scene| model.value(scene));
         if let Some(crate::sbc::panels::field::FieldValue::Text(name)) = chosen {
-            if let Some(scene) = capabilities.scenes.iter().find(|scene| scene.name == name) {
+            if let Some(scene) = scenes.iter().find(|scene| scene.name == name) {
                 items.push(Item::Custom(note(&scene.what)));
             }
         }
     }
-    for category in categories(capabilities) {
+    for category in capabilities.categories_in(model.panel) {
+        if category.hidden {
+            continue;
+        }
         let mut fields: Vec<usize> = Vec::new();
         for (index, entry) in model.entries.iter().enumerate() {
             let Role::Control(control_id) = &entry.role else {
@@ -54,7 +57,25 @@ pub(crate) fn layout(model: &LabModel) -> Vec<Item<usize>> {
             continue;
         }
         items.push(Item::OwnedSection(category.name.clone()));
-        items.extend(fields.into_iter().map(Item::Field));
+        // Buttons next to each other share a row.
+        let is_button = |index: usize| match &model.entries[index].role {
+            Role::Control(id) => model.control(id).is_some_and(|c| c.is_button()),
+            _ => false,
+        };
+        let mut buttons = Vec::new();
+        for field in fields {
+            if is_button(field) {
+                buttons.push(field);
+                continue;
+            }
+            if !buttons.is_empty() {
+                items.push(Item::OwnedRow(std::mem::take(&mut buttons)));
+            }
+            items.push(Item::Field(field));
+        }
+        if !buttons.is_empty() {
+            items.push(Item::OwnedRow(buttons));
+        }
     }
     let overlays: Vec<usize> = model
         .entries
@@ -86,21 +107,6 @@ pub(crate) fn layout(model: &LabModel) -> Vec<Item<usize>> {
         )));
     }
     items
-}
-
-/// Categories in the renderer's order, plus any used by a control but not listed.
-fn categories(capabilities: &super::catalogue::Capabilities) -> Vec<Named> {
-    let mut categories = capabilities.categories.clone();
-    for control in &capabilities.controls {
-        if !categories.iter().any(|c| c.id == control.category) {
-            categories.push(Named {
-                id: control.category.clone(),
-                name: control.category.clone(),
-                what: String::new(),
-            });
-        }
-    }
-    categories
 }
 
 fn status(model: &LabModel) -> String {

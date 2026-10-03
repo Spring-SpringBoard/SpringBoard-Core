@@ -1,5 +1,8 @@
 //! The top-level panel tab strip's native data-model projection.
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::panels::rows::ChoiceRow;
@@ -15,13 +18,14 @@ const HOST_ID: &str = "tab-bar";
 const MODEL_NAME: &str = "panel_tabs";
 const TEMPLATE: &str = include_str!("tab_bar.rml");
 
-/// Owns the top-level tab controls, including the development-only tab when it
-/// was enabled before the registry first initialized.
+/// Owns the top-level tab controls. The tabs shown can change while the
+/// document lives (the Effects tab appears once the game's renderer offers it),
+/// so the click handler reads the current list rather than capturing one.
 #[derive(Default)]
 pub(crate) struct TabBar {
     rows: Option<Rows<ChoiceRow>>,
     document: Option<u64>,
-    tabs: Vec<Tab>,
+    tabs: Rc<RefCell<Vec<Tab>>>,
     current: Option<Tab>,
 }
 
@@ -29,7 +33,7 @@ impl TabBar {
     pub(crate) fn forget(&mut self) {
         self.rows = None;
         self.document = None;
-        self.tabs.clear();
+        self.tabs = Rc::default();
         self.current = None;
     }
 
@@ -38,6 +42,7 @@ impl TabBar {
         interface: &NativeInterfaceRef,
         document: u64,
         current: Tab,
+        visible: &[Tab],
         events: &ShellQueue,
     ) -> Result<(), Error> {
         let Some(host) = element_by_id(interface, document, HOST_ID) else {
@@ -53,11 +58,11 @@ impl TabBar {
             self.forget();
             let model = rml.create_data_model(context, MODEL_NAME)?;
             let rows = Rows::<ChoiceRow>::bind(&model, "tabs")?;
-            self.tabs = Tab::all();
+            *self.tabs.borrow_mut() = visible.to_vec();
             let tabs = self.tabs.clone();
             let queue = events.clone();
             Rows::<ChoiceRow>::on_row(&model, "select", move |index, _| {
-                if let Some(tab) = tabs.get(index) {
+                if let Some(tab) = tabs.borrow().get(index) {
                     queue.borrow_mut().push(ShellEvent::Tab(*tab));
                 }
             })?;
@@ -68,7 +73,11 @@ impl TabBar {
             self.current = Some(current);
         }
 
-        if self.current != Some(current) {
+        let changed = *self.tabs.borrow() != visible;
+        if changed {
+            *self.tabs.borrow_mut() = visible.to_vec();
+        }
+        if changed || self.current != Some(current) {
             self.rows
                 .as_ref()
                 .expect("tab rows are bound before their markup")
@@ -80,6 +89,7 @@ impl TabBar {
 
     fn rows_for(&self, current: Tab) -> Vec<ChoiceRow> {
         self.tabs
+            .borrow()
             .iter()
             .map(|tab| ChoiceRow {
                 label: tab.as_str().to_owned(),

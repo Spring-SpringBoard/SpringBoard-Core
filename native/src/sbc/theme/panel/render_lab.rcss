@@ -49,7 +49,39 @@ div.render-lab-explain-text
 	font-size: 12dp;
 }
 
+/* Push buttons: alone, a button the width of a switch; buttons side by side share their row
+   evenly; beside another control a button stays compact. The wrapper carries none of the
+   asset picker's button frame, and a label stays on one line. */
+div.field-row.field-button,
+div.field-row.field-button:hover
+{
+	width: 200dp;
+	padding: 0dp;
+	border-width: 0dp;
+	background-color: transparent;
+}
+
+/* Beside another control (the scene picker's Load), a button keeps a compact width. */
+div.field-group > div.field-row.field-button
+{
+	flex: 0 0 140dp;
+	width: 140dp;
+}
+
+div.field-group > div.field-row.field-button:first-child,
+div.field-group > div.field-row.field-button + div.field-row.field-button
+{
+	flex: 1 1 0dp;
+	min-width: 0dp;
+	width: auto;
+}
+
 div.field-button button.field-push
 {
 	width: 100%;
+}
+
+button.field-push span.field-toggle-label
+{
+	white-space: nowrap;
 }

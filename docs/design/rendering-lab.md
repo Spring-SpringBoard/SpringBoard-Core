@@ -13,6 +13,37 @@ shader gadget reports its material layers and light strengths.
 Status: V1. Toggle, solo, reset, named debug views, one overlay (local lights), test scenes,
 and a description for every control.
 
+## Panels
+
+The same capabilities feed more than one panel. A category or scene may list the panels it is
+shown in (`"panels":["tuning"]`); one that lists none is shown in the Rendering Lab
+(`render`). The `Effects` tab holds three more: `effectsStages` shows what names `stages`,
+`effectsFire` what names `fire`, and `effectsTuning` what names `tuning` (Ship Game's effect
+stages and weapons, one effect fired on demand, and the effect switches and scales). A category
+naming several panels (the orbit camera) appears in each. Debug views and overlays are the
+Rendering Lab's only. Every panel reads one renderer reply, so a change made in one shows in the
+others.
+
+The tab bar shows the Effects tab only once the running renderer's capabilities name one of its
+panels; until a renderer answers, SpringBoard asks again now and then, less often once it has
+stayed silent. Other games see no Effects tab. The control protocol's `describe` lists the tab
+either way, with `"shown"`, and its editors open by name.
+
+*Reset* sends `reset PANEL` once the renderer names panels at all, so each panel's Reset puts
+back only its own controls; a renderer that names none is sent the plain `reset`.
+
+A category marked `"hidden":true` is not laid out, but its controls are still fields a control
+script can set and read: Ship Game's capture tool pauses on a frame this way.
+
+## Control kinds
+
+- `switch`: a toggle.
+- `number`: a slider between `min` and `max`.
+- `choice`: a dropdown of `choices`; the value sent and kept is the index.
+- `button`: a push button. A press sends `set <id> 1`; the renderer keeps nothing, and state
+  updates leave the button alone. Buttons next to each other in a category share a row evenly;
+  a button alone is as wide as a switch, and a label stays on one line.
+
 ## Ids are concepts
 
 Controls are named by rendering concept (`lighting.local`), not by implementation
@@ -50,7 +81,8 @@ because a game mounted as a mutator replaces SpringBoard's `LuaUI/main.lua`.
 {"kind":"capabilities","controls":[{"id":"lighting.local","name":"Local lights",
   "category":"lighting","kind":"switch","default":true,"value":true,
   "what":"...","how":"...","look":"...","solo":true}, ...],
- "categories":[{"id":"lighting","name":"Lighting"}, ...],
+ "categories":[{"id":"lighting","name":"Lighting"}, {"id":"stage","name":"Stage","panels":["effects"]},
+  {"id":"capture","name":"Capture","panels":["effects"],"hidden":true}, ...],
  "views":[{"id":"albedo","name":"Albedo"}, ...],
  "overlays":[{"id":"lights","name":"Local lights","what":"..."}],
  "scenes":[{"id":"local_light","name":"Dynamic light","what":"..."}],
@@ -65,7 +97,7 @@ The renderer sends `values` after every command, so the panel shows the applied 
 
 | | |
 | --- | --- |
-| Panel | `native/src/sbc/render_lab/`: `renderer.rs` stores the last reply (a `Model` fed by the `renderLab` message handler), `model.rs` builds fields, `layout.rs` groups them by category, `behavior.rs` turns field changes into commands, `protocol.rs` sends them. |
+| Panel | `native/src/sbc/render_lab/`: `renderer.rs` stores the last reply (a `Model` fed by the `renderLab` message handler), `model.rs` builds one panel's fields, `layout.rs` groups them by category, `panel.rs` registers the two panels, `behavior.rs` turns field changes into commands, `protocol.rs` sends them. |
 | Push button | `panels/fields/button.rs`: value is the press count, so each press is a change. |
 | Control channel | `describe` returns the open editor's live fields (`PanelManager::control_open_fields`). `Control.refresh_schema()` in `tools/control` fetches it again. `tools/sweep` drives the Lab's `debugView`. |
 | Ship Game | `wasm-src/crates/shipcore/src/lab/` (catalogue, wire format, state; engine-free, tested), `rules-synced/src/game_lab.rs` (relay, test scenes), `rules-unsynced/src/lab.rs` (applies values, overlay, camera). `just lab` opens the editor with the Lab; `just lab-sweep` captures every scene, view and solo. |

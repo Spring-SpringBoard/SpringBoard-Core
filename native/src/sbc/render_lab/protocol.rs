@@ -38,8 +38,12 @@ pub(crate) fn solo(engine: &NativeInterfaceRef, id: Option<&str>) {
     send(engine, &format!("solo {}", id.unwrap_or("off")));
 }
 
-pub(crate) fn reset(engine: &NativeInterfaceRef) {
-    send(engine, "reset");
+/// Back to the starting values: one panel's controls, or (`None`) every control.
+pub(crate) fn reset(engine: &NativeInterfaceRef, panel: Option<&str>) {
+    match panel {
+        Some(panel) => send(engine, &format!("reset {panel}")),
+        None => send(engine, "reset"),
+    }
 }
 
 pub(crate) fn scene(engine: &NativeInterfaceRef, id: &str) {

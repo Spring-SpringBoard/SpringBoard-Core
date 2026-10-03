@@ -5,3 +5,29 @@ mod model;
 mod panel;
 mod protocol;
 mod renderer;
+
+use spring_native::prelude::NativeInterfaceRef;
+
+use crate::sbc::command_system::model::Models;
+
+use renderer::RendererModel;
+
+/// Whether the running game's renderer offers any of the Effects tab's editors.
+pub(crate) fn offers_effects(models: &mut Models) -> bool {
+    models
+        .get::<RendererModel>()
+        .capabilities()
+        .is_some_and(|capabilities| {
+            panel::EFFECTS_PANELS
+                .iter()
+                .any(|panel| capabilities.offers(panel))
+        })
+}
+
+/// Ask the renderer what it offers until it answers, without a Lab open: the tab bar needs to
+/// know whether to show the Effects tab.
+pub(crate) fn ask_until_answered(engine: &NativeInterfaceRef, models: &mut Models) {
+    if models.get::<RendererModel>().due_to_ask() {
+        protocol::list(engine);
+    }
+}

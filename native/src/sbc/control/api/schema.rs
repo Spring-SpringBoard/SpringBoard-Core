@@ -31,7 +31,10 @@ pub(crate) fn describe(sbc: &mut SBC) -> Value {
                     })
                 })
                 .collect();
-            json!({ "name": tab.as_str(), "editors": editors })
+            // A tab the bar does not show (Effects, before the game's renderer offers it)
+            // is still listed: its editors open by name all the same.
+            let shown = tab.shown(sbc.models_mut());
+            json!({ "name": tab.as_str(), "shown": shown, "editors": editors })
         })
         .collect();
 

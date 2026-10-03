@@ -83,7 +83,27 @@ impl Behavior for LabBehavior {
         };
         let value = model.value(id);
         match role {
-            Role::Control(control) => protocol::set(engine, &control, &value),
+            Role::Control(control) => {
+                if model.control(&control).is_some_and(|spec| spec.is_button()) {
+                    protocol::set(engine, &control, &FieldValue::Number(1.0));
+                    return Outcome::default();
+                }
+                let value = if let (Some(spec), FieldValue::Text(name)) =
+                    (model.control(&control), &value)
+                {
+                    if spec.kind == "choice" {
+                        let Some(index) = spec.choices.iter().position(|item| item == name) else {
+                            return Outcome::default();
+                        };
+                        FieldValue::Number(index as f32)
+                    } else {
+                        value
+                    }
+                } else {
+                    value
+                };
+                protocol::set(engine, &control, &value);
+            }
             Role::Overlay(overlay) => {
                 protocol::overlay(engine, &overlay, matches!(value, FieldValue::Bool(true)));
             }
@@ -128,7 +148,7 @@ impl Behavior for LabBehavior {
                     }
                 }
             }
-            Role::Reset => protocol::reset(engine),
+            Role::Reset => protocol::reset(engine, model.reset_scope()),
         }
         Outcome::default()
     }
