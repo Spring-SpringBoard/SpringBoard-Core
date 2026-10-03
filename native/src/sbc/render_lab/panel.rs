@@ -8,7 +8,8 @@ use super::model::LabModel;
 pub(crate) const STAGES_PANEL: &str = "stages";
 pub(crate) const FIRE_PANEL: &str = "fire";
 pub(crate) const TUNING_PANEL: &str = "tuning";
-pub(crate) const EFFECTS_PANELS: [&str; 3] = [STAGES_PANEL, FIRE_PANEL, TUNING_PANEL];
+pub(crate) const RUNTIME_PANEL: &str = "runtime";
+pub(crate) const EFFECTS_PANELS: [&str; 4] = [STAGES_PANEL, FIRE_PANEL, TUNING_PANEL, RUNTIME_PANEL];
 
 inventory::submit! {
     EditorSpec {
@@ -55,5 +56,17 @@ inventory::submit! {
         tooltip: "Switch effects on and off and scale how they look",
         image: "LuaUI/images/scenedit/cog.png",
         make: || Box::new(Runtime::new(LabBehavior::default(), LabModel::for_panel(TUNING_PANEL))),
+    }
+}
+
+inventory::submit! {
+    EditorSpec {
+        name: "effectsRuntime",
+        tab: Tab::Effects,
+        order: 4,
+        caption: "GPU particles",
+        tooltip: "Step through how the GPU particles are drawn, measure them, stress them",
+        image: "LuaUI/images/scenedit/computing.png",
+        make: || Box::new(Runtime::new(LabBehavior::default(), LabModel::for_panel(RUNTIME_PANEL))),
     }
 }
