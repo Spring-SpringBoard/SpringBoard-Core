@@ -193,6 +193,7 @@ class Camera:
     def set(
         self,
         *,
+        mode: int | None = None,
         position: Sequence[float] | None = None,
         controller_position: Sequence[float] | None = None,
         direction: Sequence[float] | None = None,
@@ -204,6 +205,8 @@ class Camera:
         transition: float = 0.0,
     ) -> dict[str, Any]:
         params: dict[str, object] = {"transition": transition}
+        if mode is not None:
+            params["mode"] = int(mode)
         if position is not None:
             params["position"] = [float(v) for v in position]
         if controller_position is not None:

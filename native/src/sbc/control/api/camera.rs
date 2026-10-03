@@ -10,6 +10,8 @@ use super::super::{ControlError, Handled, Reply};
 
 #[derive(Deserialize)]
 pub(crate) struct Set {
+    /// Engine controller index, returned by camera.get (4 is free camera).
+    pub mode: Option<i32>,
     pub position: Option<[f32; 3]>,
     /// The controller/map position (`px/py/pz`) returned by `camera.get`.
     /// Unlike `position`, this is not the rendered camera position.
@@ -56,6 +58,7 @@ pub(crate) fn get(sbc: &mut SBC) -> Handled {
         // `position` is the rendered camera position. The controller state is
         // returned separately because overhead/spring cameras keep their
         // ground focus in `px/py/pz` and derive the rendered position from it.
+        "mode": state.mode,
         "position": [position.x, position.y, position.z],
         "controller_position": [state.pos.x, state.pos.y, state.pos.z],
         "direction": [direction.x, direction.y, direction.z],
@@ -68,7 +71,8 @@ pub(crate) fn get(sbc: &mut SBC) -> Handled {
 }
 
 pub(crate) fn set(sbc: &mut SBC, params: Set) -> Handled {
-    if params.position.is_none()
+    if params.mode.is_none()
+        && params.position.is_none()
         && params.controller_position.is_none()
         && params.direction.is_none()
         && params.fov.is_none()
@@ -81,10 +85,37 @@ pub(crate) fn set(sbc: &mut SBC, params: Set) -> Handled {
             "camera.set needs at least one camera field",
         ));
     }
+    let requested_direction = params.direction.map(unit_direction).transpose()?;
     let camera = sbc.interface().camera();
     let mut state = camera
         .get_camera_state(false)
         .map_err(|err| ControlError::failed(format!("get_camera_state: {err:?}")))?;
+    let changing_mode = params.mode.is_some_and(|mode| mode != state.mode);
+    let direction = if requested_direction.is_none() && changing_mode {
+        let actual = camera
+            .get_camera_direction()
+            .map_err(|err| ControlError::failed(format!("get_camera_direction: {err:?}")))?;
+        Some(unit_direction([actual.x, actual.y, actual.z])?)
+    } else {
+        requested_direction
+    };
+    let position =
+        if params.position.is_none() && params.controller_position.is_none() && changing_mode {
+            let actual = camera
+                .get_camera_position()
+                .map_err(|err| ControlError::failed(format!("get_camera_position: {err:?}")))?;
+            Some([actual.x, actual.y, actual.z])
+        } else {
+            params.position
+        };
+    if let Some(mode) = params.mode {
+        if !(0..=6).contains(&mode) {
+            return Err(ControlError::invalid(
+                "camera.set mode must be an engine controller index (0..6)",
+            ));
+        }
+        state.mode = mode;
+    }
     if let Some(height) = params.height {
         if !height.is_finite() || height <= 0.0 {
             return Err(ControlError::invalid(
@@ -118,17 +149,17 @@ pub(crate) fn set(sbc: &mut SBC, params: Set) -> Handled {
         state.pos.x = x;
         state.pos.y = y;
         state.pos.z = z;
-    } else if let Some([x, y, z]) = params.position {
+    } else if let Some([x, y, z]) = position {
         if !x.is_finite() || !y.is_finite() || !z.is_finite() {
             return Err(ControlError::invalid("camera.set position must be finite"));
         }
         // The native CameraState mirrors Spring's controller map. Convert the
         // public rendered position back to that map for cameras whose position
         // is derived from a ground focus and a distance/height.
-        let direction = params
-            .direction
-            .unwrap_or([state.dir.x, state.dir.y, state.dir.z]);
-        let offset = if state.height > 0.0 {
+        let direction = direction.unwrap_or([state.dir.x, state.dir.y, state.dir.z]);
+        let offset = if matches!(state.mode, 0 | 3 | 4) {
+            0.0
+        } else if state.height > 0.0 {
             state.height
         } else {
             state.dist
@@ -137,13 +168,19 @@ pub(crate) fn set(sbc: &mut SBC, params: Set) -> Handled {
         state.pos.y = y + direction[1] * offset;
         state.pos.z = z + direction[2] * offset;
     }
-    if let Some([x, y, z]) = params.direction {
-        if !x.is_finite() || !y.is_finite() || !z.is_finite() {
-            return Err(ControlError::invalid("camera.set direction must be finite"));
-        }
+    if let Some([x, y, z]) = direction {
         state.dir.x = x;
         state.dir.y = y;
         state.dir.z = z;
+        // FPS and rotating overhead use polar rotation; free camera exports
+        // pitch/yaw converted from that rotation. Merely writing dx/dy/dz
+        // leaves all three looking in their previous direction.
+        if matches!(state.mode, 0 | 3 | 4) {
+            let [rx, ry] = controller_angles([x, y, z], state.mode);
+            state.rx = rx;
+            state.ry = ry;
+            state.rz = 0.0;
+        }
     }
     if let Some(fov) = params.fov {
         if !fov.is_finite() || fov <= 0.0 {
@@ -172,6 +209,29 @@ pub(crate) fn set(sbc: &mut SBC, params: Set) -> Handled {
             .map_err(|err| ControlError::failed(format!("set_camera_target: {err:?}")))?;
     }
     get(sbc)
+}
+
+fn unit_direction([x, y, z]: [f32; 3]) -> Result<[f32; 3], ControlError> {
+    let length = x.hypot(y).hypot(z);
+    if !length.is_finite() || length < 1e-6 {
+        return Err(ControlError::invalid(
+            "camera.set direction must be finite and nonzero",
+        ));
+    }
+    Ok([x / length, y / length, z / length])
+}
+
+fn controller_angles([x, y, z]: [f32; 3], mode: i32) -> [f32; 2] {
+    let pitch = y.clamp(-1.0, 1.0).acos();
+    let yaw = x.atan2(-z);
+    if mode == 4 {
+        [
+            core::f32::consts::FRAC_PI_2 - pitch,
+            core::f32::consts::PI - yaw,
+        ]
+    } else {
+        [pitch, yaw]
+    }
 }
 
 pub(crate) fn zoom(sbc: &mut SBC, params: Zoom) -> Handled {
@@ -250,4 +310,25 @@ pub(crate) fn trace(sbc: &mut SBC, params: Trace) -> Handled {
         "hit_id": trace.hit_id,
         "position": [trace.position.x, trace.position.y, trace.position.z],
     })))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn direction_updates_rotation_and_rejects_degenerate_vectors() {
+        assert!(unit_direction([0.0; 3]).is_err());
+        assert!(unit_direction([f32::NAN, 0.0, 1.0]).is_err());
+        assert_eq!(
+            unit_direction([0.0, -8.0, 0.0]).ok(),
+            Some([0.0, -1.0, 0.0])
+        );
+        let down = controller_angles([0.0, -1.0, 0.0], 0);
+        assert!((down[0] - core::f32::consts::PI).abs() < 1e-6);
+        let left = controller_angles([-1.0, 0.0, 0.0], 3);
+        assert!((left[0] - core::f32::consts::FRAC_PI_2).abs() < 1e-6);
+        assert!((left[1] + core::f32::consts::FRAC_PI_2).abs() < 1e-6);
+        let free = controller_angles([0.0, -1.0, 0.0], 4);
+        assert!((free[0] + core::f32::consts::FRAC_PI_2).abs() < 1e-6);
+    }
 }

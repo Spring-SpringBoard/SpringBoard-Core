@@ -78,6 +78,14 @@ controller distance/height), `camera.trace_screen_ray(x, y)`,
 reload deliberately preserves engine world/project state; it is not a project
 reset.
 
+`camera.get()` includes the engine controller `mode`, rendered pose, controller position and
+rotation. `camera.set(mode=4, position=..., direction=..., fov=...)` selects the free camera
+for astronomical views without the FPS controller's height clamp. Direction vectors are
+normalised and converted into the rotation used by FPS, rotating and free controllers;
+setting a direction therefore changes the rendered view. Preserve `controller_position`
+and the controller's height/angle/distance when restoring an overhead camera. Capture tools
+should verify the actual pose from `camera.get()` before taking a frame.
+
 **Dialogs** — `dialog.open/get/set/select/accept/cancel` controls typed
 project/file dialogs through their existing action and modal paths. A domain
 workflow can create a project, choose a VFS project, or save/export by name
