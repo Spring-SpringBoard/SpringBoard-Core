@@ -38,6 +38,7 @@ impl Behavior for LabBehavior {
                     let (state, revision) = (renderer.state().clone(), renderer.state_revision());
                     model.take_state(&state, revision);
                 }
+                model.show_display();
             }
             None => self.ask(engine),
         }
@@ -53,8 +54,8 @@ impl Behavior for LabBehavior {
             return Watch::Rebuild;
         }
         if model.state_from != renderer.state_revision() {
-            // Status line (light counts, solo) is markup, not a field value.
-            return Watch::Rebuild;
+            // Values and the bound status line update in place.
+            return Watch::Refresh;
         }
         Watch::Unchanged
     }
@@ -133,7 +134,7 @@ impl Behavior for LabBehavior {
                 }
                 self.rebuild = true;
             }
-            Role::Scene => self.rebuild = true,
+            Role::Scene => model.show_display(),
             Role::LoadScene => {
                 let chosen = model
                     .id_of_role(&Role::Scene)

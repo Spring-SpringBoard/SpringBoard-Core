@@ -48,7 +48,6 @@ pub(crate) enum Event<Id> {
 pub(crate) enum Watch {
     Unchanged,
     /// Re-run `refresh` and push values to the DOM.
-    #[allow(dead_code)]
     Refresh,
     /// Also re-run `layout` and rebuild the markup.
     Rebuild,

@@ -1,5 +1,8 @@
 //! Panel fields, built at runtime from the renderer's capabilities.
 
+use spring_native::prelude::Error;
+use spring_native::{RmlDataModel, RmlDataVariable};
+
 use crate::sbc::panels::field::{Field, FieldValue};
 use crate::sbc::panels::fields::{BooleanField, ButtonField, ChoiceField, NumericField};
 use crate::sbc::panels::runtime::{EditorModel, FieldMut, FieldRef};
@@ -43,7 +46,22 @@ pub(crate) struct LabModel {
     pub state_from: u64,
     /// Control whose description is shown.
     pub explaining: Option<String>,
+    /// Text the panel shows that changes with the renderer's state, bound so it updates in
+    /// place: rebuilding the markup for it would make the whole panel flicker.
+    display: Display,
 }
+
+#[derive(Default)]
+struct Display {
+    status: Option<RmlDataVariable<'static, String>>,
+    scene_note: Option<RmlDataVariable<'static, String>>,
+    scene_note_shown: Option<RmlDataVariable<'static, bool>>,
+}
+
+/// Data-model names of the bound status line and scene description.
+pub(crate) const STATUS_BINDING: &str = "render_lab_status";
+pub(crate) const SCENE_NOTE_BINDING: &str = "render_lab_scene_note";
+pub(crate) const SCENE_NOTE_SHOWN_BINDING: &str = "render_lab_scene_note_shown";
 
 impl Default for LabModel {
     fn default() -> Self {
@@ -102,6 +120,7 @@ impl LabModel {
             built_from: 0,
             state_from: 0,
             explaining: None,
+            display: Display::default(),
         }
     }
 
@@ -243,6 +262,8 @@ impl LabModel {
         let view = name_of(&state.view, &capabilities.views).unwrap_or_default();
         for entry in &mut self.entries {
             match &entry.role {
+                // The user's hand is on it: the reply describes a value already passed.
+                _ if entry.field.interacting() => {}
                 Role::Control(id) => {
                     // A button keeps nothing to show; setting it would press it.
                     if capabilities
@@ -304,6 +325,51 @@ impl LabModel {
         }
     }
 
+    /// The renderer's status line: light counts, solo, scene.
+    pub fn status(&self) -> String {
+        let state = &self.state;
+        let mut parts = vec![format!(
+            "{} lights, {} used",
+            state.lights.candidates, state.lights.chosen
+        )];
+        if let Some(solo) = &state.solo {
+            parts.push(format!("solo {solo}"));
+        }
+        if let Some(scene) = &state.scene {
+            parts.push(format!("scene {scene}"));
+        }
+        parts.join(", ")
+    }
+
+    /// What the scene chosen in the list shows, if it says.
+    pub fn scene_note(&self) -> Option<String> {
+        let scene = self.id_of_role(&Role::Scene)?;
+        let FieldValue::Text(name) = self.value(scene) else {
+            return None;
+        };
+        self.capabilities
+            .as_ref()?
+            .scenes_in(self.panel)
+            .into_iter()
+            .find(|scene| scene.name == name)
+            .map(|scene| scene.what.clone())
+            .filter(|what| !what.is_empty())
+    }
+
+    /// Put the status line and the scene's description into the panel as it stands.
+    pub fn show_display(&self) {
+        if let Some(status) = &self.display.status {
+            let _ = status.set(self.status());
+        }
+        let note = self.scene_note();
+        if let Some(shown) = &self.display.scene_note_shown {
+            let _ = shown.set(note.is_some());
+        }
+        if let Some(text) = &self.display.scene_note {
+            let _ = text.set(note.unwrap_or_default());
+        }
+    }
+
     pub fn role(&self, id: usize) -> Option<&Role> {
         self.entries.get(id).map(|entry| &entry.role)
     }
@@ -330,6 +396,19 @@ impl LabModel {
 
 impl EditorModel for LabModel {
     type Id = usize;
+
+    fn prepare_data_model(&mut self, model: &RmlDataModel<'static>) -> Result<(), Error> {
+        self.display = Display {
+            status: Some(model.bind(STATUS_BINDING, self.status())?),
+            scene_note: Some(
+                model.bind(SCENE_NOTE_BINDING, self.scene_note().unwrap_or_default())?,
+            ),
+            scene_note_shown: Some(
+                model.bind(SCENE_NOTE_SHOWN_BINDING, self.scene_note().is_some())?,
+            ),
+        };
+        Ok(())
+    }
 
     fn fields(&self) -> Vec<FieldRef<'_>> {
         self.entries
@@ -392,6 +471,107 @@ mod tests {
             model.value(model.id_of(SCENE_FIELD).unwrap()),
             FieldValue::Text("Ship: phalanx".into())
         );
+    }
+
+    /// A numeric field the user is dragging: what the game sends meanwhile is already old.
+    struct Dragged(Box<dyn Field>);
+
+    impl Field for Dragged {
+        fn name(&self) -> &str {
+            self.0.name()
+        }
+        fn generate_rml(&self) -> String {
+            self.0.generate_rml()
+        }
+        fn bind(
+            &mut self,
+            interface: &spring_native::prelude::NativeInterfaceRef,
+            document: u64,
+            changes: &crate::sbc::panels::field::ChangeQueue,
+            interactions: &crate::sbc::panels::field::InteractionQueue,
+        ) -> Result<(), Error> {
+            self.0.bind(interface, document, changes, interactions)
+        }
+        fn read_from_dom(
+            &mut self,
+            interface: &spring_native::prelude::NativeInterfaceRef,
+        ) -> Result<FieldValue, Error> {
+            self.0.read_from_dom(interface)
+        }
+        fn write_to_dom(
+            &self,
+            interface: &spring_native::prelude::NativeInterfaceRef,
+        ) -> Result<(), Error> {
+            self.0.write_to_dom(interface)
+        }
+        fn set_value(&mut self, value: &FieldValue) {
+            self.0.set_value(value)
+        }
+        fn value(&self) -> FieldValue {
+            self.0.value()
+        }
+        fn interacting(&self) -> bool {
+            true
+        }
+    }
+
+    #[test]
+    fn a_field_in_the_users_hand_keeps_its_value_while_others_follow_the_reply() {
+        let capabilities: Capabilities = serde_json::from_value(serde_json::json!({
+            "controls": [
+                {"id":"effects.glow_gain", "name":"Glow gain", "category":"scales",
+                    "kind":"number", "value":1, "min":0, "max":4},
+                {"id":"effects.jet_gain", "name":"Jet gain", "category":"scales",
+                    "kind":"number", "value":1, "min":0, "max":4}
+            ]
+        }))
+        .unwrap();
+        let mut model = LabModel::default();
+        model.build(&capabilities, 1);
+        let glow = model.id_of("ctl_effects_glow_gain").unwrap();
+        let jet = model.id_of("ctl_effects_jet_gain").unwrap();
+        model.entries[glow]
+            .field
+            .set_value(&FieldValue::Number(2.5));
+        let field = std::mem::replace(
+            &mut model.entries[glow].field,
+            Box::new(BooleanField::new("placeholder", "", false)),
+        );
+        model.entries[glow].field = Box::new(Dragged(field));
+        let state: State = serde_json::from_value(serde_json::json!(
+            {"values":{"effects.glow_gain":2.0, "effects.jet_gain":3.0}}
+        ))
+        .unwrap();
+        model.take_state(&state, 2);
+        assert_eq!(model.value(glow), FieldValue::Number(2.5));
+        assert_eq!(model.value(jet), FieldValue::Number(3.0));
+    }
+
+    #[test]
+    fn the_status_line_and_scene_note_are_bound_not_written_into_the_markup() {
+        let capabilities: Capabilities = serde_json::from_value(serde_json::json!({
+            "controls": [],
+            "scenes": [{"id":"inspect_phalanx", "name":"Ship: phalanx", "what":"A Phalanx, close."}]
+        }))
+        .unwrap();
+        let mut model = LabModel::default();
+        model.build(&capabilities, 1);
+        let state: State = serde_json::from_value(serde_json::json!(
+            {"lights":{"candidates":7, "chosen":3}, "scene":"inspect_phalanx"}
+        ))
+        .unwrap();
+        model.take_state(&state, 2);
+        let markup: String = super::super::layout::layout(&model)
+            .into_iter()
+            .filter_map(|item| match item {
+                Item::OwnedSection(text) | Item::Custom(text) => Some(text),
+                _ => None,
+            })
+            .collect();
+        assert!(!markup.contains("7 lights") && !markup.contains("A Phalanx, close."));
+        assert!(markup.contains(STATUS_BINDING) && markup.contains(SCENE_NOTE_BINDING));
+        assert_eq!(model.status(), "7 lights, 3 used, scene inspect_phalanx");
+        assert_eq!(model.scene_note().as_deref(), Some("A Phalanx, close."));
     }
 
     #[test]

@@ -1,6 +1,8 @@
 //! The active editor's lifecycle: opening, markup rebuild, refresh flags, and
 //! the editing-state handshake (state requests out, selection clearing back).
 
+use std::time::{Duration, Instant};
+
 use spring_native::prelude::{Error, NativeInterfaceRef};
 
 use crate::sbc::command_system::model::Models;
@@ -32,6 +34,47 @@ pub(crate) struct EditorSlot {
     /// wholesale on reload, so a different handle means there is nothing to
     /// remove from the new context.
     field_model_context: Option<u64>,
+    /// Markup rebuilds and value refreshes since `stats.since`; logged once a
+    /// second when `SBC_PANEL_STATS=1`, to find editors that churn their DOM.
+    stats: PanelStats,
+}
+
+struct PanelStats {
+    on: bool,
+    since: Instant,
+    rebuilds: u32,
+    refreshes: u32,
+}
+
+impl Default for PanelStats {
+    fn default() -> Self {
+        PanelStats {
+            on: matches!(std::env::var("SBC_PANEL_STATS").as_deref(), Ok("1")),
+            since: Instant::now(),
+            rebuilds: 0,
+            refreshes: 0,
+        }
+    }
+}
+
+impl PanelStats {
+    fn report(&mut self, editor: Option<&str>) {
+        if !self.on || self.since.elapsed() < Duration::from_secs(1) {
+            return;
+        }
+        if self.rebuilds + self.refreshes > 0 {
+            log::info!(
+                "panel stats {}: {} rebuilds, {} refreshes in {:.2} s",
+                editor.unwrap_or("-"),
+                self.rebuilds,
+                self.refreshes,
+                self.since.elapsed().as_secs_f32()
+            );
+        }
+        self.since = Instant::now();
+        self.rebuilds = 0;
+        self.refreshes = 0;
+    }
 }
 
 impl Default for EditorSlot {
@@ -44,6 +87,7 @@ impl Default for EditorSlot {
             needs_field_bind: false,
             state_was_default: true,
             field_model_context: None,
+            stats: PanelStats::default(),
         }
     }
 }
@@ -160,14 +204,17 @@ impl EditorSlot {
             self.needs_field_bind = false;
             self.bind_fields(interface, view, input)?;
         }
+        self.stats.report(self.name);
         if !self.needs_refresh {
             return Ok(());
         }
         if let Some(ed) = self.editor.as_mut() {
             ed.refresh_from_engine(interface, models);
         }
+        self.stats.refreshes += 1;
         if self.needs_rebuild {
             self.needs_rebuild = false;
+            self.stats.rebuilds += 1;
             self.rebuild(interface, view)?;
         }
         self.write_field_values(interface);

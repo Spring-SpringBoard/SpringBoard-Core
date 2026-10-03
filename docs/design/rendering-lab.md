@@ -35,6 +35,19 @@ back only its own controls; a renderer that names none is sent the plain `reset`
 A category marked `"hidden":true` is not laid out, but its controls are still fields a control
 script can set and read: Ship Game's capture tool pauses on a frame this way.
 
+### Updating in place
+
+A panel's markup is built when the renderer's capabilities arrive or change, and when *Explain*
+picks another control. A `values` reply does not rebuild it: the fields take the new values in
+place, and the status line and the chosen scene's description are data bindings
+(`render_lab_status`, `render_lab_scene_note`). Rebuilding on every reply replaced the whole panel
+each time a readout changed, which flickered and broke a drag in progress. A field the user is
+dragging or typing in (`Field::interacting`) keeps its own value until they let go; a reply
+received meanwhile describes a value already passed.
+
+`SBC_PANEL_STATS=1` logs, once a second, how many markup rebuilds and value refreshes the open
+editor did.
+
 ## Control kinds
 
 - `switch`: a toggle.

@@ -27,6 +27,7 @@ pub(crate) struct NumericField {
     button_elem: Option<u64>,
     edit_elem: Option<u64>,
     editing: bool,
+    dragging: bool,
     display_value: Option<RmlDataVariable<'static, String>>,
     input_value: Option<RmlDataVariable<'static, String>>,
     editing_value: Option<RmlDataVariable<'static, bool>>,
@@ -49,6 +50,7 @@ impl NumericField {
             button_elem: None,
             edit_elem: None,
             editing: false,
+            dragging: false,
             display_value: None,
             input_value: None,
             editing_value: None,
@@ -295,7 +297,12 @@ impl Field for NumericField {
         FieldValue::Number(self.value)
     }
 
+    fn interacting(&self) -> bool {
+        self.editing || self.dragging
+    }
+
     fn drag(&mut self, dx: f32, interface: &NativeInterfaceRef) {
+        self.dragging = true;
         self.value = self.clamp(self.value + dx * self.drag_step());
         let _ = interface;
         let _ = self.sync_display_value();
@@ -313,6 +320,7 @@ impl Field for NumericField {
 
     fn drag_end(&mut self, interface: &NativeInterfaceRef) -> Option<FieldValue> {
         let _ = interface;
+        self.dragging = false;
         if let Some(dragging) = &self.dragging_value {
             let _ = dragging.set(false);
         }

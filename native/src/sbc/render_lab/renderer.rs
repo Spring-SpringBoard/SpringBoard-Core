@@ -147,6 +147,51 @@ mod tests {
     }
 
     #[test]
+    fn a_reply_with_values_refreshes_the_fields_in_place_and_new_controls_rebuild_them() {
+        use crate::sbc::panels::runtime::{Behavior, Watch};
+        use crate::sbc::render_lab::behavior::LabBehavior;
+        use crate::sbc::render_lab::model::LabModel;
+
+        let capabilities = serde_json::json!({
+            "kind": "capabilities",
+            "controls": [{"id":"fx.particles", "name":"Particles", "category":"runtime",
+                "kind":"number", "value":0, "min":0, "max":1000000}],
+            "categories": [{"id":"runtime", "name":"GPU particles", "panels":["runtime"]}],
+        });
+        let mut renderer = RendererModel::default();
+        renderer.receive(capabilities.clone());
+        let mut models = Models::default();
+        models.insert(renderer);
+        let mut behavior = LabBehavior::default();
+        let mut model = LabModel::for_panel("runtime");
+        assert_eq!(behavior.watch(&mut model, &mut models), Watch::Rebuild);
+        let built = models
+            .get::<RendererModel>()
+            .capabilities()
+            .cloned()
+            .unwrap();
+        model.build(&built, 1);
+        model.take_state(&models.get::<RendererModel>().state().clone(), 1);
+        assert_eq!(behavior.watch(&mut model, &mut models), Watch::Unchanged);
+
+        // Readouts arrive many times a second: they must not rebuild the panel's markup.
+        for count in 1..=5 {
+            models.get::<RendererModel>().receive(serde_json::json!({
+                "kind": "values", "values": {"fx.particles": count * 100},
+                "lights": {"candidates": count, "chosen": count},
+            }));
+            assert_eq!(behavior.watch(&mut model, &mut models), Watch::Refresh);
+            let state = models.get::<RendererModel>().state().clone();
+            let revision = models.get::<RendererModel>().state_revision();
+            model.take_state(&state, revision);
+            assert!(model.status().starts_with(&format!("{count} lights")));
+        }
+
+        models.get::<RendererModel>().receive(capabilities);
+        assert_eq!(behavior.watch(&mut model, &mut models), Watch::Rebuild);
+    }
+
+    #[test]
     fn asking_stops_once_answered_and_slows_when_nobody_answers() {
         let mut renderer = RendererModel::default();
         assert!(renderer.due_to_ask());

@@ -1,7 +1,9 @@
 use crate::sbc::panels::field::escape_rml;
 use crate::sbc::panels::runtime::Item;
 
-use super::model::{LabModel, Role, NONE};
+use super::model::{
+    LabModel, Role, NONE, SCENE_NOTE_BINDING, SCENE_NOTE_SHOWN_BINDING, STATUS_BINDING,
+};
 
 pub(crate) fn layout(model: &LabModel) -> Vec<Item<usize>> {
     let Some(capabilities) = &model.capabilities else {
@@ -10,9 +12,10 @@ pub(crate) fn layout(model: &LabModel) -> Vec<Item<usize>> {
         ))];
     };
     let id = |role: Role| model.id_of_role(&role);
+    // Bound, not written in: the line follows every reply, and the markup is only rebuilt
+    // when the controls themselves change.
     let mut items = vec![Item::OwnedSection(format!(
-        "Renderer: {}",
-        escape_rml(&status(model))
+        "Renderer: {{{{ {STATUS_BINDING} }}}}"
     ))];
     if let Some(reset) = id(Role::Reset) {
         items.push(Item::Field(reset));
@@ -30,12 +33,9 @@ pub(crate) fn layout(model: &LabModel) -> Vec<Item<usize>> {
         row.extend(id(Role::Scene));
         row.extend(id(Role::LoadScene));
         items.push(Item::OwnedRow(row));
-        let chosen = id(Role::Scene).map(|scene| model.value(scene));
-        if let Some(crate::sbc::panels::field::FieldValue::Text(name)) = chosen {
-            if let Some(scene) = scenes.iter().find(|scene| scene.name == name) {
-                items.push(Item::Custom(note(&scene.what)));
-            }
-        }
+        items.push(Item::Custom(format!(
+            r#"<div class="render-lab-note" data-class-hidden="!{SCENE_NOTE_SHOWN_BINDING}">{{{{ {SCENE_NOTE_BINDING} }}}}</div>"#
+        )));
     }
     for category in capabilities.categories_in(model.panel) {
         if category.hidden {
@@ -107,21 +107,6 @@ pub(crate) fn layout(model: &LabModel) -> Vec<Item<usize>> {
         )));
     }
     items
-}
-
-fn status(model: &LabModel) -> String {
-    let state = &model.state;
-    let mut parts = vec![format!(
-        "{} lights, {} used",
-        state.lights.candidates, state.lights.chosen
-    )];
-    if let Some(solo) = &state.solo {
-        parts.push(format!("solo {solo}"));
-    }
-    if let Some(scene) = &state.scene {
-        parts.push(format!("scene {scene}"));
-    }
-    parts.join(", ")
 }
 
 fn note(text: &str) -> String {

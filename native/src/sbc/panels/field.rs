@@ -280,6 +280,12 @@ pub trait Field {
     fn set_value(&mut self, value: &FieldValue);
     fn value(&self) -> FieldValue;
 
+    /// Whether the user is dragging or typing in this field now. A view that
+    /// takes values from elsewhere leaves such a field alone until the user is done.
+    fn interacting(&self) -> bool {
+        false
+    }
+
     /// Adjust value while dragging (dx = pixels moved since last tick).
     fn drag(&mut self, _dx: f32, _interface: &NativeInterfaceRef) {}
 
