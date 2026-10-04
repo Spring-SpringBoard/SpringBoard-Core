@@ -156,4 +156,7 @@ pub(crate) struct State {
     pub scene: Option<String>,
     #[serde(default)]
     pub lights: Lights,
+    /// A line the renderer wants read: a mistake in a file it loads, for one.
+    #[serde(default)]
+    pub note: Option<String>,
 }

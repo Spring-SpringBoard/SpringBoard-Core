@@ -338,7 +338,11 @@ impl LabModel {
         if let Some(scene) = &state.scene {
             parts.push(format!("scene {scene}"));
         }
-        parts.join(", ")
+        let line = parts.join(", ");
+        match state.note.as_deref().filter(|note| !note.is_empty()) {
+            Some(note) => format!("{line} — {note}"),
+            None => line,
+        }
     }
 
     /// What the scene chosen in the list shows, if it says.
@@ -571,6 +575,11 @@ mod tests {
         assert!(!markup.contains("7 lights") && !markup.contains("A Phalanx, close."));
         assert!(markup.contains(STATUS_BINDING) && markup.contains(SCENE_NOTE_BINDING));
         assert_eq!(model.status(), "7 lights, 3 used, scene inspect_phalanx");
+        model.state.note = Some("fx/effects/a.lua: emitters[1]: unknown field".into());
+        assert_eq!(
+            model.status(),
+            "7 lights, 3 used, scene inspect_phalanx — fx/effects/a.lua: emitters[1]: unknown field"
+        );
         assert_eq!(model.scene_note().as_deref(), Some("A Phalanx, close."));
     }
 
