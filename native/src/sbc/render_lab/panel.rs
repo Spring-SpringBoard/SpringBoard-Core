@@ -9,7 +9,9 @@ pub(crate) const STAGES_PANEL: &str = "stages";
 pub(crate) const FIRE_PANEL: &str = "fire";
 pub(crate) const TUNING_PANEL: &str = "tuning";
 pub(crate) const RUNTIME_PANEL: &str = "runtime";
-pub(crate) const EFFECTS_PANELS: [&str; 4] = [STAGES_PANEL, FIRE_PANEL, TUNING_PANEL, RUNTIME_PANEL];
+pub(crate) const AUTHOR_PANEL: &str = "author";
+pub(crate) const EFFECTS_PANELS: [&str; 5] =
+    [STAGES_PANEL, FIRE_PANEL, TUNING_PANEL, AUTHOR_PANEL, RUNTIME_PANEL];
 
 inventory::submit! {
     EditorSpec {
@@ -63,10 +65,22 @@ inventory::submit! {
     EditorSpec {
         name: "effectsRuntime",
         tab: Tab::Effects,
-        order: 4,
+        order: 5,
         caption: "GPU particles",
         tooltip: "Step through how the GPU particles are drawn, measure them, stress them",
         image: "LuaUI/images/scenedit/computing.png",
         make: || Box::new(Runtime::new(LabBehavior::default(), LabModel::for_panel(RUNTIME_PANEL))),
+    }
+}
+
+inventory::submit! {
+    EditorSpec {
+        name: "effectsAuthor",
+        tab: Tab::Effects,
+        order: 4,
+        caption: "Author",
+        tooltip: "Edit effect files and see them at once: reload, timeline, solo, mute, overrides",
+        image: "LuaUI/images/scenedit/palette.png",
+        make: || Box::new(Runtime::new(LabBehavior::default(), LabModel::for_panel(AUTHOR_PANEL))),
     }
 }
