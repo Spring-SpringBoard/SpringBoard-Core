@@ -8,6 +8,7 @@ use crate::sbc::message_handler::MessageHandler;
 use crate::sbc::sbc::SBC;
 
 use super::catalogue::{Capabilities, State};
+use super::parts::Parts;
 
 inventory::submit! { ModelFactory { make: |_iface| Box::new(RendererModel::default()) } }
 inventory::submit! { MessageHandler { tag: "renderLab", handler: receive } }
@@ -22,6 +23,8 @@ pub(crate) struct RendererModel {
     /// Unanswered capability requests sent by `due_to_ask`, and when the last went.
     asked: u32,
     asked_at: Option<Instant>,
+    /// A reply arriving in parts.
+    pub(super) parts: Parts,
 }
 
 /// Interval between unanswered capability requests: short while the game may still be

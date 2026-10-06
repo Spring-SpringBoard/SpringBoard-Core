@@ -106,11 +106,17 @@ because a game mounted as a mutator replaces SpringBoard's `LuaUI/main.lua`.
 
 The renderer sends `values` after every command, so the panel shows the applied state.
 
+The engine refuses a Lua message of 64 KiB or more (its packet size is 16 bits), and a
+`capabilities` reply carrying every control's text is past that. A reply too long for one
+message comes in parts, `springboard|lab-part|<reply>|<part>|<parts>|<text>` (`<part>` from 0),
+whose texts join into the reply's JSON; `render_lab/parts.rs` joins them and the joined reply is
+handled as one `springboard|lab|` message. A part of a new reply drops an unfinished one.
+
 ## Code
 
 | | |
 | --- | --- |
-| Panel | `native/src/sbc/render_lab/`: `renderer.rs` stores the last reply (a `Model` fed by the `renderLab` message handler), `model.rs` builds one panel's fields, `layout.rs` groups them by category, `panel.rs` registers the two panels, `behavior.rs` turns field changes into commands, `protocol.rs` sends them. |
+| Panel | `native/src/sbc/render_lab/`: `renderer.rs` stores the last reply (a `Model` fed by the `renderLab` message handler), `model.rs` builds one panel's fields, `layout.rs` groups them by category, `panel.rs` registers the two panels, `behavior.rs` turns field changes into commands, `protocol.rs` sends them, `parts.rs` joins a reply sent in parts. |
 | Push button | `panels/fields/button.rs`: value is the press count, so each press is a change. |
 | Control channel | `describe` returns the open editor's live fields (`PanelManager::control_open_fields`). `Control.refresh_schema()` in `tools/control` fetches it again. `tools/sweep` drives the Lab's `debugView`. |
 | Ship Game | `wasm-src/crates/shipcore/src/lab/` (catalogue, wire format, state; engine-free, tested), `rules-synced/src/game_lab.rs` (relay, test scenes), `rules-unsynced/src/lab.rs` (applies values, overlay, camera). `just lab` opens the editor with the Lab; `just lab-sweep` captures every scene, view and solo. |

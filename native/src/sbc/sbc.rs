@@ -31,6 +31,8 @@ pub struct SBC {
 /// Prefix of Rendering Lab replies, and the message handler tag they are dispatched to.
 const RENDERER_REPLY_PREFIX: &str = "springboard|lab|";
 const RENDERER_REPLY_TAG: &str = "renderLab";
+/// Prefix of a part of a Rendering Lab reply too long for one message.
+const RENDERER_PART_PREFIX: &str = "springboard|lab-part|";
 
 /// The `{ tag, data }` envelope Lua sends over `Spring.InvokeNativeModule`.
 /// `data` is left as raw JSON — only the command system knows its shape.
@@ -73,10 +75,21 @@ impl NativeModule for SBC {
         _mode: i32,
         data: &[u8],
     ) -> Result<(), Error> {
-        let Some(reply) = std::str::from_utf8(data)
-            .ok()
-            .and_then(|text| text.strip_prefix(RENDERER_REPLY_PREFIX))
-        else {
+        let Ok(text) = std::str::from_utf8(data) else {
+            return Ok(());
+        };
+        let joined;
+        let reply = if let Some(reply) = text.strip_prefix(RENDERER_REPLY_PREFIX) {
+            reply
+        } else if let Some(part) = text.strip_prefix(RENDERER_PART_PREFIX) {
+            match crate::sbc::render_lab::take_reply_part(&mut self.models, part) {
+                Some(reply) => {
+                    joined = reply;
+                    &joined
+                }
+                None => return Ok(()),
+            }
+        } else {
             return Ok(());
         };
         match serde_json::from_str(reply) {
