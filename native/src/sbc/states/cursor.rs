@@ -13,6 +13,7 @@ thread_local! {
 struct Cursor {
     wanted: Option<String>,
     assigned: HashSet<String>,
+    interface_hidden: bool,
 }
 
 /// `None` hands the cursor back to the engine.
@@ -38,7 +39,23 @@ pub(crate) fn set(interface: &NativeInterfaceRef, name: Option<&str>) {
 /// Must run every frame: the engine puts its own cursor back each time it draws.
 pub(crate) fn reassert(interface: &NativeInterfaceRef) {
     CURSOR.with(|cursor| {
-        if let Some(name) = cursor.borrow().wanted.as_deref() {
+        let mut cursor = cursor.borrow_mut();
+        // Clean captures hide the interface, including the editing state's pointer.
+        if interface.display().is_guihidden().unwrap_or(false) {
+            if cursor.assigned.insert(String::from("empty")) {
+                let _ = interface
+                    .unsynced_ctrl()
+                    .assign_mouse_cursor("empty", "empty", true, true);
+            }
+            let _ = interface.unsynced_ctrl().set_mouse_cursor("empty", 1.0);
+            cursor.interface_hidden = true;
+            return;
+        }
+        if cursor.interface_hidden {
+            cursor.interface_hidden = false;
+            let _ = interface.unsynced_ctrl().set_mouse_cursor("", 1.0);
+        }
+        if let Some(name) = cursor.wanted.as_deref() {
             let _ = interface.unsynced_ctrl().set_mouse_cursor(name, 1.0);
         }
     });

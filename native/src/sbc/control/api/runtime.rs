@@ -1,6 +1,6 @@
 //! Runtime lifecycle operations owned by the engine, rather than an editor.
 
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use crate::sbc::sbc::SBC;
 
@@ -49,10 +49,19 @@ pub(crate) fn give_order(sbc: &SBC, params: Value) -> Handled {
     let values: Vec<f32> = params
         .get("params")
         .and_then(Value::as_array)
-        .map(|list| list.iter().filter_map(Value::as_f64).map(|v| v as f32).collect())
+        .map(|list| {
+            list.iter()
+                .filter_map(Value::as_f64)
+                .map(|v| v as f32)
+                .collect()
+        })
         .unwrap_or_default();
     let units: Vec<i32> = match params.get("units").and_then(Value::as_array) {
-        Some(list) => list.iter().filter_map(Value::as_i64).map(|id| id as i32).collect(),
+        Some(list) => list
+            .iter()
+            .filter_map(Value::as_i64)
+            .map(|id| id as i32)
+            .collect(),
         None => {
             let team = interface
                 .player()
@@ -151,4 +160,30 @@ fn number(data: &Value, name: &str) -> Result<f32, ControlError> {
                 "runtime.emulate_input requires finite number {name:?}"
             ))
         })
+}
+
+/// Read or explicitly set interface visibility; capture clients restore the previous value.
+pub(crate) fn interface_visibility(sbc: &SBC, params: Value) -> Handled {
+    let interface = sbc.interface();
+    if let Some(value) = params.get("visible") {
+        let visible = value
+            .as_bool()
+            .ok_or_else(|| ControlError::invalid("visible must be boolean"))?;
+        interface
+            .messages()
+            .send_commands(
+                if visible {
+                    "hideinterface 0"
+                } else {
+                    "hideinterface 1"
+                },
+                "",
+            )
+            .map_err(|error| ControlError::failed(format!("interface visibility: {error:?}")))?;
+    }
+    let hidden = interface
+        .display()
+        .is_guihidden()
+        .map_err(|error| ControlError::failed(format!("interface visibility: {error:?}")))?;
+    Ok(Reply::now(json!({ "visible": !hidden })))
 }

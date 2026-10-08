@@ -1115,6 +1115,7 @@ dependencies = [
 name = "spring-native"
 version = "0.1.0"
 dependencies = [
+ "libm",
  "spring",
  "spring-api-codegen",
  "spring-native-sys",

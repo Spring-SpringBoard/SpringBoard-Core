@@ -66,6 +66,7 @@ fn route(sbc: &mut SBC, request: &Request) -> Handled {
         "camera.zoom" => camera::zoom(sbc, params(request)?),
         "camera.trace" => camera::trace(sbc, params(request)?),
         "capture" => capture::capture(sbc, params(request)?),
+        "runtime.interface" => runtime::interface_visibility(sbc, request.params.clone()),
         "runtime.barrier" => runtime::barrier(sbc),
         "runtime.reload_native_modules" => runtime::reload_native_modules(sbc),
         "runtime.reset_session" => runtime::reset_session(sbc),

@@ -74,6 +74,8 @@ Alongside these: `camera.set/get` (rendered position, direction, fov, and
 controller distance/height), `camera.trace_screen_ray(x, y)`,
 `camera.zoom(factor)`, `capture(path)`,
 `runtime.barrier()` (two input-idle native updates, for ordering external input), and
+`runtime.interface(visible=...)` (read or set interface and cursor visibility; capture clients
+restore the prior `visible` value), and
 `runtime.reload_native_modules()` for native-module lifecycle testing. The
 reload deliberately preserves engine world/project state; it is not a project
 reset.
@@ -175,7 +177,7 @@ Nothing in this channel may fail by doing nothing.
 
 **Built**: `describe`, `ui.open/set/get`, `dialog.open/get/set/select/accept/cancel`, `command.execute`,
 `camera.set/get/trace_screen_ray/zoom`,
-`capture`, `runtime.barrier`, `runtime.reload_native_modules`. `SBC_CONTROL_FILE` names the discovery file and turns the channel on;
+`capture`, `runtime.interface`, `runtime.barrier`, `runtime.reload_native_modules`. `SBC_CONTROL_FILE` names the discovery file and turns the channel on;
 the E2E harness sets it per run and exposes the connection as
 `run_state.control`.
 
